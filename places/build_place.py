@@ -44,7 +44,8 @@ from places.fetch_nsi import (
     to_building_records,
     write_json,
 )
-from places.terrain import add_terrain
+from places.roads import fetch_roads, find_crossings, load_traffic, road_lines
+from places.terrain import add_terrain, load_terrain
 
 log = logging.getLogger(__name__)
 
@@ -57,9 +58,15 @@ WINDOW_BIN_M = 100        # grid resolution for the most-populous-square search
 FOOTPRINT_DECIMALS = 5    # ~1 m; footprint shapes are only drawn, never measured
 
 
-def build_place(query: str, place_id: str, max_buildings: int | None = None,
-                out_dir: Path | str = PLACES_DIR) -> Path:
-    """Build places/<place_id>/ for the city named by `query` and return the folder."""
+def build_place(query: str, place_id: str, area: str, max_buildings: int | None = None,
+                out_dir: Path | str = PLACES_DIR, traffic_path: Path | str | None = None) -> Path:
+    """Build places/<place_id>/ for the city named by `query` and return the folder.
+
+    `area` is "rural" or "urban" and picks the traffic volumes and hourly curve.
+    """
+    if area not in ("rural", "urban"):
+        raise ValueError('area must be "rural" or "urban"')
+    traffic = load_traffic(traffic_path)
     _configure_osmnx()
 
     limits = ox.geocode_to_gdf(query)
@@ -73,20 +80,25 @@ def build_place(query: str, place_id: str, max_buildings: int | None = None,
     records = to_building_records(raw)
     stats = attach_footprints(records, raw, rect)
 
-    cover = h3.geo_to_cells(rect, H3_RES)
+    terrain = load_terrain(rect)
+    roads = fetch_roads(rect)
+    crossings = find_crossings(roads, terrain, rect, area, traffic)
+
+    cover = set(h3.geo_to_cells(rect, H3_RES)) | {c["h3"] for c in crossings}
     cells = cells_from_records(records, extra_cells=cover)
 
     folder = Path(out_dir) / place_id
     folder.mkdir(parents=True, exist_ok=True)
 
-    # 3DEP ground elevation, hand_m, terrain.bin, and stream lines.
+    # 3DEP ground elevation, hand_m, terrain.bin, stream lines, road lines.
     place = place_record(rect, place_id, records, name=query)
-    place.update(add_terrain(records, cells, rect, folder))
+    place.update(add_terrain(records, cells, rect, folder, terrain))
+    place["roads"] = road_lines(roads, rect, terrain.utm)
 
     write_json(folder / "buildings.json", records)
     write_json(folder / "cells.json", cells)
     write_json(folder / "place.json", place)
-    write_json(folder / "crossings.json", [])
+    write_json(folder / "crossings.json", crossings)
 
     log.info("footprints: %s", stats)
     return folder
@@ -277,12 +289,17 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Build places/<place_id>/ for a U.S. city.")
     p.add_argument("query", help='City name for OSM geocoding, e.g. "Lumberton, North Carolina, USA"')
     p.add_argument("--place-id", required=True)
+    p.add_argument("--area", required=True, choices=["rural", "urban"],
+                   help="traffic volumes and hourly curve for crossings")
     p.add_argument("--max-buildings", type=int, default=None)
+    p.add_argument("--traffic", default=None,
+                   help="path to traffic_by_hour.json (default ml/exports/traffic_by_hour.json)")
     args = p.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     t0 = time.time()
-    folder = build_place(args.query, args.place_id, args.max_buildings)
+    folder = build_place(args.query, args.place_id, args.area, args.max_buildings,
+                         traffic_path=args.traffic)
 
     recs = json.loads((folder / "buildings.json").read_text())
     cells = json.loads((folder / "cells.json").read_text())
@@ -290,6 +307,7 @@ if __name__ == "__main__":
     print(json.dumps(summarize(recs), indent=1))
     print("cells", len(cells), "| empty", sum(1 for c in cells if c["pop_night"] == 0 and c["pop_day"] == 0))
     print("place", json.dumps({k: v for k, v in place.items() if k != "streams"}))
-    print("streams", len(place["streams"]), "lines")
+    print("streams", len(place["streams"]), "lines | roads", len(place["roads"]), "lines")
+    print("crossings", len(json.loads((folder / "crossings.json").read_text())))
     print("sizes KB", {f.name: round(f.stat().st_size / 1024) for f in sorted(folder.glob("*.json"))})
     print(f"{time.time() - t0:.1f}s")

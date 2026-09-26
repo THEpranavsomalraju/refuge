@@ -3,7 +3,8 @@
 All elevations come from one DEM (USGS 3DEP, 10 m), so building ground elevation,
 stream elevation, cell elevation, and the baked terrain for the 3D scene agree.
 
-    add_terrain(records, cells, rect, folder) -> dict for place.json
+    terrain = load_terrain(rect)
+    add_terrain(records, cells, rect, folder, terrain) -> dict for place.json
 
 Streams are NHDPlus medium resolution (named creeks and rivers). hand_m is the simple
 nearest-stream version: building ground elevation minus the elevation of the nearest
@@ -14,6 +15,7 @@ from __future__ import annotations
 
 import logging
 import os
+from dataclasses import dataclass
 from pathlib import Path
 
 # HyRiver caches web responses; keep that cache in the repo's gitignored data/ folder.
@@ -41,16 +43,30 @@ LINE_SIMPLIFY_M = 5        # stream lines drawn in the scene
 LINE_DECIMALS = 5
 
 
-def add_terrain(records: list[dict], cells: list[dict], rect: Polygon, folder: Path) -> dict:
+@dataclass
+class Terrain:
+    """DEM, stream lines, and the local UTM CRS for one place, loaded once and shared."""
+    dem: xr.DataArray
+    streams: gpd.GeoDataFrame
+    utm: object
+
+
+def load_terrain(rect: Polygon) -> Terrain:
+    """3DEP DEM and NHDPlus MR streams for `rect` plus STREAM_MARGIN_M (cached by HyRiver)."""
+    utm = gpd.GeoSeries([rect], crs="EPSG:4326").estimate_utm_crs()
+    fetch_area = gpd.GeoSeries([rect], crs=4326).to_crs(utm).buffer(STREAM_MARGIN_M).to_crs(4326).iloc[0]
+    dem = py3dep.get_dem(fetch_area.bounds, resolution=DEM_RES_M)
+    streams = fetch_streams(fetch_area.bounds)
+    return Terrain(dem=dem, streams=streams, utm=utm)
+
+
+def add_terrain(records: list[dict], cells: list[dict], rect: Polygon, folder: Path,
+                terrain: Terrain) -> dict:
     """Fill ground_elev_m and hand_m on records, ground_elev_m on cells, write terrain.bin.
 
     Returns {"terrain_source": {...}, "streams": [[[lon, lat], ...], ...]} for place.json.
     """
-    utm = gpd.GeoSeries([rect], crs="EPSG:4326").estimate_utm_crs()
-    fetch_area = gpd.GeoSeries([rect], crs=4326).to_crs(utm).buffer(STREAM_MARGIN_M).to_crs(4326).iloc[0]
-
-    dem = py3dep.get_dem(fetch_area.bounds, resolution=DEM_RES_M)
-    streams = fetch_streams(fetch_area.bounds)
+    dem, streams, utm = terrain.dem, terrain.streams, terrain.utm
 
     # Buildings and cells: DEM at their point.
     b_lon = np.array([r["lon"] for r in records])

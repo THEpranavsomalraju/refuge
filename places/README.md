@@ -4,7 +4,7 @@ Owner: Structures and 3D (@soham-patki). Read `REFUGE_overview.md` first.
 
 This folder turns real building, road, stream, and terrain data into one folder of JSON files per featured place. Those files, plus the Python functions in `fetch_nsi.py`, are the only things other parts of Refuge use from here. The overview says only this role edits `places/`.
 
-> **Status:** `fetch_nsi.py`, `build_place.py`, and `terrain.py` are done. The three featured places are built with buildings, footprints, full `cells.json`, 3DEP elevation, streams, `hand_m`, and baked terrain. Roads and low-water crossings are next. Anything marked **TBD** is undecided. Anything marked **proposed** still needs sign-off from the teammate who reads it.
+> **Status:** `fetch_nsi.py`, `build_place.py`, `terrain.py`, and `roads.py` are done. The three featured places are built with buildings, footprints, full `cells.json`, 3DEP elevation, streams, `hand_m`, and baked terrain. Morganton and Lumberton also have roads and low-water crossings. Chapel Hill's roads and crossings are pending, because an OpenStreetMap server outage blocked the road download. Anything marked **TBD** is undecided. Anything marked **proposed** still needs sign-off from the teammate who reads it.
 
 ## Featured places
 
@@ -94,9 +94,12 @@ Known NSI gap: the Amazon DLI4 warehouse in Edwardsville, where all 6 deaths of 
 ## `build_place.py`: featured places for any U.S. city
 
 ```bash
-python -m places.build_place "Lumberton, North Carolina, USA" --place-id lumberton
-python -m places.build_place "Some Big City, State, USA" --place-id big_city --max-buildings 13000
+python -m places.build_place "Lumberton, North Carolina, USA" --place-id lumberton --area rural
+python -m places.build_place "Chapel Hill, North Carolina, USA" --place-id chapel_hill --area urban
+python -m places.build_place "Some Big City, State, USA" --place-id big_city --area urban --max-buildings 13000
 ```
+
+`--area rural|urban` is required and picks the traffic volumes and hourly curve. `--traffic PATH` points at the ML lead's `traffic_by_hour.json`, default `ml/exports/traffic_by_hour.json`. Until the ML branches merge into `main`, pass a local copy, e.g. `--traffic data/ml_exports/traffic_by_hour.json`.
 
 1. **Area:** the city limits come from OpenStreetMap (osmnx geocoding). The place is the bounding rectangle of those limits.
 2. **Large cities:** with `--max-buildings N`, if the rectangle holds more than N buildings, the script keeps the square holding the most people at night with at most N buildings.
@@ -113,7 +116,8 @@ python -m places.build_place "Some Big City, State, USA" --place-id big_city --m
    - **`hand_m`:** the simple nearest-stream version from the role file. It is building ground elevation minus the DEM elevation of the nearest stream point (streams sampled every 10 m), clipped at 0.
    - **`terrain.bin`:** elevation grid for the 3D scene, baked from the same DEM, so no internet is needed during the demo. Described in `place.json` → `terrain_source`.
    - **Stream lines** for drawing go in `place.json` → `streams`.
-6. **Writes** `buildings.json`, `cells.json` (every H3 cell in the rectangle, empty ones included), `place.json`, `terrain.bin`, and `crossings.json` (`[]` until roads and crossings are in).
+6. **Roads and crossings** (`roads.py`): OSM drivable roads, and low-water crossings (see `crossings.json` below).
+7. **Writes** `buildings.json`, `cells.json` (every H3 cell in the rectangle, empty ones included, plus any crossing cell at the edge), `place.json`, `terrain.bin`, and `crossings.json`.
 
 A rebuild with a warm cache takes 15–20 s. A new city's first build takes longer while NSI, OSM, 3DEP and NHD download. Caches live in `data/cache/` (`nsi/`, `osmnx/`, `hyriver/`).
 
@@ -149,7 +153,6 @@ Every key in a format is always written. A field that isn't computed yet is `nul
 | `hand_m` | buildings.json | `terrain.py` (featured places) | `null` in backtest folders → no flood data (not 0) |
 | `footprint` | buildings.json | `build_place.py` (featured places) | `null` in backtest folders |
 | `ground_elev_m` | cells.json | `terrain.py` (featured places, 3DEP) | `null` in backtest folders |
-| `cars_per_hour` | crossings.json | Phase 2 | `null` |
 
 ### `buildings.json` (frozen, overview §1)
 One record per NSI structure, keys in this order: `id`, `lon`, `lat`, `h3`, `cbfips`, `footprint`, `occtype`, `cls`, `stories`, `basement`, `ground_elev_m`, `first_floor_ht_m`, `hand_m`, `firmzone`, `pop_night_u65`, `pop_night_o65`, `pop_day_u65`, `pop_day_o65`.
@@ -170,18 +173,28 @@ One record per NSI structure, keys in this order: `id`, `lon`, `lat`, `h3`, `cbf
 - `pop_night` / `pop_day` are the sums of building populations. They're for display only; Simulation computes cell people itself (buildings plus crossing drivers).
 - Every `h3` in `buildings.json` and `crossings.json` appears in `cells.json`.
 
-### `crossings.json` (frozen, overview §2), Phase 2
-Low-water crossings: points where a road line crosses a stream line and the road sits within a few meters of the stream. **Proposed:** add an `"h3"` key so Simulation can count drivers per cell. In the 3D scene, vehicles are static props, not animated.
+### `crossings.json` (frozen, overview §2, plus `h3`)
+Keys: `id` (`x_<n>`), `lon`, `lat`, `h3`, `road_name`, `road_class`, `road_elev_m`, `hand_m`, `cars_per_hour` (24 values). The `h3` key comes from the role file ("give every crossing an H3 id") so Simulation can count drivers per cell. It was announced to Simulation and is awaiting their OK.
+
+How a crossing is found (`roads.py`):
+- A point where an OSM road crosses an NHDPlus stream line. Crossings of the same stream within 30 m are merged, keeping the busier road.
+- **Excluded:** roads tagged as bridges (the DEM is bare earth, so bridge decks would read as low), and motorway, trunk, and service roads. Those are still drawn on the map.
+- `road_elev_m` = DEM at the crossing point. The stream bed = lowest DEM value along the stream within 50 m. `hand_m` = road minus bed.
+- Kept if `hand_m` ≤ 3 m.
+- `road_class` is the OSM highway tag, with `_link` roads counted as their parent class and `living_street` as `residential`.
+
+Results: Morganton 48 crossings, Lumberton 79. In the 3D scene, vehicles are static props, not animated.
 
 `cars_per_hour[h] = daily_volume_by_osm_tag[area][highway] × curves[curve].share[h]`, from `ml/exports/traffic_by_hour.json`:
 - the two small towns use `area = "rural"` and `curve = "weekday_rural"`
 - Chapel Hill uses `"urban"` and `"weekday_urban"`
 
 ### `place.json` (**proposed** keys)
-`place_id`, `name` (the geocoding query; `null` in backtest folders), `county_fips` (the most common county, taken from the buildings' `cbfips[:5]`), `bbox` `[min_lon, min_lat, max_lon, max_lat]`, `center` `[lon, lat]`, `camera` (`null` until Phase 2), `terrain_source`, `streams`, `roads` (empty until roads are in).
+`place_id`, `name` (the geocoding query; `null` in backtest folders), `county_fips` (the most common county, taken from the buildings' `cbfips[:5]`), `bbox` `[min_lon, min_lat, max_lon, max_lat]`, `center` `[lon, lat]`, `camera` (`null` until the 3D scene sets it), `terrain_source`, `streams`, `roads`.
 
 - `terrain_source` (featured places): `{"file": "terrain.bin", "format": "float32-le, row-major, first row north, first column west", "width", "height", "bbox", "min_m", "max_m", "source"}`. The grid spans `bbox` edge to edge, with at most 512 samples on the longer side (about 0.7–1 MB). It is `null` in backtest folders.
 - `streams` (featured places): stream lines clipped to the rectangle, each `[[lon, lat], ...]`. Empty in backtest folders.
+- `roads` (featured places): `[{"class": "primary", "line": [[lon, lat], ...]}, ...]`, clipped to the rectangle and simplified to 5 m. For drawing only. Empty in backtest folders.
 
 ---
 
@@ -205,8 +218,9 @@ Raw downloads and caches go in `data/` at the repo root (gitignored), never in `
 | File | Phase | Status |
 |---|---|---|
 | `fetch_nsi.py` | 1 | done |
-| `build_place.py` | 1–2 | buildings, footprints, cells, terrain done; roads and crossings to do |
+| `build_place.py` | 1–2 | done |
 | `terrain.py` | 2 | done: 3DEP elevation, NHD streams, `hand_m`, `terrain.bin` |
+| `roads.py` | 2 | done: OSM roads, low-water crossings, `cars_per_hour` |
 | `validate.py` | 3 | to do |
 
 ---
