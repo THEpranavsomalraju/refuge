@@ -8,13 +8,13 @@
   "deaths_indirect": 23,
   "property_damage_usd": 6900000000.0,
   "by_event_type": {
-   "Storm Surge/Tide": {
-    "deaths_direct": 5,
-    "property_damage_usd": 800000000.0
-   },
    "Hurricane (Typhoon)": {
     "deaths_direct": 1,
     "property_damage_usd": 6100000000.0
+   },
+   "Storm Surge/Tide": {
+    "deaths_direct": 5,
+    "property_damage_usd": 800000000.0
    }
   },
   "zones": [
@@ -89,6 +89,12 @@
   "points": 5
  },
  "bbox_for_build_place": [
+  -85.47,
+  29.9,
+  -85.33,
+  29.99
+ ],
+ "build_bbox": [
   -85.47,
   29.9,
   -85.33,
@@ -195,11 +201,5 @@
   "Hurricane mode shows wind damage and displacement. Storm surge, rain flooding and falling trees are not modeled.",
   "Recorded deaths and property damage are NOAA totals for the forecast zones listed, which are larger than the town box.",
   "Buildings and populations are today's NSI records."
- ],
- "build_bbox": [
-  -85.47,
-  29.9,
-  -85.33,
-  29.99
  ]
 }

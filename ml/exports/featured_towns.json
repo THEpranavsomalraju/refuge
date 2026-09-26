@@ -23,7 +23,7 @@
      "red": 11,
      "deep_red": 17,
      "sparse": 1562,
-     "empty": 10365
+     "empty": 10366
     },
     "cells_touched": 125,
     "touched_uncertain_share": 0.16,
@@ -265,7 +265,7 @@
       "red": 0,
       "deep_red": 0,
       "sparse": 1562,
-      "empty": 10365
+      "empty": 10366
      },
      "cells_touched": 42,
      "touched_uncertain_share": 0,
@@ -287,7 +287,7 @@
       "red": 0,
       "deep_red": 0,
       "sparse": 2005,
-      "empty": 10210
+      "empty": 10211
      },
      "cells_touched": 41,
      "touched_uncertain_share": 0,
@@ -307,7 +307,7 @@
       "red": 12,
       "deep_red": 0,
       "sparse": 1562,
-      "empty": 10365
+      "empty": 10366
      },
      "cells_touched": 66,
      "touched_uncertain_share": 0.106,
@@ -330,7 +330,7 @@
       "red": 9,
       "deep_red": 0,
       "sparse": 2005,
-      "empty": 10210
+      "empty": 10211
      },
      "cells_touched": 68,
      "touched_uncertain_share": 0.044,
@@ -353,7 +353,7 @@
       "red": 11,
       "deep_red": 17,
       "sparse": 1562,
-      "empty": 10365
+      "empty": 10366
      },
      "cells_touched": 125,
      "touched_uncertain_share": 0.16,
@@ -380,7 +380,7 @@
       "red": 17,
       "deep_red": 12,
       "sparse": 2005,
-      "empty": 10210
+      "empty": 10211
      },
      "cells_touched": 143,
      "touched_uncertain_share": 0.119,
@@ -407,7 +407,7 @@
       "red": 37,
       "deep_red": 40,
       "sparse": 1562,
-      "empty": 10365
+      "empty": 10366
      },
      "cells_touched": 192,
      "touched_uncertain_share": 0.313,
@@ -435,7 +435,7 @@
       "red": 37,
       "deep_red": 48,
       "sparse": 2005,
-      "empty": 10210
+      "empty": 10211
      },
      "cells_touched": 211,
      "touched_uncertain_share": 0.275,

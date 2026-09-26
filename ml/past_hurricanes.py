@@ -40,7 +40,7 @@ def recorded(cfg):
     return {"deaths_direct": int(ev["deaths_direct"].sum()), "deaths_indirect": int(ev["deaths_indirect"].sum()),
             "property_damage_usd": float(ev["damage_property_usd"].fill_null(0).sum()),
             "by_event_type": {r["event_type"]: {"deaths_direct": r["d"], "property_damage_usd": r["dmg"]} for r in
-                              ev.group_by("event_type").agg(d=pl.col("deaths_direct").sum(), dmg=pl.col("damage_property_usd").fill_null(0).sum()).iter_rows(named=True)},
+                              ev.group_by("event_type").agg(d=pl.col("deaths_direct").sum(), dmg=pl.col("damage_property_usd").fill_null(0).sum()).sort("event_type").iter_rows(named=True)},
             "zones": cfg["zones"], "source": "NOAA Storm Events", "noaa_event_ids": ev["event_id"].to_list()}
 
 
