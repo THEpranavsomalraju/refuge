@@ -45,3 +45,17 @@ The trade-offs are real: location beats size. A small church next to the mobile-
 - The 25% hardened share is a model choice. It sets capacity and cost together, so it changes which buildings look attractive, not the lives-saved ceiling.
 - Compliance is from mobile-home studies; applying 30% to everyone within reach is an assumption.
 - Lives saved are model estimates for one storm, not proven causal effects.
+
+## Hurricane mode (damage and displacement)
+
+Same buildings and conversion, different occupancy and purpose. Reference implementation: `ml/hurricane_damage.py`; numbers in `ml/exports/hurricane_damage_reference.json`.
+
+| Setting | Tornado | Hurricane | Source / reason |
+|---|---|---|---|
+| Space per person | 5 sq ft | **20 sq ft** | FEMA P-361 occupant density (tornado vs hurricane safe rooms) |
+| Capacity | 25% footprint / 5, clamped 50–1,000 | 25% footprint / 20, clamped **25–1,000** | Same hardened share |
+| Cost | $1,500 × capacity | **$6,000 × capacity** | Same $300 per hardened sq ft |
+| Who goes | Own occupants + mobile-home residents within walking reach, 30% compliance | **Displaced residents** (homes at major damage or worse) within **3 km**, nearest first | Hurricanes give days of warning; people drive to a shelter before landfall |
+| Score | Lives saved (expected deaths averted) | **Need served**: 1.0 per person from a destroyed home, 0.5 from a major-damage home | Deaths from hurricane wind at home are tiny (ml/exports/hurricane_mortality.json), so displacement is the planning target |
+
+Lumberton, Category 2 with the eye through town: 11,141 residents displaced and 1,410 in destroyed homes. The best single shelters are big-roof buildings holding 1,000 people for $6.0M each; they serve about 610–620 need points.

@@ -729,5 +729,11 @@
   -97.1207,
   33.4665
  ],
- "focus_share_of_simulated_deaths": 0.88
+ "focus_share_of_simulated_deaths": 0.88,
+ "build_bbox": [
+  -97.2068,
+  33.3941,
+  -97.1207,
+  33.4665
+ ]
 }

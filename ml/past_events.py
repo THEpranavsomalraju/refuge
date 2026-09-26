@@ -113,6 +113,7 @@ def main():
                       "Buildings and populations are today's NSI records, not the town as it was on the storm date."],
         }
         doc["focus_bbox_for_build_place"], doc["focus_share_of_simulated_deaths"] = focus_bbox(pid, doc["scenario"])
+        doc["build_bbox"] = doc["focus_bbox_for_build_place"] or doc["bbox_for_build_place"]   # the box Structures builds
         (OUT / f"{pid}.json").write_text(json.dumps(doc, indent=1))
         print(f"  wrote ml/past_events/{pid}.json: EF{ef}, {len(path)} path points, width {width_m} m, hour {first['hour']}, "
               f"deaths {deaths} {doc['recorded']['death_locations']}, bbox {doc['bbox_for_build_place']}")
