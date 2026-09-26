@@ -97,15 +97,16 @@ test('optimizer searches every affordable subset and its value matches the engin
   assert.equal(plan.method, 'exhaustive'); assert.equal(plan.label, 'best');
   assert.ok(plan.cost_usd <= 200000);
   const check = core.expected(storm(plan.building_ids.map(shelter)), town, params(), config());
-  near(plan.expected_deaths, check.expected_deaths);
-  near(plan.value, plan.baseline_deaths - check.expected_deaths);
+  near(plan.remaining, check.expected_deaths);
+  near(plan.value, plan.baseline - check.expected_deaths);
+  assert.equal(plan.objective, 'lives_saved');
   // Brute force over all affordable plans agrees.
   const cands = core.shelterCandidates(s, town, params(), config());
   let bestV = 0;
   for (let m = 0; m < 1 << cands.length; m++) {
     const pick = cands.filter((_, i) => m & (1 << i));
     if (pick.reduce((a, c) => a + c.cost_usd, 0) > 200000) continue;
-    const v = plan.baseline_deaths - core.expected(storm(pick.map(c => shelter(c.building_id))), town, params(), config()).expected_deaths;
+    const v = plan.baseline - core.expected(storm(pick.map(c => shelter(c.building_id))), town, params(), config()).expected_deaths;
     bestV = Math.max(bestV, v);
   }
   near(plan.value, bestV, 1e-9);
@@ -132,4 +133,39 @@ test('CLI accepts --protections for scenarios with shelters', () => {
     '--protections', join(simRoot, 'params/protections.json')], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
   near(JSON.parse(r.stdout).sheltered, 4.9);
+});
+
+// ---- Hurricane shelters: displaced residents within 3 km, need-weighted ----
+const hp = JSON.parse(readFileSync(new URL('../params/hurricane.json', import.meta.url)));
+function coastTown() {
+  const buildings = [];
+  for (let i = 0; i < 30; i++) buildings.push(building({ id: `h${i}`, h3: `c${i % 3}`, cls: i % 4 ? 'RES_WOOD' : 'MH', lon: -90 + i * 0.002, pop_night_u65: 4, pop_night_o65: 0 }));
+  [[-89.99, 20000], [-89.97, 3000], [-89.90, 60000]].forEach(([lon, f], i) => buildings.push(shop({ id: `s${i}`, lon, lat: 38, footprint_sqft: f })));
+  return { buildings };
+}
+const cane = (protections = []) => ({ place_id: 'test', hazard: 'hurricane', track: [[-90.3, 37.7, 89, 37, 1.6, 0], [-89.7, 38.3, 89, 37, 1.6, 4]], hour: 7, protections });
+
+test('hurricane capacity/cost use 20 sq ft and $6,000 per person', () => {
+  const c = core.shelterCandidates(cane(), coastTown(), params(), config(), hp);
+  const s0 = c.find(x => x.building_id === 's0');
+  assert.equal(s0.capacity, 250); assert.equal(s0.cost_usd, 1500000);
+  assert.equal(c.find(x => x.building_id === 's1').capacity, 37);
+});
+
+test('hurricane need served alone matches the engine, and sheltered people leave the displaced map', () => {
+  const town = coastTown(); const P = params(); P.wind = JSON.parse(readFileSync(new URL('../params/sim_params.default.json', import.meta.url))).wind;
+  const base = core.simulateHurricane(cane(), town, P, hp, config());
+  for (const c of core.shelterCandidates(cane(), town, P, config(), hp)) {
+    const r = core.simulateHurricane(cane([shelter(c.building_id)]), town, P, hp, config());
+    near(r.need_served, c.effectiveness);
+    near(r.displaced_unsheltered, base.displaced - r.sheltered);
+    assert.ok(r.sheltered <= c.capacity + 1e-9);
+    near(r.displaced, base.displaced);
+  }
+  const plan = core.optimizeShelters(cane(), town, P, config(), 3e6, [], hp);
+  assert.equal(plan.objective, 'need_served');
+  const r = core.simulateHurricane(cane(plan.building_ids.map(shelter)), town, P, hp, config());
+  near(plan.value, r.need_served);
+  const sheltered = Object.values(r.cells).reduce((s, c) => s + c.displaced, 0);
+  near(sheltered, r.displaced_unsheltered);
 });

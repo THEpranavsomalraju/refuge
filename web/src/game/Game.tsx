@@ -1,21 +1,26 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { scene, type Band, type LoadState } from '../scene';
+import type { SceneExtensions } from '../shared/contract';
+import { HURRICANE_READY, PAST_EVENTS } from './events';
 import { riskBands, shelterRules, type DetailedResult } from './simClient';
-import { SHOWN_CANDIDATES, useGame, type MapView } from './store';
+import { CITIES, SHOWN_CANDIDATES, useGame, type MapView } from './store';
 import { BAND_COLOR, BAND_WORDS, GROUPS, deaths, driverWords, hourWords, oneInN, usd } from './format';
 
-/** Game UI for the Lumberton tornado flow: storm -> risk map -> safe rooms -> replay -> optimal plan. */
+/** Game UI (plan section 1): intro -> mode -> past event or future storm -> storm -> map -> plan -> replay -> best plan -> score. */
 export function Game({ load }: { load: LoadState }) {
   const g = useGame();
-  useEffect(() => { if (load.state === 'ready') void g.init(load.place); }, [load]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (load.state === 'ready' && load.place.meta.place_id === g.placeId) void g.placeLoaded(load.place);
+    if (load.state === 'error') g.placeFailed(load.message);
+  }, [load, g.placeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
       <div style={panel}>
-        <div style={{ fontWeight: 700, fontSize: 15 }}>{load.state === 'ready' ? load.place.meta.name : 'Refuge'}</div>
-        {load.state === 'error' && <div style={bad}>Could not load the town: {load.message}</div>}
+        <div style={{ fontWeight: 700, fontSize: 15 }}>{g.event ? g.event.title : g.place && g.step !== 'intro' && g.step !== 'choose_mode' ? g.place.meta.name : 'Refuge'}</div>
         {g.error && <div style={bad}>{g.error}</div>}
-        <Phase />
+        {g.busy ? <div style={muted}>{g.busy}</div> : <Step />}
+        {g.error && <button style={secondary} onClick={g.restart}>Back to start</button>}
       </div>
       {g.baseline && <HoverCard />}
       {g.baseline && <Legend />}
@@ -23,40 +28,82 @@ export function Game({ load }: { load: LoadState }) {
   );
 }
 
-function Phase() {
+/** Scenario hour for display: the event's own hour in past mode. */
+const hourOf = (g: ReturnType<typeof useGame.getState>) => g.event ? Number(g.event.scenario.hour) : g.hour;
+
+function Step() {
   const g = useGame();
-  switch (g.phase) {
-    case 'loading': return <div style={muted}>Loading buildings…</div>;
-    case 'simulating': return <div style={muted}>Running 500 simulated storms…</div>;
-    case 'storm': return <div style={muted}>Storm passing through town…</div>;
-    case 'setup': return <Setup />;
-    case 'results': return (
+  switch (g.step) {
+    case 'intro': return (
       <>
-        <Summary title="Without protections" r={g.baseline!} hour={g.hour} />
-        <button style={primary} onClick={() => void g.plan()}>Plan protections</button>
+        <div style={muted}>Send a real storm through a real town, see who is at risk and why, then turn existing buildings into shelters and see how close your plan gets to the best one.</div>
+        <button style={primary} onClick={() => g.go('choose_mode')}>Start</button>
       </>
     );
-    case 'planning': return <Planning />;
-    case 'replayed': return (
+    case 'choose_mode': return (
+      <>
+        <button style={choice} onClick={() => g.chooseMode('past')}><b>Past disaster</b><span style={muted}>Replay a real storm on today's buildings and compare with what NOAA recorded.</span></button>
+        <button style={choice} onClick={() => g.chooseMode('future')}><b>Future storm</b><span style={muted}>Pick a town and design the storm yourself.</span></button>
+      </>
+    );
+    case 'choose_event': return (
+      <>
+        {PAST_EVENTS.map(e => {
+          const ready = e.hazard === 'tornado' || HURRICANE_READY;
+          return (
+            <button key={e.id} style={{ ...choice, opacity: ready ? 1 : 0.45 }} disabled={!ready} onClick={() => g.chooseEvent(e.id)}>
+              <b>{e.title}</b><span style={muted}>{e.subtitle}</span>
+              <span style={muted}>{ready ? `${e.recorded.deaths_direct} direct deaths recorded` : 'Hurricane mode is coming next'}</span>
+            </button>
+          );
+        })}
+        <button style={secondary} onClick={() => g.go('choose_mode')}>Back</button>
+      </>
+    );
+    case 'choose_city': return (
+      <>
+        {CITIES.map(c => <button key={c.place_id} style={choice} onClick={() => g.chooseCity(c.place_id)}><b>{c.name}</b></button>)}
+        <button style={secondary} onClick={() => g.go('choose_mode')}>Back</button>
+      </>
+    );
+    case 'choose_hazard': return (
+      <>
+        <button style={choice} onClick={g.chooseHazard}><b>Tornado</b><span style={muted}>Chance of death per person.</span></button>
+        <button style={{ ...choice, opacity: 0.45 }} disabled><b>Hurricane</b><span style={muted}>Damage and displacement: coming next.</span></button>
+        <button style={secondary} onClick={() => g.go('choose_city')}>Back</button>
+      </>
+    );
+    case 'load_place': return <div style={muted}>Loading town…</div>;
+    case 'storm_setup': return <Setup />;
+    case 'storm_animation': return <div style={muted}>Storm passing through town…</div>;
+    case 'results_map': return (
+      <>
+        {g.event ? <RecordedVsSimulated /> : <Summary title="Without shelters" r={g.baseline!} hour={g.hour} />}
+        <button style={primary} onClick={() => void g.plan()}>Plan shelters</button>
+      </>
+    );
+    case 'plan': return <Planning />;
+    case 'replay': return g.yours ? (
       <>
         <BeforeAfter />
         <Views options={['before', 'yours']} />
-        <button style={primary} onClick={() => void g.compare()}>Compare with the best plan</button>
+        <button style={primary} onClick={() => void g.best()}>Compare with the best plan</button>
         <button style={secondary} onClick={() => void g.plan()}>Change my plan</button>
       </>
-    );
-    case 'compare': return <Compare />;
+    ) : <div style={muted}>Replaying the same storm…</div>;
+    case 'optimal': return <div style={muted}>Searching every affordable plan…</div>;
+    case 'score': return <Compare />;
   }
 }
 
 function Setup() {
   const g = useGame();
+  const canDraw = typeof (scene as typeof scene & SceneExtensions).onGroundClick === 'function';
   return (
     <>
-      <div style={muted}>A tornado crosses Lumberton's two largest mobile-home parks. Set it up and press play.</div>
       <Row label="Strength">
         <select value={g.ef} onChange={e => g.set({ ef: Number(e.target.value) })} style={input}>
-          {[1, 2, 3, 4, 5].map(ef => <option key={ef} value={ef}>EF{ef}</option>)}
+          {[0, 1, 2, 3, 4, 5].map(ef => <option key={ef} value={ef}>EF{ef}</option>)}
         </select>
       </Row>
       <Row label={`Time: ${hourWords(g.hour)}`}>
@@ -65,7 +112,10 @@ function Setup() {
       <Row label={`Warning: ${g.warning} min`}>
         <input type="range" min={0} max={30} value={g.warning} onChange={e => g.set({ warning: Number(e.target.value) })} />
       </Row>
-      <button style={primary} onClick={() => void g.play()}>Play storm</button>
+      {canDraw
+        ? <button style={secondary} onClick={g.startDrawing}>{g.drawing ? `Click the map: ${g.path.length} point${g.path.length === 1 ? '' : 's'}` : 'Draw the path'}</button>
+        : <div style={muted}>Path drawing arrives with the scene's ground-click hook; using {g.placeId === 'lumberton' ? 'the showcase path through both mobile-home parks' : 'a path through the town center'}.</div>}
+      <button style={primary} disabled={g.path.length < 2} onClick={() => void g.play()}>Play storm</button>
     </>
   );
 }
@@ -84,12 +134,42 @@ function Summary({ title, r, hour }: { title: string; r: DetailedResult; hour: n
   );
 }
 
+/** Past mode: NOAA's record next to the simulation, plus every caveat from the event file. */
+function RecordedVsSimulated() {
+  const g = useGame();
+  const e = g.event!, r = g.baseline!;
+  const groups = GROUPS.map(({ label, classes }) => [label, classes.reduce((a, c) => a + (r.by_class[c as keyof typeof r.by_class] ?? 0), 0)] as const)
+    .filter(([, v]) => v >= 0.05);
+  return (
+    <div style={{ display: 'grid', gap: 6 }}>
+      <div style={muted}>{e.subtitle}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div style={{ display: 'grid', gap: 3 }}>
+          <div style={muted}>Recorded (NOAA)</div>
+          <div style={{ fontSize: 26, fontWeight: 700, lineHeight: 1 }}>{e.recorded.deaths_direct}</div>
+          <div style={muted}>direct deaths</div>
+          {e.recorded.injuries_direct !== undefined && <div style={muted}>{e.recorded.injuries_direct} injuries</div>}
+          {Object.entries(e.recorded.death_locations ?? {}).map(([loc, n]) => <div key={loc} style={muted}>{n} · {loc}</div>)}
+        </div>
+        <div style={{ display: 'grid', gap: 3 }}>
+          <div style={muted}>Simulated</div>
+          <div style={{ fontSize: 26, fontWeight: 700, lineHeight: 1 }}>{deaths(r.expected_deaths)}</div>
+          <div style={muted}>expected · {r.p05}–{r.p95}</div>
+          <div style={muted}>injuries not modeled</div>
+          {groups.map(([label, v]) => <div key={label} style={muted}>{deaths(v)} · {label}</div>)}
+        </div>
+      </div>
+      {e.notes.map(n => <div key={n} style={{ ...muted, fontSize: 11 }}>{n}</div>)}
+    </div>
+  );
+}
+
 const CLASS_WORDS: Record<string, string> = { SCHOOL: 'School', WORSHIP: 'Place of worship', COMMERCIAL: 'Business', BIGROOF: 'Big-box / warehouse' };
 
 function Planning() {
   const g = useGame();
   const t = shelterRules.tornado;
-  const reach = Math.round(t.walk_speed_mps * Math.max(0, g.warning - t.mobilize_min) * 60);
+  const reach = Math.round(t.walk_speed_mps * Math.max(0, (g.event ? Number(g.event.scenario.warning_min) : g.warning) - t.mobilize_min) * 60);
   const spent = [...g.placed.keys()].reduce((s, id) => s + (g.candidates.find(c => c.building_id === id)?.cost_usd ?? 0), 0);
   const shown = g.candidates.slice(0, SHOWN_CANDIDATES);
   return (
@@ -97,7 +177,7 @@ function Planning() {
       <div style={muted}>
         Turn existing buildings into tornado shelters (a FEMA P-361 hardened core, {Math.round(shelterRules.hardened_share * 100)}% of
         the footprint, {t.sqft_per_person} sq ft per person, {usd(t.cost_per_person)} per person). The building's own occupants go first,
-        then about {Math.round(t.compliance * 100)}% of mobile-home residents within a {reach} m walk ({g.warning} min warning).
+        then about {Math.round(t.compliance * 100)}% of mobile-home residents within a {reach} m walk ({g.event ? Number(g.event.scenario.warning_min) : g.warning} min warning).
         People inside are modeled as safe. Tornado shelter only.
       </div>
       <Row label="Budget">
@@ -158,7 +238,7 @@ function Compare() {
       <div style={row}><span>Your plan saves</span><span style={mono}>{yourSaved.toFixed(1)} · {usd(yourCost)}</span></div>
       <div style={row}><span>{plan.label === 'best' ? 'Best' : 'Best found'} plan saves</span><span style={mono}>{plan.value.toFixed(1)} · {usd(plan.cost_usd)}</span></div>
       <div style={muted}>
-        {plan.label === 'best' ? 'Best' : 'Best found'} plan: {names}; {deaths(plan.expected_deaths)} expected deaths remain.
+        {plan.label === 'best' ? 'Best' : 'Best found'} plan: {names}; {deaths(plan.remaining)} expected deaths remain.
         {plan.method === 'exhaustive'
           ? ` Every affordable combination of the ${plan.candidates.length} top buildings (including yours) was checked: ${plan.evaluated} plans within ${usd(g.budget)}.`
           : ` Greedy search with swaps over ${plan.candidates.length} buildings (${plan.evaluated} plans); not guaranteed optimal.`}
@@ -200,9 +280,9 @@ function HoverCard() {
   return (
     <div style={{ ...panel, top: 'auto', bottom: 12, width: 300 }}>
       <div style={{ fontWeight: 600 }}>{text}</div>
-      {c.band !== 'empty' && <div style={row}><span>People at {hourWords(g.hour)}</span><span style={mono}>{Math.round(c.people)}</span></div>}
+      {c.band !== 'empty' && <div style={row}><span>People at {hourWords(hourOf(g))}</span><span style={mono}>{Math.round(c.people)}</span></div>}
       {c.expected_deaths > 0 && <div style={row}><span>Expected deaths</span><span style={mono}>{c.expected_deaths.toFixed(2)} ({c.p05}–{c.p95})</span></div>}
-      {c.drivers.length > 0 && <div style={muted}>{driverWords(c.drivers, g.hour)}{c.uncertain ? ' · uncertain' : ''}</div>}
+      {c.drivers.length > 0 && <div style={muted}>{driverWords(c.drivers, hourOf(g))}{c.uncertain ? ' · uncertain' : ''}</div>}
     </div>
   );
 }
@@ -244,5 +324,6 @@ const mono: CSSProperties = { fontFamily: 'ui-monospace, Consolas, monospace', f
 const input: CSSProperties = { background: '#101817', color: '#e3eae7', border: '1px solid #2c3a37', borderRadius: 4 };
 const primary: CSSProperties = { padding: '8px 10px', borderRadius: 6, border: 0, background: '#e3eae7', color: '#101817', fontWeight: 600, cursor: 'pointer' };
 const secondary: CSSProperties = { ...primary, background: 'transparent', color: '#e3eae7', border: '1px solid #2c3a37' };
+const choice: CSSProperties = { display: 'grid', gap: 3, padding: '8px 10px', borderRadius: 6, border: '1px solid #2c3a37', background: 'transparent', color: '#e3eae7', cursor: 'pointer', textAlign: 'left' };
 const site: CSSProperties = { ...row, padding: '6px 8px', borderRadius: 6, border: '1px solid', background: 'transparent', color: '#e3eae7', cursor: 'pointer', textAlign: 'left' };
 const tab: CSSProperties = { flex: 1, padding: '5px 6px', borderRadius: 5, border: '1px solid #2c3a37', cursor: 'pointer', fontSize: 12 };
