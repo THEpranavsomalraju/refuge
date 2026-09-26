@@ -36,6 +36,48 @@ export interface TornadoScenario {
   seed: number;
 }
 
+/** Water surface height above the nearest stream, uniform across the place. */
+export interface FloodScenario {
+  place_id: string;
+  hazard: 'flood';
+  flood_height_m: number;
+  hour: number;
+  warning_min: number;
+  protections: readonly never[];
+  runs: number;
+  seed: number;
+}
+export type Scenario = TornadoScenario | FloodScenario;
+
+export interface Crossing {
+  id: string;
+  lon: number;
+  lat: number;
+  /** H3 resolution-10 cell; required by simulateDetailed. */
+  h3?: string;
+  /** Road height above the nearest stream; null = no flood data. */
+  hand_m: number | null;
+  /** 24 hourly values, local clock hour; null = not computed yet. */
+  cars_per_hour: number[] | null;
+  [key: string]: unknown;
+}
+
+export interface FloodParams {
+  /** Depth above first floor (m) where damage levels 1-4 begin. */
+  damage_thresholds_m: Record<BuildingClass, number[]>;
+  /** Added to levels 3-4 per story above the first (occupants move up); not for MH. */
+  story_height_m: number;
+  lethality_by_damage: number[];
+}
+export interface VehicleParams {
+  exposure_hours: number;
+  occupancy: number;
+  attempt_prob: number;
+  /** Water depth over the road (m) where levels 1-3 begin. */
+  depth_thresholds_m: number[];
+  lethality_by_depth: number[];
+}
+
 export interface SimParams {
   schema_version: 1;
   night_hours: number[];
@@ -47,23 +89,33 @@ export interface SimParams {
     damage_thresholds_mph: Record<BuildingClass, number[]>;
   };
   lethality_by_damage: Record<BuildingClass, number[]>;
+  /** Required only for flood scenarios. */
+  flood?: FloodParams;
+  vehicle?: VehicleParams;
   risk_bands: { yellow: number; red: number; deep_red: number };
   min_cell_people: number;
 }
 
 /** `cells` lists every cells.json entry, so empty featured-place cells still get a result. */
-export interface Place { buildings: readonly Building[]; cells?: readonly { h3: string }[] }
+export interface Place {
+  buildings: readonly Building[];
+  cells?: readonly { h3: string }[];
+  /** Loaded for flood scenarios; tornadoes ignore crossings. */
+  crossings?: readonly Crossing[];
+}
 export type ClassTotals = Record<BuildingClass | 'VEHICLE', number>;
 export interface ExpectedResult {
   place_id: string;
   expected_deaths: number;
   by_class: ClassTotals;
   people_exposed: number;
+  /** Flood only: buildings and crossings skipped because hand_m or traffic is null. */
+  no_flood_data?: { buildings: number; crossings: number };
 }
 export interface SimulationResult extends ExpectedResult { p05: number; p95: number }
 
 export type Band = 'green' | 'yellow' | 'red' | 'deep_red' | 'sparse' | 'empty';
-export type Driver = BuildingClass | 'no_basement' | 'night';
+export type Driver = BuildingClass | 'VEHICLE' | 'no_basement' | 'night' | 'flood_depth' | 'crossing_traffic';
 export interface CellResult {
   people: number;
   expected_deaths: number;

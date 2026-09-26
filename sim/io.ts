@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { parseBuildings, parseScenario } from './validation.js';
-import type { Place, TornadoScenario } from './core/types.js';
+import { parseBuildings, parseCrossings, parseScenario } from './validation.js';
+import type { Place, Scenario } from './core/types.js';
 
 export async function readJson(file: string): Promise<unknown> {
   try { return JSON.parse(await readFile(file, 'utf8')); }
   catch (error) { throw new Error(`${file}: ${error instanceof Error ? error.message : String(error)}`); }
 }
 
-export async function readScenarios(file: string, batch: boolean): Promise<TornadoScenario[]> {
+export async function readScenarios(file: string, batch: boolean): Promise<Scenario[]> {
   if (!batch) {
     try { return [parseScenario(await readJson(file))]; }
     catch (error) { throw new Error(`${file}: ${error instanceof Error ? error.message : String(error)}`); }
@@ -23,12 +23,17 @@ export async function readScenarios(file: string, batch: boolean): Promise<Torna
   });
 }
 
-export async function loadPlaces(root: string, scenarios: readonly TornadoScenario[]): Promise<Map<string, Place>> {
+export async function loadPlaces(root: string, scenarios: readonly Scenario[]): Promise<Map<string, Place>> {
   const places = new Map<string, Place>();
+  const flooded = new Set(scenarios.filter(s => s.hazard === 'flood').map(s => s.place_id));
   for (const id of new Set(scenarios.map(s => s.place_id))) {
-    const file = join(root, id, 'buildings.json');
-    try { places.set(id, { buildings: parseBuildings(await readJson(file)) }); }
-    catch (error) { throw new Error(`${file}: ${error instanceof Error ? error.message : String(error)}`); }
+    let file = join(root, id, 'buildings.json');
+    try {
+      const place: Place = { buildings: parseBuildings(await readJson(file)) };
+      // Crossings only matter to floods; tornado batches never read the file.
+      if (flooded.has(id)) place.crossings = parseCrossings(await readJson(file = join(root, id, 'crossings.json')));
+      places.set(id, place);
+    } catch (error) { throw new Error(`${file}: ${error instanceof Error ? error.message : String(error)}`); }
   }
   return places;
 }

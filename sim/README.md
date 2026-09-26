@@ -133,6 +133,28 @@ keys and out-of-bounds values fail rather than being silently ignored/clamped.
 See [parameter sources](params/sim_params.sources.md) for every default and its
 limitations. All base death probabilities are provisional pending calibration.
 
+## Flood scenarios
+
+```json
+{"place_id": "morganton", "hazard": "flood", "ef": null, "path": null, "width_m": null,
+ "flood_height_m": 4.5, "hour": 2, "warning_min": 30, "protections": [], "runs": 500, "seed": 42}
+```
+
+- `flood_height_m`: water surface height above the nearest stream (m), uniform
+  for the place. `ef`, `path`, `width_m` must be null or absent.
+- Building depth above floor = `flood_height_m - hand_m - first_floor_ht_m`;
+  depth over a crossing's road = `flood_height_m - hand_m` of the crossing.
+- The CLI reads `crossings.json` only for places with a flood scenario.
+- Output adds `no_flood_data: {buildings, crossings}`: units skipped because
+  `hand_m` (or `cars_per_hour`) is null. Vehicle deaths go in `by_class.VEHICLE`.
+- `--params` must contain the `flood` and `vehicle` blocks (copy them from
+  `sim_params.default.json`; they are uncalibrated). Tornado-only params files
+  without them still load.
+- Flood cells count drivers; cell reasons can include `VEHICLE`,
+  `flood_depth`, and `crossing_traffic`.
+
+Sources and formulas: `params/sim_params.sources.md`.
+
 ## Game API: cells (`sim/core`, browser-safe)
 
 The CLI output is unchanged. The game calls the core directly:

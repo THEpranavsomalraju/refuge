@@ -1,17 +1,19 @@
 import { BUILDING_CLASSES, type Band, type BuildingClass, type CellDiff, type CellResult, type CellRuns,
-  type Driver, type Place, type SimParams, type TornadoScenario } from './types.js';
-import { preparePath } from './geometry.js';
-import { damageLevel, deathProb, expectedExposure, exposure, isNight, windAt } from './engine.js';
+  type Driver, type Place, type Scenario, type SimParams } from './types.js';
+import { expectedExposure, forEachUnit, isNight } from './engine.js';
 import { nearestRank } from './random.js';
 
+type Cls = BuildingClass | 'VEHICLE';
+const CLASSES: readonly Cls[] = [...BUILDING_CLASSES, 'VEHICLE'];
 interface CellTally {
   people: number;
   expected: number;
   noBasement: number;
-  byClass: Record<BuildingClass, number>;
+  deepWater: number;
+  byClass: Record<Cls, number>;
 }
-const emptyTally = (): CellTally => ({ people: 0, expected: 0, noBasement: 0,
-  byClass: Object.fromEntries(BUILDING_CLASSES.map(c => [c, 0])) as Record<BuildingClass, number> });
+const emptyTally = (): CellTally => ({ people: 0, expected: 0, noBasement: 0, deepWater: 0,
+  byClass: Object.fromEntries(CLASSES.map(c => [c, 0])) as Record<Cls, number> });
 
 /** Band by lower cutoff: a risk equal to a cutoff belongs to the higher band. */
 export function riskBand(risk: number, params: SimParams): Band {
@@ -21,26 +23,24 @@ export function riskBand(risk: number, params: SimParams): Band {
 
 /**
  * Per-cell people at the scenario hour, expected deaths, run quantiles, risk, band,
- * and drivers. Cells come from place.cells plus every building's h3. Tornado cells
- * count building occupants only; crossing drivers join with the flood chunk.
+ * and drivers. Cells come from place.cells plus every building's h3 (and every
+ * crossing's h3 for floods). Tornado cells count building occupants only; flood
+ * cells add drivers passing crossings during the exposure window.
  */
-export function aggregateCells(runs: CellRuns, place: Place, scenario: TornadoScenario,
+export function aggregateCells(runs: CellRuns, place: Place, scenario: Scenario,
   params: SimParams): Record<string, CellResult> {
   const tallies = new Map<string, CellTally>();
   for (const c of place.cells ?? []) tallies.set(c.h3, emptyTally());
-  const distance = preparePath(scenario.path);
-  for (const building of place.buildings) {
-    const h3 = building.h3!;
-    let t = tallies.get(h3);
-    if (!t) tallies.set(h3, t = emptyTally());
-    const damage = damageLevel(building.cls, windAt(distance(building.lon, building.lat), scenario, params), params);
-    const e = exposure(building, damage, scenario, params);
-    const deaths = expectedExposure(e);
-    t.people += e.under65 + e.over65;
+  forEachUnit(scenario, place, params, true, u => {
+    let t = tallies.get(u.h3!);
+    if (!t) tallies.set(u.h3!, t = emptyTally());
+    const deaths = expectedExposure(u.e);
+    t.people += u.e.under65 + u.e.over65;
     t.expected += deaths;
-    t.byClass[building.cls] += deaths;
-    if (!building.basement) t.noBasement += deaths;
-  }
+    t.byClass[u.cls] += deaths;
+    if (u.kind === 'building' && !u.basement) t.noBasement += deaths;
+    if (u.kind === 'building' && u.damage >= 3) t.deepWater += deaths;
+  });
 
   const night = isNight(scenario.hour);
   const zeros = new Array<number>(scenario.runs).fill(0);
@@ -55,38 +55,45 @@ export function aggregateCells(runs: CellRuns, place: Place, scenario: TornadoSc
       people: t.people, expected_deaths: t.expected, p05, p95, risk,
       band: t.people === 0 ? 'empty' : banded ? riskBand(risk, params) : 'sparse',
       uncertain: banded && riskBand(p05 / t.people, params) !== riskBand(p95 / t.people, params),
-      drivers: drivers(t, night, params),
+      drivers: drivers(t, scenario, night, params),
     };
   }
   return cells;
 }
 
 /**
- * Dominant class first, then no_basement / night ranked by the deaths each adds:
- * no_basement = deaths in basementless buildings x (1 - basement modifier), when
- * those buildings hold over half the cell's deaths; night = deaths x (1 - 1/night).
+ * Dominant class (VEHICLE included) first, then the other reasons ranked by the
+ * deaths each accounts for:
+ * - tornado no_basement: deaths in basementless buildings x (1 - basement modifier),
+ *   when those buildings hold over half the cell's deaths;
+ * - flood flood_depth: building deaths at damage level 3+ (compromised or chance);
+ * - flood crossing_traffic: deaths of drivers at crossings;
+ * - night (both hazards): deaths x (1 - 1/night modifier).
  */
-function drivers(t: CellTally, night: boolean, params: SimParams): Driver[] {
+function drivers(t: CellTally, scenario: Scenario, night: boolean, params: SimParams): Driver[] {
   if (t.expected <= 0) return [];
-  let dominant: BuildingClass = BUILDING_CLASSES[0];
-  for (const cls of BUILDING_CLASSES) if (t.byClass[cls] > t.byClass[dominant]) dominant = cls;
+  let dominant: Cls = CLASSES[0]!;
+  for (const cls of CLASSES) if (t.byClass[cls] > t.byClass[dominant]) dominant = cls;
   const extra: [Driver, number][] = [];
-  if (t.noBasement / t.expected > 0.5) extra.push(['no_basement', t.noBasement * (1 - params.modifiers.basement)]);
+  if (scenario.hazard === 'tornado') {
+    if (t.noBasement / t.expected > 0.5) extra.push(['no_basement', t.noBasement * (1 - params.modifiers.basement)]);
+  } else {
+    if (t.deepWater > 0) extra.push(['flood_depth', t.deepWater]);
+    if (t.byClass.VEHICLE > 0) extra.push(['crossing_traffic', t.byClass.VEHICLE]);
+  }
   if (night) extra.push(['night', t.expected * (1 - 1 / params.modifiers.night)]);
   extra.sort((a, b) => b[1] - a[1]);
   return [dominant, ...extra.map(([d]) => d)].slice(0, 3);
 }
 
 /** Occupant death probability for each damaged, occupied building (building data card). */
-export function buildingProbabilities(scenario: TornadoScenario, place: Place, params: SimParams): Record<string, number> {
-  const distance = preparePath(scenario.path);
+export function buildingProbabilities(scenario: Scenario, place: Place, params: SimParams): Record<string, number> {
   const out: Record<string, number> = {};
-  for (const building of place.buildings) {
-    const damage = damageLevel(building.cls, windAt(distance(building.lon, building.lat), scenario, params), params);
-    if (damage === 0) continue;
-    const p = deathProb(building, damage, scenario, params);
-    if (p > 0) out[building.id] = p;
-  }
+  forEachUnit(scenario, place, params, false, u => {
+    if (u.kind !== 'building') return;
+    const n = u.e.under65 + u.e.over65;
+    if (n > 0 && expectedExposure(u.e) > 0) out[u.id] = expectedExposure(u.e) / n;
+  });
   return out;
 }
 

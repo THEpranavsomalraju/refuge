@@ -114,3 +114,29 @@ would give up to 427x. On the real `bt_2024_1181735` town (97 mobile homes),
 the four riskiest cells at both EF3 and EF4 are mobile-home cells. MULTI only
 ranks first where apartments sit on an EF4 centerline. Methods note: at the core
 of a violent tornado every class is destroyed and ranks by its fitted multiplier.
+
+## Flood and vehicle defaults (approved 2026-09-26, uncalibrated)
+
+Depth above the first floor = `flood_height_m - hand_m - first_floor_ht_m`
+(`first_floor_ht_m` null counts as 0). `flood_height_m` is one water height
+above the nearest stream for the whole place (HAND approach), a
+simplification: real stages vary by reach. Buildings or crossings with null
+`hand_m` (or null `cars_per_hour`) are skipped and counted in `no_flood_data`.
+
+| Parameter | Value | Source / reasoning |
+|---|---|---|
+| `flood.lethality_by_damage` | 0, 0, 0.0001, 0.10, 0.90 | LifeSim lethality zones (McClelland & Bowles 2002, via [USACE LifeSim overview](https://www.researchgate.net/publication/228729916_LIFESim_A_Tool_for_Estimating_and_Reducing_Life-Loss_Resulting_from_Dam_and_Levee_Failures)): safe ≈ 0, compromised ≈ 10% (range 0–50%), chance ≈ 90% (range 50–100%). Level 3 = compromised, level 4 = chance. |
+| `flood.damage_thresholds_m` (non-MH) | 0, 0.9, 1.5, 2.4 | Water on the floor; waist; shoulder height indoors (LifeSim's compromised example); over head height on a one-story floor (chance). |
+| `flood.damage_thresholds_m.MH` | 0, 0.1, 0.2, 0.3 | [FEMA P-85](https://www.fema.gov/sites/default/files/2020-08/fema_p85.pdf) p. 97: "Flood depths of only 4 to 5 inches above the lowest floor can be capable of floating unsecured manufactured homes off their foundations." Chance level set at ~1 ft, allowing that many homes are anchored (NSI does not record anchoring). |
+| `flood.story_height_m` | 3.0 | Levels 3–4 rise one story per story above the first: occupants move upstairs (LifeSim: second floors are typically safe). Not applied to MH. |
+| `vehicle.depth_thresholds_m` | 0.15, 0.3, 0.6 | [NWS Turn Around Don't Drown](https://www.weather.gov/safety/flood-turn-around-dont-drown): 6 in knocks over an adult, 12 in carries away most cars, 2 ft carries away SUVs and trucks. |
+| `vehicle.lethality_by_depth` | 0, 0.01, 0.10, 0.30 | Model choice anchored to the NWS depths; a floated car is less lethal than LifeSim's chance zone because many occupants escape. Uncalibrated. |
+| `vehicle.attempt_prob` | 0.27 | Share of drivers who would drive through moving water deeper than 30 cm (UK driver survey, Environment Agency/AA). |
+| `vehicle.occupancy` | 1.67 | People per vehicle trip, [NHTS 2017](https://nhts.ornl.gov/assets/2017_nhts_summary_travel_trends.pdf). |
+| `vehicle.exposure_hours` | 1 | Drivers arriving during the scenario hour. |
+
+Drivers at a crossing = `cars_per_hour[hour] x exposure_hours x occupancy`;
+each dies with `attempt_prob x lethality_by_depth[level] x VEHICLE multiplier x
+night x warning`. Flood does **not** use the tornado class multipliers or the
+basement modifier (they were fit to wind, and basements do not protect from
+water). It keeps night, warning, over65, and the VEHICLE multiplier.

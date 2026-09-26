@@ -2,7 +2,7 @@ import { expected, simulate } from './core/engine.js';
 import { loadPlaces, readJson, readScenarios } from './io.js';
 import { parseParams } from './validation.js';
 
-const HELP = `Refuge tornado calibration CLI (Node 22)
+const HELP = `Refuge simulation CLI (Node 22)
 Usage: node sim/dist/cli.js (--batch FILE.jsonl | --scenario FILE.json)
        --places DIR --params FILE.json --mode expected|simulate
 
@@ -10,7 +10,9 @@ Paths are relative to the current working directory unless absolute.
 JSONL results go to stdout in input order; errors go to stderr (exit 1).
 Expected: place_id, expected_deaths, by_class, people_exposed.
 Simulate: the same analytic fields plus p05 and p95 from seeded runs.
-Only tornado scenarios with no protections are supported in this chunk.
+Flood scenarios (hazard "flood", flood_height_m) also return no_flood_data,
+read crossings.json, and need the flood and vehicle blocks in --params.
+Protections are not supported yet.
 `;
 
 async function main(args: string[]): Promise<void> {
