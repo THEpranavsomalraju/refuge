@@ -23,6 +23,14 @@ function placesPlugin(): Plugin {
         res.setHeader('Content-Type', file.endsWith('.json') ? 'application/json' : 'application/octet-stream');
         createReadStream(file).pipe(res);
       });
+      // Dev only: cities built on demand by places/server.py (data/places/, gitignored).
+      const generated = resolve(HERE, '..', 'data', 'places');
+      server.middlewares.use('/generated', (req, res, next) => {
+        const file = join(generated, normalize(decodeURIComponent((req.url ?? '').split('?')[0])));
+        if (!file.startsWith(generated) || !existsSync(file) || !statSync(file).isFile()) return next();
+        res.setHeader('Content-Type', file.endsWith('.json') ? 'application/json' : 'application/octet-stream');
+        createReadStream(file).pipe(res);
+      });
       // Dev only: sample simulation results in the gitignored data/dev_results/ folder.
       const devResults = resolve(HERE, '..', 'data', 'dev_results');
       server.middlewares.use('/dev-results', (req, res, next) => {
@@ -34,6 +42,8 @@ function placesPlugin(): Plugin {
     },
     closeBundle() {
       const out = resolve(HERE, 'dist', 'places');
+      if (existsSync(join(PLACES_DIR, 'index.json'))) cpSync(join(PLACES_DIR, 'index.json'), join(out, 'index.json'));
+      // Featured towns only; generated cities stay local to the machine that built them.
       for (const id of ['morganton', 'lumberton', 'chapel_hill']) {
         for (const f of PLACE_FILES) {
           const src = join(PLACES_DIR, id, f);
@@ -46,4 +56,6 @@ function placesPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [react(), placesPlugin()],
+  // The local build service (places/server.py) turns any typed-in city into a place.
+  server: { proxy: { '/api': 'http://127.0.0.1:8787' } },
 });

@@ -16,6 +16,15 @@ export const PALETTE = {
   path: '#c9d3dc',
   funnel: '#d9e2ea',
   shelter: '#5fe0c8',
+  site: '#e8eef0',
+};
+
+/** Difference view: lives saved (light to deep blue), unchanged (gray), worse (amber). */
+export const DIFF_COLOR = {
+  savedLow: '#9cc9ef',
+  savedHigh: '#1f5fb8',
+  unchanged: '#5d6663',
+  worse: '#e0a030',
 };
 
 /**

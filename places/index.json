@@ -1,0 +1,68 @@
+[
+ {
+  "place_id": "chapel_hill",
+  "name": "Chapel Hill, North Carolina, USA",
+  "county_fips": "37135",
+  "bbox": [
+   -79.083142,
+   35.869407,
+   -78.99539,
+   35.976142
+  ],
+  "center": [
+   -79.039266,
+   35.922775
+  ],
+  "buildings": 21065,
+  "crossings": 0,
+  "pop_night": 95189,
+  "area": "urban",
+  "trimmed": false,
+  "roads_pending": true,
+  "built": "2026-09-26 18:48"
+ },
+ {
+  "place_id": "lumberton",
+  "name": "Lumberton, North Carolina, USA",
+  "county_fips": "37155",
+  "bbox": [
+   -79.107392,
+   34.579363,
+   -78.962313,
+   34.703428
+  ],
+  "center": [
+   -79.034852,
+   34.641396
+  ],
+  "buildings": 14551,
+  "crossings": 79,
+  "pop_night": 31629,
+  "area": "rural",
+  "trimmed": false,
+  "roads_pending": false,
+  "built": "2026-09-26 18:42"
+ },
+ {
+  "place_id": "morganton",
+  "name": "Morganton, North Carolina, USA",
+  "county_fips": "37023",
+  "bbox": [
+   -81.800307,
+   35.695877,
+   -81.645536,
+   35.783861
+  ],
+  "center": [
+   -81.722922,
+   35.739869
+  ],
+  "buildings": 13595,
+  "crossings": 48,
+  "pop_night": 27739,
+  "area": "rural",
+  "trimmed": false,
+  "roads_pending": false,
+  "built": "2026-09-26 18:42"
+ }
+]

@@ -4,7 +4,11 @@ import { latLngToCell } from 'h3-js';
 import { useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { Buildings } from './Buildings';
+import { CameraRig } from './CameraRig';
+import { CandidateSites } from './CandidateSites';
 import { loadPlace } from './data';
+import { DifferenceMap } from './DifferenceMap';
+import type { PlaceSource } from './places';
 import { makeFrame, type Frame } from './geo';
 import { Lines } from './Lines';
 import { PALETTE } from './palette';
@@ -18,16 +22,16 @@ import type { PlaceData } from './types';
 export type LoadState = { state: 'loading' } | { state: 'ready'; place: PlaceData } | { state: 'error'; message: string };
 
 /** Loads a featured place and renders it. `onLoad` reports progress to the game UI. */
-export function Town({ placeId, onLoad }: { placeId: string; onLoad?: (s: LoadState) => void }) {
+export function Town({ placeId, source = 'featured', onLoad }: { placeId: string; source?: PlaceSource; onLoad?: (s: LoadState) => void }) {
   const [load, setLoad] = useState<LoadState>({ state: 'loading' });
   useEffect(() => {
     let alive = true;
     setLoad({ state: 'loading' });
-    loadPlace(placeId)
+    loadPlace(placeId, source)
       .then(place => alive && setLoad({ state: 'ready', place }))
       .catch(err => alive && setLoad({ state: 'error', message: String(err?.message ?? err) }));
     return () => { alive = false; };
-  }, [placeId]);
+  }, [placeId, source]);
   useEffect(() => { onLoad?.(load); }, [load, onLoad]);
 
   return (
@@ -52,6 +56,9 @@ function Place({ place }: { place: PlaceData }) {
       <TornadoPath frame={frame} />
       <Protections frame={frame} />
       <RiskMap place={place} frame={frame} />
+      <DifferenceMap place={place} frame={frame} />
+      <CandidateSites frame={frame} />
+      <CameraRig frame={frame} />
       <CellHover frame={frame} />
     </>
   );

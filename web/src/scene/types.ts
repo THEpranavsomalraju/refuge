@@ -102,6 +102,9 @@ export interface RiskBands {
 
 export type ProtectionType = 'safe_room' | 'siren' | 'gate' | 'bridge' | 'elevate';
 
+/** A place the player can put a protection. `selected` draws it as chosen. */
+export interface CandidateSite { id: string; lon: number; lat: number; label: string; selected?: boolean }
+
 /** What the game calls. Every function is safe to call before the place has loaded. */
 export interface SceneAPI {
   setBuildingGlow(id: string, value0to1: number): void;
@@ -116,5 +119,21 @@ export interface SceneAPI {
   onBuildingClick(cb: ((b: BuildingRecord) => void) | null): void;
   onCellHover(cb: ((h3: string | null) => void) | null): void;
   showRiskMap(cells: Record<string, CellResult>, bands: RiskBands): Promise<void>;
+  /** Hides the risk map and the difference map. */
   hideRiskMap(): void;
+  /**
+   * Difference view: cells where expected deaths dropped rise in blue, height = lives
+   * saved; unchanged cells with people stay gray and flat. Replaces the risk map.
+   */
+  showDifference(before: Record<string, CellResult>, after: Record<string, CellResult>): Promise<void>;
+
+  /** Clickable markers for protection sites; replaces any shown before. */
+  showCandidateSites(sites: CandidateSite[]): void;
+  hideCandidateSites(): void;
+  onSiteClick(cb: ((id: string) => void) | null): void;
+
+  /** Camera: frame points (plus a margin), the current storm path, or a set of H3 cells. */
+  frameCoords(coords: LonLat[], ms?: number, marginM?: number): void;
+  frameStormPath(ms?: number): void;
+  focusCells(h3s: string[], ms?: number): void;
 }

@@ -151,7 +151,7 @@ export function buildLayer(place: PlaceData, frame: Frame, cells: Record<string,
 }
 
 /** Hexagonal prism (walls + top) as triangles; records base y and lift per vertex. */
-function prism(ring: [number, number][], y0: number, h: number, pos: number[], base: number[], lift: number[]) {
+export function prism(ring: [number, number][], y0: number, h: number, pos: number[], base: number[], lift: number[]) {
   const ccw = signedArea(ring) > 0 ? ring : ring.slice().reverse();
   const push = (x: number, z: number, top: boolean) => { pos.push(x, y0 + (top ? h : 0), z); base.push(y0); lift.push(top ? h : 0); };
   for (let k = 0; k < ccw.length; k++) {
@@ -166,19 +166,19 @@ function prism(ring: [number, number][], y0: number, h: number, pos: number[], b
 }
 
 /** Flat hexagon (fan) at height y, with world-space UVs for the hatch texture. */
-function flatTile(ring: [number, number][], y: number, pos: number[], uv: number[]) {
+export function flatTile(ring: [number, number][], y: number, pos: number[], uv: number[]) {
   const ccw = signedArea(ring) > 0 ? ring : ring.slice().reverse();
   const add = ([x, z]: [number, number]) => { pos.push(x, y, z); uv.push(x / 24, z / 24); };
   for (let k = 1; k + 1 < ccw.length; k++) { add(ccw[0]); add(ccw[k + 1]); add(ccw[k]); }
 }
 
-function signedArea(ring: [number, number][]) {
+export function signedArea(ring: [number, number][]) {
   let a = 0;
   for (let k = 0; k < ring.length; k++) { const [x1, z1] = ring[k], [x2, z2] = ring[(k + 1) % ring.length]; a += x1 * z2 - x2 * z1; }
   return a;
 }
 
-function makeHatchTexture(): THREE.Texture {
+export function makeHatchTexture(): THREE.Texture {
   const size = 64;
   const c = document.createElement('canvas');
   c.width = c.height = size;

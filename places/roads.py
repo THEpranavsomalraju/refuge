@@ -72,7 +72,7 @@ def fetch_roads(rect: Polygon) -> gpd.GeoDataFrame:
     try:
         feats = ox.features_from_bbox(rect.bounds, tags={"highway": list(ROAD_CLASS)})
     except InsufficientResponseError:
-        return gpd.GeoDataFrame({"cls": [], "name": [], "bridge": []}, geometry=[], crs=4326)
+        return empty_roads()
     feats = feats[feats.geometry.geom_type.isin(["LineString", "MultiLineString"])]
     feats = feats[feats["highway"].isin(ROAD_CLASS)]
     out = gpd.GeoDataFrame(
@@ -85,6 +85,11 @@ def fetch_roads(rect: Polygon) -> gpd.GeoDataFrame:
         crs=4326,
     )
     return out.explode(index_parts=False).reset_index(drop=True)
+
+
+def empty_roads() -> gpd.GeoDataFrame:
+    """No roads (a place with none, or OSM unavailable during the build)."""
+    return gpd.GeoDataFrame({"cls": [], "name": [], "bridge": []}, geometry=[], crs=4326)
 
 
 def _col(df, name):

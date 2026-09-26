@@ -1,7 +1,10 @@
-"""Build a featured place folder for any U.S. city.
+"""Build a place folder for any U.S. city.
 
-    python -m places.build_place "Lumberton, North Carolina, USA" --place-id lumberton
-    python -m places.build_place "Wilmington, North Carolina, USA" --place-id wilmington --max-buildings 13000
+    python -m places.build_place "Lumberton, North Carolina, USA" --place-id lumberton --area rural
+    python -m places.build_place "Wilmington, North Carolina, USA" --place-id wilmington_north_carolina \\
+        --area urban --max-buildings 20000 --out-dir data/places
+
+The build service (places/server.py) calls build_place() for cities typed into the app.
 
 Steps:
   1. City limits from OpenStreetMap; the place is the bounding rectangle of the limits.
@@ -25,6 +28,7 @@ import logging
 import math
 import time
 from collections import Counter
+from contextlib import contextmanager
 from pathlib import Path
 
 import geopandas as gpd
@@ -32,7 +36,8 @@ import h3
 import numpy as np
 import osmnx as ox
 from openlocationcode import openlocationcode as olc
-from osmnx._errors import InsufficientResponseError
+import requests
+from osmnx._errors import InsufficientResponseError, ResponseStatusCodeError
 from shapely.geometry import Point, Polygon, box
 
 from places.fetch_nsi import (
@@ -44,7 +49,7 @@ from places.fetch_nsi import (
     to_building_records,
     write_json,
 )
-from places.roads import fetch_roads, find_crossings, load_traffic, road_lines
+from places.roads import empty_roads, fetch_roads, find_crossings, load_traffic, road_lines
 from places.terrain import add_terrain, load_terrain
 
 log = logging.getLogger(__name__)
@@ -58,35 +63,64 @@ WINDOW_BIN_M = 100        # grid resolution for the most-populous-square search
 FOOTPRINT_DECIMALS = 5    # ~1 m; footprint shapes are only drawn, never measured
 
 
+# Cities built on demand (build service) go here; featured towns live in places/.
+GENERATED_DIR = PLACES_DIR.parent / "data" / "places"
+DEFAULT_MAX_BUILDINGS = 20_000
+# Night population per km2 of the town rectangle above which a city is suggested as urban.
+# Our towns: Morganton 202, Lumberton 173, Chapel Hill 1,023.
+URBAN_DENSITY_PER_KM2 = 500
+
+STEPS = ["city limits", "buildings", "footprints", "elevation and streams",
+         "roads and crossings", "cells", "writing files"]
+
+
 def build_place(query: str, place_id: str, area: str, max_buildings: int | None = None,
-                out_dir: Path | str = PLACES_DIR, traffic_path: Path | str | None = None) -> Path:
-    """Build places/<place_id>/ for the city named by `query` and return the folder.
+                out_dir: Path | str = PLACES_DIR, traffic_path: Path | str | None = None,
+                progress=None) -> Path:
+    """Build <out_dir>/<place_id>/ for the city named by `query` and return the folder.
 
     `area` is "rural" or "urban" and picks the traffic volumes and hourly curve.
+    `progress(step)` is called with each name in STEPS as the build reaches it.
+    The place is also added to <out_dir>/index.json.
     """
     if area not in ("rural", "urban"):
         raise ValueError('area must be "rural" or "urban"')
+    say = progress or (lambda step: None)
     traffic = load_traffic(traffic_path)
     _configure_osmnx()
 
+    say("city limits")
     limits = ox.geocode_to_gdf(query)
     rect = box(*limits.geometry.iloc[0].bounds)
 
+    say("buildings")
     raw = fetch_buildings(rect)
+    trimmed = False
     if max_buildings is not None and len(raw) > max_buildings:
         rect = densest_square(raw, max_buildings)
         raw = fetch_buildings(rect)
+        trimmed = True
 
     records = to_building_records(raw)
+    say("footprints")
     stats = attach_footprints(records, raw, rect)
 
+    say("elevation and streams")
     terrain = load_terrain(rect)
-    roads = fetch_roads(rect)
+    say("roads and crossings")
+    try:
+        roads = with_overpass_retry(fetch_roads, rect)
+        roads_pending = False
+    except OverpassUnavailable as e:
+        log.warning("roads unavailable (%s); building without roads and crossings", e)
+        roads, roads_pending = empty_roads(), True
     crossings = find_crossings(roads, terrain, rect, area, traffic)
 
+    say("cells")
     cover = set(h3.geo_to_cells(rect, H3_RES)) | {c["h3"] for c in crossings}
     cells = cells_from_records(records, extra_cells=cover)
 
+    say("writing files")
     folder = Path(out_dir) / place_id
     folder.mkdir(parents=True, exist_ok=True)
 
@@ -99,15 +133,149 @@ def build_place(query: str, place_id: str, area: str, max_buildings: int | None 
     write_json(folder / "cells.json", cells)
     write_json(folder / "place.json", place)
     write_json(folder / "crossings.json", crossings)
+    update_index(Path(out_dir), place, records, crossings, area, trimmed, roads_pending)
 
     log.info("footprints: %s", stats)
     return folder
+
+
+def slugify(query: str) -> str:
+    """'Wilmington, North Carolina, USA' -> 'wilmington_north_carolina'."""
+    parts = [p.strip() for p in query.split(",") if p.strip() and p.strip().lower() not in ("usa", "us", "united states")]
+    return "_".join("".join(ch if ch.isalnum() else "_" for ch in p.lower()).strip("_") for p in parts)
+
+
+def update_index(out_dir: Path, place: dict, records: list, crossings: list, area: str, trimmed: bool,
+                 roads_pending: bool = False):
+    """Add or replace this place in <out_dir>/index.json (what the app's place picker lists)."""
+    path = out_dir / "index.json"
+    index = json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+    index = [e for e in index if e["place_id"] != place["place_id"]]
+    index.append({
+        "place_id": place["place_id"],
+        "name": place["name"],
+        "county_fips": place["county_fips"],
+        "bbox": place["bbox"],
+        "center": place["center"],
+        "buildings": len(records),
+        "crossings": len(crossings),
+        "pop_night": sum(r["pop_night_u65"] + r["pop_night_o65"] for r in records),
+        "area": area,
+        "trimmed": trimmed,
+        # OSM was down during the build: no roads or crossings yet. Rebuilding the place
+        # later fills them in (NSI, 3DEP, and NHD downloads are cached, so it is quick).
+        "roads_pending": roads_pending,
+        "built": time.strftime("%Y-%m-%d %H:%M"),
+    })
+    index.sort(key=lambda e: e["place_id"])
+    path.write_text(json.dumps(index, indent=1), encoding="utf-8")
+
+
+def suggest_place(query: str, max_buildings: int = DEFAULT_MAX_BUILDINGS) -> dict:
+    """What building `query` would produce, before building it: size, density, and the
+    suggested traffic area. Fetches NSI for the rectangle (cached, reused by the build)."""
+    _configure_osmnx()
+    limits = ox.geocode_to_gdf(query)
+    row = limits.iloc[0]
+    rect = box(*row.geometry.bounds)
+    raw = fetch_buildings(rect)
+    km2 = gpd.GeoSeries([rect], crs=4326).to_crs(gpd.GeoSeries([rect], crs=4326).estimate_utm_crs()).area.iloc[0] / 1e6
+    night = int((raw["pop2amu65"].fillna(0) + raw["pop2amo65"].fillna(0)).sum()) if len(raw) else 0
+    density = night / km2 if km2 else 0.0
+    return {
+        "query": query,
+        "place_id": slugify(query),
+        "display_name": row.get("display_name"),
+        "bbox": [round(v, 6) for v in rect.bounds],
+        "area_km2": round(km2, 1),
+        "buildings": len(raw),
+        "pop_night": night,
+        "density_per_km2": round(density),
+        "suggested_area": "urban" if density >= URBAN_DENSITY_PER_KM2 else "rural",
+        "will_trim_to": max_buildings if len(raw) > max_buildings else None,
+    }
 
 
 def _configure_osmnx():
     ox.settings.cache_folder = str(OSM_CACHE_DIR)
     ox.settings.use_cache = True
     ox.settings.log_console = False
+
+
+# Overpass (OSM) servers. The main server comes first so responses already in the osmnx
+# cache (keyed by server URL and query text) are reused without a request.
+OVERPASS_ENDPOINTS = [
+    "https://overpass-api.de/api",
+    "https://overpass.private.coffee/api",
+]
+OVERPASS_TRIES = 4
+# Wait at most this long to open a connection. The server name has several addresses;
+# when one stops answering, the connection moves on to the next address after this long
+# instead of waiting the full osmnx timeout (which also stays in the query text, so the
+# cache keeps matching).
+OVERPASS_CONNECT_S = 10
+# Retries split each query into tiles of about 4 x 4 km with a shorter server timeout.
+RETRY_TILE_AREA_M2 = 16_000_000
+RETRY_TIMEOUT_S = 90
+
+
+@contextmanager
+def _short_connect_timeout():
+    """Give osmnx's requests a (connect, read) timeout while an Overpass query runs."""
+    orig_get, orig_post = requests.get, requests.post
+
+    def wrap(fn):
+        def call(*args, timeout=None, **kwargs):
+            if isinstance(timeout, (int, float)):
+                timeout = (OVERPASS_CONNECT_S, timeout)
+            return fn(*args, timeout=timeout, **kwargs)
+        return call
+
+    requests.get, requests.post = wrap(orig_get), wrap(orig_post)
+    try:
+        yield
+    finally:
+        requests.get, requests.post = orig_get, orig_post
+
+
+class OverpassUnavailable(RuntimeError):
+    """Every Overpass attempt failed; the caller falls back instead of stopping the build."""
+
+
+def with_overpass_retry(fn, *args):
+    """Call an osmnx Overpass query, retrying on timeouts, dropped connections, and
+    busy-server responses.
+
+    Attempt 1 uses the main server and osmnx defaults, so earlier cached responses match.
+    Later attempts start with the mirror and split the query into small tiles
+    (RETRY_TILE_AREA_M2) with a shorter timeout: busy servers answer small queries.
+    Raises OverpassUnavailable when every attempt fails.
+    """
+    last = None
+    defaults = (ox.settings.max_query_area_size, ox.settings.requests_timeout)
+    try:
+        with _short_connect_timeout():
+            for attempt in range(1, OVERPASS_TRIES + 1):
+                if attempt == 1:
+                    ox.settings.overpass_url = OVERPASS_ENDPOINTS[0]
+                else:
+                    ox.settings.overpass_url = OVERPASS_ENDPOINTS[attempt % len(OVERPASS_ENDPOINTS)]
+                    ox.settings.max_query_area_size = RETRY_TILE_AREA_M2
+                    ox.settings.requests_timeout = RETRY_TIMEOUT_S
+                try:
+                    return fn(*args)
+                except (requests.exceptions.ConnectionError, requests.exceptions.Timeout,
+                        ResponseStatusCodeError) as e:
+                    last = e
+                    log.warning("Overpass %s failed on attempt %d of %d (%s: %s)",
+                                ox.settings.overpass_url, attempt, OVERPASS_TRIES,
+                                type(e).__name__, str(e)[:120])
+                    if attempt < OVERPASS_TRIES:
+                        time.sleep(min(20, 2 ** attempt))
+        raise OverpassUnavailable(f"{type(last).__name__}: {last}")
+    finally:
+        ox.settings.overpass_url = OVERPASS_ENDPOINTS[0]
+        ox.settings.max_query_area_size, ox.settings.requests_timeout = defaults
 
 
 # ---------------------------------------------------------------------------
@@ -183,7 +351,11 @@ def attach_footprints(records: list[dict], raw: gpd.GeoDataFrame, rect: Polygon)
         crs="EPSG:4326",
     ).to_crs(utm)
 
-    outlines = osm_building_outlines(rect).to_crs(utm)
+    try:
+        outlines = with_overpass_retry(osm_building_outlines, rect).to_crs(utm)
+    except OverpassUnavailable as e:
+        log.warning("OSM outlines unavailable (%s); every building uses its NSI box", e)
+        outlines = gpd.GeoDataFrame(geometry=[], crs=utm)
     outlines["area"] = outlines.area
     outlines["geometry"] = outlines.simplify(SIMPLIFY_M, preserve_topology=True)
 
@@ -294,12 +466,15 @@ if __name__ == "__main__":
     p.add_argument("--max-buildings", type=int, default=None)
     p.add_argument("--traffic", default=None,
                    help="path to traffic_by_hour.json (default ml/exports/traffic_by_hour.json)")
+    p.add_argument("--out-dir", default=str(PLACES_DIR),
+                   help="where to write <place_id>/ (default places/; on-demand cities use data/places)")
     args = p.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     t0 = time.time()
     folder = build_place(args.query, args.place_id, args.area, args.max_buildings,
-                         traffic_path=args.traffic)
+                         out_dir=args.out_dir, traffic_path=args.traffic,
+                         progress=lambda step: log.info("step: %s", step))
 
     recs = json.loads((folder / "buildings.json").read_text())
     cells = json.loads((folder / "cells.json").read_text())
