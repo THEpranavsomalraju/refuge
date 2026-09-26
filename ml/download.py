@@ -112,6 +112,17 @@ def download_fhwa():
         print(f"fhwa {name}: {download_file(url, out / f'{name}_2023.html')}")
 
 
+HURDAT_URL = "https://www.nhc.noaa.gov/data/hurdat/hurdat2-1851-2025-02272026.txt"
+CENPOP_URL = "https://www2.census.gov/geo/docs/reference/cenpop2020/county/CenPop2020_Mean_CO.txt"
+
+
+def download_hurdat():
+    out = RAW / "hurdat"
+    out.mkdir(parents=True, exist_ok=True)
+    print(f"hurdat2: {download_file(HURDAT_URL, out / 'hurdat2_atlantic.txt')}")
+    print(f"census county population centers: {download_file(CENPOP_URL, out / 'cenpop2020_county.txt')}")
+
+
 def download_nhts():
     out = RAW / "nhts"
     out.mkdir(parents=True, exist_ok=True)
@@ -125,9 +136,9 @@ def download_nhts():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--only", choices=["storm", "svi", "nhts", "fhwa"])
+    ap.add_argument("--only", choices=["storm", "svi", "nhts", "fhwa", "hurdat"])
     args = ap.parse_args()
-    steps = {"storm": download_storm, "svi": download_svi, "nhts": download_nhts, "fhwa": download_fhwa}
+    steps = {"storm": download_storm, "svi": download_svi, "nhts": download_nhts, "fhwa": download_fhwa, "hurdat": download_hurdat}
     for name, fn in steps.items():
         if args.only in (None, name):
             fn()
