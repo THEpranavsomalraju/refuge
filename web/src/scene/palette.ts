@@ -11,8 +11,24 @@ export const PALETTE = {
   roadMajor: '#9aa6a2',
   stream: '#3f8fd0',
   glow: '#ff6a3d',
-  neutral: '#8a918e',
+  neutral: '#6d7471',
   moon: '#c9d6e8',
+  path: '#c9d3dc',
+  funnel: '#d9e2ea',
+  shelter: '#5fe0c8',
+};
+
+/**
+ * Risk bands, colorblind-safe ramp from the overview: pale yellow-green, amber,
+ * orange-red, deep red (deep red is also hatched). Check in a CVD simulator before locking.
+ */
+export const RISK_COLOR = {
+  green: '#cfe5a0',
+  yellow: '#f2b134',
+  red: '#e4572e',
+  deep_red: '#8e1b24',
+  sparse: '#9aa6a2',
+  unavailable: '#7d8582',
 };
 
 export const CLASS_COLOR: Record<BuildingClass, string> = {
