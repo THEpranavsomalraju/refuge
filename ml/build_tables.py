@@ -146,6 +146,9 @@ def build_events():
         flood_cause=pl.col("FLOOD_CAUSE").str.strip_chars(),
         tor_length_mi=num("TOR_LENGTH"),
         tor_width_yd=num("TOR_WIDTH"),
+        # a tornado crossing a county line is split into segments; these name the other county
+        tor_other_state=pl.col("TOR_OTHER_CZ_STATE").str.strip_chars(),
+        tor_other_cz_fips=num("TOR_OTHER_CZ_FIPS", pl.Int32),
         begin_lat=coord("BEGIN_LAT", 13, 72),
         begin_lon=coord("BEGIN_LON", -180, -60),
         end_lat=coord("END_LAT", 13, 72),
