@@ -11,8 +11,8 @@ non-fatal storms far faster than it explains fatal ones, so it stayed at 1 and w
 Fixed: VEHICLE (no crossings in tornado places), over65, warning_per_min (every storm uses the
 same placeholder warning time, so it cannot be fit).
 
-Target: deaths_sim_target = recorded deaths minus deaths NOAA places outside buildings (vehicles,
-outdoors), since the tornado sim only models people in buildings.
+Target: deaths_sim_target = recorded direct deaths minus known VEHICLE, OUTDOOR, WATER and OTHER
+locations. Unknown locations remain, so the target is not confirmed building deaths.
 
 Objective on the train storms (each weighted by its sampling weight):
   mean weighted Poisson deviance(target, sim expected deaths + FLOOR)
@@ -37,7 +37,7 @@ from common import EXPORTS, PROCESSED, ROOT, WORK, write_json
 
 TORNADOES = ROOT / "ml" / "backtest" / "tornadoes.json"
 PLACES = ROOT / "data" / "backtest" / "places"
-# env overrides are only for testing the loop against a mock CLI
+# Overrides also support the real engine/defaults in a teammate's checkout.
 SIM_CLI = os.environ.get("REFUGE_SIM_CLI", str(ROOT / "sim" / "dist" / "cli.js"))
 DEFAULT_PARAMS = Path(os.environ.get("REFUGE_DEFAULT_PARAMS", ROOT / "sim" / "params" / "sim_params.default.json"))
 CALIBRATED = WORK / "calibrated_params.json"
@@ -297,9 +297,12 @@ def backtest():
         mu = sum(oof.get(e, 0.0) for e in s["noaa_event_ids"])
         methods["national_model"][s["place_id"]] = (mu, stats.poisson.ppf(0.05, mu), stats.poisson.ppf(0.95, mu))
 
-    out = {"note": ("Held-out historical tornadoes (never used in calibration). building_deaths = NOAA direct deaths "
-                    "minus those recorded in vehicles or outdoors (what the tornado sim models); all_recorded_deaths = "
-                    "every NOAA direct death. p05-p95 from 500 sim runs; for the national model, a Poisson range."),
+    out = {"note": ("Tornadoes held out from parameter fitting; see METHODS.md for the post-test experiment disclosure. "
+                    "Legacy building_deaths/recorded_in_buildings keys mean NOAA direct deaths minus known VEHICLE, "
+                    "OUTDOOR, WATER and OTHER locations; unknown locations remain. all_recorded_deaths includes every "
+                    "direct death. National-model predictions target all direct deaths, so its comparison with the reduced "
+                    "target is not target-matched. Simulator p05-p95 comes from 500 conditional sampling runs and excludes "
+                    "parameter/exposure/geometry uncertainty; the national model uses a Poisson range."),
            "storms": [], "summary": {}}
     for tname, y in targets.items():
         out["summary"][tname] = {}

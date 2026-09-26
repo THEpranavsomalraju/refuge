@@ -15,7 +15,8 @@ and red covers under 10% of storm cells, so the red bands lose meaning. Moving e
 decade (still log scale) gives EF1 mostly green, EF2 mostly yellow, EF3 some red, EF4 about a quarter
 red or deep red. See CANDIDATES and heatmap_bands.json.
 
-Writes sim/params/sim_params.json = ml/work/calibrated_params.json + the chosen risk_bands.
+Writes calibrated tornado params + the chosen risk_bands, preserving published flood/vehicle
+blocks when the calibration cache predates flood support.
 Output: ml/exports/heatmap_bands.json, ml/figures/cell_risk_distribution.png
 """
 import json
@@ -124,9 +125,20 @@ def verify_against_cli(storms, P, widths):
     return max(rel)
 
 
-def main():
+def final_params():
+    """Older tornado-only calibration caches must not remove flood support."""
     P = json.loads(CALIBRATED.read_text())
+    if PARAMS.exists():
+        published = json.loads(PARAMS.read_text())
+        for key in ("flood", "vehicle"):
+            if key not in P and key in published:
+                P[key] = published[key]
     P["risk_bands"] = CANDIDATES[CHOSEN]
+    return P
+
+
+def main():
+    P = final_params()
     PARAMS.write_text(json.dumps(P, indent=2) + "\n")  # lethality is unchanged by bands; the CLI check below reads this file
     bands, min_people = P["risk_bands"], P["min_cell_people"]
     widths = {int(k[2:]): v["width_m"]["median"] for k, v in json.loads((EXPORTS / "tornado_width_by_ef.json").read_text())["by_ef"].items()}
@@ -185,7 +197,7 @@ def main():
         ax.text(np.log10(v), ax.get_ylim()[1] * 0.95, f" {k.replace('_', ' ')} 1 in {1 / v:,.0f}", fontsize=8, va="top")
     ax.set_xlabel("risk of death per person in the cell (log10)")
     ax.set_ylabel("cells inside the storm")
-    ax.set_title("Cell risk from the calibrated simulator, 79 real towns")
+    ax.set_title(f"Cell risk from the calibrated simulator, {len(storms)} active backtest places")
     ax.legend(frameon=False)
     fig.tight_layout()
     fig.savefig(FIGURES / "cell_risk_distribution.png", dpi=150)
@@ -201,9 +213,10 @@ def main():
     print(f"  wrote sim/params/sim_params.json with risk_bands = {CHOSEN} {bands}")
 
     write_json(EXPORTS / "heatmap_bands.json", {
-        "note": ("Share of populated H3 cells in each band when the calibrated sim runs EF1-EF4 tornadoes through the 79 "
-                 "backtest towns. share_of_touched_cells counts only cells with nonzero expected deaths. Interim: "
-                 "confirm on the three featured places before freezing."),
+        "note": (f"Share of populated H3 cells in each band when the calibrated sim runs EF1-EF4 tornadoes through {len(storms)} "
+                 "active backtest places. share_of_touched_cells counts only cells with nonzero expected deaths. "
+                 "Presentation cutoffs are fixed across places; they are not validated mortality or damage thresholds."),
+        "active_places": len(storms),
         "chosen": CHOSEN, "bands": bands, "min_cell_people": min_people, "python_vs_cli_max_rel_diff": max_diff,
         "by_storm": table, "candidates": candidates,
     })

@@ -1,5 +1,6 @@
 {
- "note": "Share of populated H3 cells in each band when the calibrated sim runs EF1-EF4 tornadoes through the 79 backtest towns. share_of_touched_cells counts only cells with nonzero expected deaths. Interim: confirm on the three featured places before freezing.",
+ "note": "Share of populated H3 cells in each band when the calibrated sim runs EF1-EF4 tornadoes through 78 active backtest places. share_of_touched_cells counts only cells with nonzero expected deaths. Presentation cutoffs are fixed across places; they are not validated mortality or damage thresholds.",
+ "active_places": 78,
  "chosen": "one_decade_lower",
  "bands": {
   "yellow": 1e-05,

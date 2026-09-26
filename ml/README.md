@@ -25,6 +25,12 @@ ml/.venv/bin/python ml/traffic_curve.py  # hourly traffic curve for crossings
 
 Outputs land in `ml/exports/` (see its README for formats), `ml/figures/`, and `ml/work/` (models, gitignored).
 
+## Simulation integration
+
+See [INTEGRATION.md](INTEGRATION.md) for the Lumberton demo baseline, flood data blockers, and shelter/replay acceptance checks. After building Simulation, run `node ml/check_sim_integration.mjs`; use `--sim-root` and `--places` to check teammate checkouts before merging. This uses cached backtest data and does not retrain models.
+
+The final parameter file includes calibrated tornado knobs and **uncalibrated** flood/vehicle blocks. `heatmap_bands.py` preserves those blocks if an older calibration cache lacks them. The script's fixed risk bands are presentation choices, not independently validated mortality categories.
+
 ## Tables (data/processed/, not in git)
 
 | File | Rows | Notes |

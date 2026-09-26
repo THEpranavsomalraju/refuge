@@ -127,7 +127,7 @@ def sample(eligible, rng):
                 break
         s = pool[chosen].with_columns(
             stratum=pl.lit("fatal" if fatal else "nonfatal"),
-            # inverse selection probability, so weighted sums estimate the eligible population
+            # Stratum prevalence weight; approximate because selection also caps storms per state.
             weight=pl.lit(pool.height / len(chosen)),
             eligible_in_stratum=pl.lit(pool.height),
         )

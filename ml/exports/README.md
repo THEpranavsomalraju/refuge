@@ -13,7 +13,11 @@ ml/.venv/bin/python ml/calibrate.py backtest   # backtest.json
 ml/.venv/bin/python ml/story_exports.py        # story/ (Flourish CSVs)
 ```
 
-All deaths are NOAA Storm Events direct deaths, 50 states + DC, 1996-2025. Hours are local clock time.
+Unless stated otherwise, mortality summaries use NOAA Storm Events direct deaths, 50 states + DC, 1996-2025. Hours are local clock time. `fatalities_dots.csv` includes both direct (`D`) and indirect (`I`) deaths; filter `fatality_type == D` when comparing it with the direct-death charts.
+
+Location shares exclude unknown locations. The simulator models buildings and crossing vehicles, not WATER or OUTDOOR exposures, so its breakdown does not have the same denominator as the national location chart. Simulator `OTHER` buildings are also not the NOAA `OTHER` location category.
+
+The legacy backtest keys `recorded_in_buildings` and `summary.building_deaths` exclude known VEHICLE, OUTDOOR, WATER and OTHER locations but retain unknown locations. Label this **comparison target**, not confirmed building deaths. National-model predictions target all direct deaths. See `ml/METHODS.md` for validation limits.
 
 | File | For | Shape |
 |---|---|---|

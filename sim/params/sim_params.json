@@ -161,5 +161,87 @@
     "red": 0.001,
     "deep_red": 0.01
   },
-  "min_cell_people": 5
+  "min_cell_people": 5,
+  "flood": {
+    "damage_thresholds_m": {
+      "MH": [
+        0,
+        0.1,
+        0.2,
+        0.3
+      ],
+      "RES_WOOD": [
+        0,
+        0.9,
+        1.5,
+        2.4
+      ],
+      "RES_MASONRY": [
+        0,
+        0.9,
+        1.5,
+        2.4
+      ],
+      "MULTI": [
+        0,
+        0.9,
+        1.5,
+        2.4
+      ],
+      "SCHOOL": [
+        0,
+        0.9,
+        1.5,
+        2.4
+      ],
+      "WORSHIP": [
+        0,
+        0.9,
+        1.5,
+        2.4
+      ],
+      "COMMERCIAL": [
+        0,
+        0.9,
+        1.5,
+        2.4
+      ],
+      "BIGROOF": [
+        0,
+        0.9,
+        1.5,
+        2.4
+      ],
+      "OTHER": [
+        0,
+        0.9,
+        1.5,
+        2.4
+      ]
+    },
+    "story_height_m": 3.0,
+    "lethality_by_damage": [
+      0,
+      0,
+      0.0001,
+      0.1,
+      0.9
+    ]
+  },
+  "vehicle": {
+    "exposure_hours": 1,
+    "occupancy": 1.67,
+    "attempt_prob": 0.27,
+    "depth_thresholds_m": [
+      0.15,
+      0.3,
+      0.6
+    ],
+    "lethality_by_depth": [
+      0,
+      0.01,
+      0.1,
+      0.3
+    ]
+  }
 }
