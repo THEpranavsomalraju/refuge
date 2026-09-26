@@ -10,7 +10,7 @@ Carolina Data Challenge 2026, Natural Science track.
 |---|---|---|
 | `ml/` | ML lead (@THEpranavsomalraju) | risk + location models, calibration, backtest, landing page data |
 | `sim/params/sim_params.json` | ML lead | calibrated params (rest of `sim/` is Simulation) |
-| `places/` | Structures and 3D (@thepatkinator) | Structure Inventory pipeline, roads, streams, terrain, crossings |
+| `places/` | Structures and 3D (@soham-patki) | Structure Inventory pipeline, roads, streams, terrain, crossings |
 | `web/src/scene/` | Structures and 3D | 3D town |
 | `web/src/landing/` | Structures and 3D | landing page |
 | `sim/` | Simulation (@mahilmanoharan) | engine, storm effects, protections, optimizer, CLI |
