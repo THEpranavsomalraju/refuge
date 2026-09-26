@@ -238,7 +238,7 @@ function Compare() {
       <div style={row}><span>Your plan saves</span><span style={mono}>{yourSaved.toFixed(1)} · {usd(yourCost)}</span></div>
       <div style={row}><span>{plan.label === 'best' ? 'Best' : 'Best found'} plan saves</span><span style={mono}>{plan.value.toFixed(1)} · {usd(plan.cost_usd)}</span></div>
       <div style={muted}>
-        {plan.label === 'best' ? 'Best' : 'Best found'} plan: {names}; {deaths(plan.expected_deaths)} expected deaths remain.
+        {plan.label === 'best' ? 'Best' : 'Best found'} plan: {names}; {deaths(plan.remaining)} expected deaths remain.
         {plan.method === 'exhaustive'
           ? ` Every affordable combination of the ${plan.candidates.length} top buildings (including yours) was checked: ${plan.evaluated} plans within ${usd(g.budget)}.`
           : ` Greedy search with swaps over ${plan.candidates.length} buildings (${plan.evaluated} plans); not guaranteed optimal.`}
