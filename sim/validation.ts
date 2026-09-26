@@ -1,4 +1,4 @@
-import { BUILDING_CLASSES, type Building, type Crossing, type Scenario, type SimParams, type Coordinate } from './core/types.js';
+import { BUILDING_CLASSES, type Building, type Crossing, type ProtectionConfig, type SafeRoom, type Scenario, type SimParams, type Coordinate } from './core/types.js';
 
 function fail(at: string, message: string): never { throw new Error(`${at}: ${message}`); }
 function record(value: unknown, at: string): Record<string, unknown> {
@@ -97,13 +97,20 @@ export function parseScenario(value: unknown): Scenario {
     fail('place_id', 'use a nonempty folder name with letters, digits, underscores or hyphens');
   }
   if (s.hazard !== 'tornado' && s.hazard !== 'flood') fail('hazard', 'expected "tornado" or "flood"');
-  const protections = s.protections ?? [];
-  if (!Array.isArray(protections) || protections.length !== 0) fail('protections', 'protections are not implemented yet');
+  const raw = s.protections ?? [];
+  if (!Array.isArray(raw)) fail('protections', 'expected an array');
+  if (s.hazard === 'flood' && raw.length > 0) fail('protections', 'flood protections are not implemented yet');
+  const protections: SafeRoom[] = raw.map((p, i) => {
+    const r = record(p, `protections[${i}]`);
+    if (r.type !== 'safe_room') fail(`protections[${i}].type`, 'only safe_room is implemented');
+    const [lon, lat] = coordinate([r.lon, r.lat], `protections[${i}].lon_lat`);
+    return { type: 'safe_room', lon, lat };
+  });
   const common = {
     place_id: s.place_id,
     hour: integer(s.hour, 'hour', 0, 23),
     warning_min: number(s.warning_min, 'warning_min'),
-    protections: [] as never[],
+    protections,
     runs: integer(s.runs ?? 500, 'runs', 1, Number.MAX_SAFE_INTEGER),
     seed: integer(s.seed ?? 42, 'seed', 0, 0xffffffff),
   };
@@ -156,4 +163,26 @@ export function parseCrossings(value: unknown): Crossing[] {
     }
   }
   return value as Crossing[];
+}
+
+export function parseProtectionConfig(value: unknown): ProtectionConfig {
+  const c = record(value, 'protections');
+  keys(c, ['schema_version', 'default_budget_usd', 'safe_room'], 'protections');
+  if (c.schema_version !== 1) fail('protections.schema_version', 'expected 1');
+  number(c.default_budget_usd, 'protections.default_budget_usd');
+  const r = record(c.safe_room, 'protections.safe_room');
+  keys(r, ['name', 'cost_usd', 'capacity', 'walk_speed_mps', 'mobilize_min', 'compliance', 'eligible_classes',
+    'candidate_sites', 'site_spacing_reach'], 'protections.safe_room');
+  if (typeof r.name !== 'string') fail('protections.safe_room.name', 'expected a string');
+  number(r.cost_usd, 'protections.safe_room.cost_usd', Number.MIN_VALUE);
+  number(r.capacity, 'protections.safe_room.capacity', 0);
+  number(r.walk_speed_mps, 'protections.safe_room.walk_speed_mps', 0, 5);
+  number(r.mobilize_min, 'protections.safe_room.mobilize_min', 0, 120);
+  number(r.compliance, 'protections.safe_room.compliance', 0, 1);
+  if (!Array.isArray(r.eligible_classes) || r.eligible_classes.some(x => !BUILDING_CLASSES.includes(x))) {
+    fail('protections.safe_room.eligible_classes', 'expected building classes');
+  }
+  integer(r.candidate_sites, 'protections.safe_room.candidate_sites', 0, 16);
+  number(r.site_spacing_reach, 'protections.safe_room.site_spacing_reach', 0, 100);
+  return c as unknown as ProtectionConfig;
 }

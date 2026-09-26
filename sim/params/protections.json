@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "default_budget_usd": 900000,
+  "safe_room": {
+    "name": "Community safe room",
+    "cost_usd": 225000,
+    "capacity": 150,
+    "walk_speed_mps": 1.07,
+    "mobilize_min": 5,
+    "compliance": 0.3,
+    "eligible_classes": ["MH"],
+    "candidate_sites": 8,
+    "site_spacing_reach": 2
+  }
+}

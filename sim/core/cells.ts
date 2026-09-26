@@ -1,5 +1,5 @@
 import { BUILDING_CLASSES, type Band, type BuildingClass, type CellDiff, type CellResult, type CellRuns,
-  type Driver, type Place, type Scenario, type SimParams } from './types.js';
+  type Driver, type Place, type ProtectionConfig, type Scenario, type SimParams } from './types.js';
 import { expectedExposure, forEachUnit, isNight } from './engine.js';
 import { nearestRank } from './random.js';
 
@@ -28,14 +28,15 @@ export function riskBand(risk: number, params: SimParams): Band {
  * cells add drivers passing crossings during the exposure window.
  */
 export function aggregateCells(runs: CellRuns, place: Place, scenario: Scenario,
-  params: SimParams): Record<string, CellResult> {
+  params: SimParams, protections?: ProtectionConfig): Record<string, CellResult> {
   const tallies = new Map<string, CellTally>();
   for (const c of place.cells ?? []) tallies.set(c.h3, emptyTally());
-  forEachUnit(scenario, place, params, true, u => {
+  // Sheltered people stay counted in their home cell, with zero deaths.
+  forEachUnit(scenario, place, params, protections, true, u => {
     let t = tallies.get(u.h3!);
     if (!t) tallies.set(u.h3!, t = emptyTally());
     const deaths = expectedExposure(u.e);
-    t.people += u.e.under65 + u.e.over65;
+    t.people += u.e.under65 + u.e.over65 + u.sheltered;
     t.expected += deaths;
     t.byClass[u.cls] += deaths;
     if (u.kind === 'building' && !u.basement) t.noBasement += deaths;
@@ -87,11 +88,12 @@ function drivers(t: CellTally, scenario: Scenario, night: boolean, params: SimPa
 }
 
 /** Occupant death probability for each damaged, occupied building (building data card). */
-export function buildingProbabilities(scenario: Scenario, place: Place, params: SimParams): Record<string, number> {
+export function buildingProbabilities(scenario: Scenario, place: Place, params: SimParams,
+  protections?: ProtectionConfig): Record<string, number> {
   const out: Record<string, number> = {};
-  forEachUnit(scenario, place, params, false, u => {
+  forEachUnit(scenario, place, params, protections, false, u => {
     if (u.kind !== 'building') return;
-    const n = u.e.under65 + u.e.over65;
+    const n = u.e.under65 + u.e.over65 + u.sheltered; // averaged over every occupant
     if (n > 0 && expectedExposure(u.e) > 0) out[u.id] = expectedExposure(u.e) / n;
   });
   return out;

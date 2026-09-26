@@ -31,9 +31,29 @@ export interface TornadoScenario {
   width_m: number;
   hour: number;
   warning_min: number;
-  protections: readonly never[];
+  protections: readonly SafeRoom[];
   runs: number;
   seed: number;
+}
+
+/** A community safe room placed by the player or the optimizer (tornado only for now). */
+export interface SafeRoom { type: 'safe_room'; lon: number; lat: number }
+export interface SafeRoomConfig {
+  name: string;
+  cost_usd: number;
+  capacity: number;
+  walk_speed_mps: number;
+  mobilize_min: number;
+  compliance: number;
+  eligible_classes: BuildingClass[];
+  candidate_sites: number;
+  site_spacing_reach: number;
+}
+/** sim/params/protections.json */
+export interface ProtectionConfig {
+  schema_version: 1;
+  default_budget_usd: number;
+  safe_room: SafeRoomConfig;
 }
 
 /** Water surface height above the nearest stream, uniform across the place. */
@@ -43,7 +63,8 @@ export interface FloodScenario {
   flood_height_m: number;
   hour: number;
   warning_min: number;
-  protections: readonly never[];
+  /** Always empty until flood protections exist (validation rejects others). */
+  protections: readonly SafeRoom[];
   runs: number;
   seed: number;
 }
@@ -99,7 +120,7 @@ export interface SimParams {
 /** `cells` lists every cells.json entry, so empty featured-place cells still get a result. */
 export interface Place {
   buildings: readonly Building[];
-  cells?: readonly { h3: string }[];
+  cells?: readonly { h3: string; center?: readonly [number, number] }[];
   /** Loaded for flood scenarios; tornadoes ignore crossings. */
   crossings?: readonly Crossing[];
 }
@@ -111,6 +132,8 @@ export interface ExpectedResult {
   people_exposed: number;
   /** Flood only: buildings and crossings skipped because hand_m or traffic is null. */
   no_flood_data?: { buildings: number; crossings: number };
+  /** Only when the scenario has protections: people inside safe rooms. */
+  sheltered?: number;
 }
 export interface SimulationResult extends ExpectedResult { p05: number; p95: number }
 

@@ -41,3 +41,8 @@ export function preparePath(path: readonly Coordinate[]): (lon: number, lat: num
     return nearest * RADIUS_M;
   };
 }
+
+/** Great-circle distance in meters between two lon/lat points. */
+export function distanceM(lon1: number, lat1: number, lon2: number, lat2: number): number {
+  return angularDistance(point([lon1, lat1]), point([lon2, lat2])) * RADIUS_M;
+}

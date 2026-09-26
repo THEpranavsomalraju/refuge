@@ -140,3 +140,20 @@ each dies with `attempt_prob x lethality_by_depth[level] x VEHICLE multiplier x
 night x warning`. Flood does **not** use the tornado class multipliers or the
 basement modifier (they were fit to wind, and basements do not protect from
 water). It keeps night, warning, over65, and the VEHICLE multiplier.
+
+## Safe rooms (`protections.json`, approved 2026-09-26, provisional)
+
+| Parameter | Value | Source |
+|---|---|---|
+| `capacity` | 150 | 750 sq ft at [FEMA P-361](https://www.fema.gov/node/what-minimum-square-footage-person-tornado-community-safe-room) minimum 5 sq ft per tornado occupant |
+| `cost_usd` | 225,000 | $1,500/occupant. FEMA-funded Tupelo MS room: ~$1.1M for 1,053 people (~$1,045/person); vendors quote $1,500–2,000/occupant. Story lead's sourced cost replaces this. |
+| `walk_speed_mps` | 1.07 | MUTCD pedestrian walking speed (3.5 ft/s) |
+| `mobilize_min` | 5 | Time to receive the warning and start moving (model choice) |
+| `compliance` | 0.30 | Under 30% of mobile-home residents leave home in tornado events ([Chaney & Weaver 2010, Natural Hazards](https://link.springer.com/article/10.1007/s11069-008-9257-z)) |
+| `eligible_classes` | MH | The compliance figure is for mobile-home residents |
+| inside death probability | 0 | P-361 rooms are designed for 250 mph winds |
+
+Reach = `walk_speed_mps x max(0, warning_min - mobilize_min) x 60` (321 m at 10
+minutes). (home, room) pairs within reach are filled nearest-first until each
+room holds `capacity`; each person is assigned at most once. Sheltered people
+stay counted in their home cell, with zero deaths.
