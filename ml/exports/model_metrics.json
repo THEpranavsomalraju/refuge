@@ -1,0 +1,468 @@
+{
+ "risk": {
+  "group_kfold_by_state": [
+   {
+    "n_events": 30196,
+    "n_fatal_events": 454,
+    "deaths_actual": 943,
+    "deaths_predicted": 493.3,
+    "poisson_deviance": 0.28321,
+    "poisson_deviance_baseline": 0.32203,
+    "auc_fatal": 0.6874,
+    "deviance_explained": 0.1205,
+    "recall_fatal_top1pct": 0.0771,
+    "share_deaths_top1pct": 0.1071,
+    "recall_fatal_top5pct": 0.1586,
+    "share_deaths_top5pct": 0.2672,
+    "recall_fatal_top10pct": 0.2555,
+    "share_deaths_top10pct": 0.3574,
+    "fold": 1,
+    "test_states": [
+     "ARIZONA",
+     "CALIFORNIA",
+     "NORTH DAKOTA",
+     "OREGON",
+     "TEXAS",
+     "UTAH",
+     "VERMONT",
+     "WEST VIRGINIA"
+    ]
+   },
+   {
+    "n_events": 30123,
+    "n_fatal_events": 347,
+    "deaths_actual": 776,
+    "deaths_predicted": 669.0,
+    "poisson_deviance": 0.15914,
+    "poisson_deviance_baseline": 0.26793,
+    "auc_fatal": 0.7832,
+    "deviance_explained": 0.406,
+    "recall_fatal_top1pct": 0.2709,
+    "share_deaths_top1pct": 0.5116,
+    "recall_fatal_top5pct": 0.3919,
+    "share_deaths_top5pct": 0.5979,
+    "recall_fatal_top10pct": 0.4496,
+    "share_deaths_top10pct": 0.6314,
+    "fold": 2,
+    "test_states": [
+     "ARKANSAS",
+     "IOWA",
+     "MASSACHUSETTS",
+     "MISSOURI",
+     "NEBRASKA",
+     "NEW HAMPSHIRE",
+     "NEW MEXICO",
+     "OHIO",
+     "SOUTH DAKOTA",
+     "WYOMING"
+    ]
+   },
+   {
+    "n_events": 30215,
+    "n_fatal_events": 448,
+    "deaths_actual": 1206,
+    "deaths_predicted": 1069.3,
+    "poisson_deviance": 0.1907,
+    "poisson_deviance_baseline": 0.37455,
+    "auc_fatal": 0.7656,
+    "deviance_explained": 0.4909,
+    "recall_fatal_top1pct": 0.2768,
+    "share_deaths_top1pct": 0.5829,
+    "recall_fatal_top5pct": 0.433,
+    "share_deaths_top5pct": 0.67,
+    "recall_fatal_top10pct": 0.4732,
+    "share_deaths_top10pct": 0.6932,
+    "fold": 3,
+    "test_states": [
+     "ALABAMA",
+     "COLORADO",
+     "DISTRICT OF COLUMBIA",
+     "HAWAII",
+     "IDAHO",
+     "INDIANA",
+     "NEVADA",
+     "NEW JERSEY",
+     "OKLAHOMA",
+     "PENNSYLVANIA",
+     "TENNESSEE"
+    ]
+   },
+   {
+    "n_events": 30145,
+    "n_fatal_events": 285,
+    "deaths_actual": 541,
+    "deaths_predicted": 768.1,
+    "poisson_deviance": 0.11509,
+    "poisson_deviance_baseline": 0.18266,
+    "auc_fatal": 0.7837,
+    "deviance_explained": 0.3699,
+    "recall_fatal_top1pct": 0.3158,
+    "share_deaths_top1pct": 0.5065,
+    "recall_fatal_top5pct": 0.4632,
+    "share_deaths_top5pct": 0.6081,
+    "recall_fatal_top10pct": 0.5298,
+    "share_deaths_top10pct": 0.6599,
+    "fold": 4,
+    "test_states": [
+     "ALASKA",
+     "DELAWARE",
+     "FLORIDA",
+     "ILLINOIS",
+     "MAINE",
+     "MICHIGAN",
+     "MINNESOTA",
+     "MISSISSIPPI",
+     "NEW YORK",
+     "VIRGINIA",
+     "WISCONSIN"
+    ]
+   },
+   {
+    "n_events": 30133,
+    "n_fatal_events": 357,
+    "deaths_actual": 780,
+    "deaths_predicted": 738.3,
+    "poisson_deviance": 0.17428,
+    "poisson_deviance_baseline": 0.24677,
+    "auc_fatal": 0.7773,
+    "deviance_explained": 0.2938,
+    "recall_fatal_top1pct": 0.2437,
+    "share_deaths_top1pct": 0.3782,
+    "recall_fatal_top5pct": 0.3894,
+    "share_deaths_top5pct": 0.5103,
+    "recall_fatal_top10pct": 0.4594,
+    "share_deaths_top10pct": 0.5641,
+    "fold": 5,
+    "test_states": [
+     "CONNECTICUT",
+     "GEORGIA",
+     "KANSAS",
+     "KENTUCKY",
+     "LOUISIANA",
+     "MARYLAND",
+     "MONTANA",
+     "NORTH CAROLINA",
+     "RHODE ISLAND",
+     "SOUTH CAROLINA",
+     "WASHINGTON"
+    ]
+   }
+  ],
+  "rounds": 299,
+  "time_split": {
+   "n_events": 33853,
+   "n_fatal_events": 401,
+   "deaths_actual": 994,
+   "deaths_predicted": 895.5,
+   "poisson_deviance": 0.22484,
+   "poisson_deviance_baseline": 0.29823,
+   "auc_fatal": 0.7782,
+   "deviance_explained": 0.2461,
+   "recall_fatal_top1pct": 0.2668,
+   "share_deaths_top1pct": 0.34,
+   "recall_fatal_top5pct": 0.3641,
+   "share_deaths_top5pct": 0.4115,
+   "recall_fatal_top10pct": 0.4464,
+   "share_deaths_top10pct": 0.5704,
+   "train_deviance": 0.13434,
+   "calibration_by_decile": [
+    {
+     "decile": 1,
+     "n_events": 3386,
+     "mean_predicted": 0.0014822981054009707,
+     "predicted_deaths": 5.0,
+     "actual_deaths": 0,
+     "fatal_events": 0
+    },
+    {
+     "decile": 2,
+     "n_events": 3385,
+     "mean_predicted": 0.006855347120032608,
+     "predicted_deaths": 23.2,
+     "actual_deaths": 13,
+     "fatal_events": 10
+    },
+    {
+     "decile": 3,
+     "n_events": 3385,
+     "mean_predicted": 0.010412926650177866,
+     "predicted_deaths": 35.2,
+     "actual_deaths": 28,
+     "fatal_events": 17
+    },
+    {
+     "decile": 4,
+     "n_events": 3386,
+     "mean_predicted": 0.01202574549857904,
+     "predicted_deaths": 40.7,
+     "actual_deaths": 60,
+     "fatal_events": 16
+    },
+    {
+     "decile": 5,
+     "n_events": 3385,
+     "mean_predicted": 0.013412543734054599,
+     "predicted_deaths": 45.4,
+     "actual_deaths": 33,
+     "fatal_events": 22
+    },
+    {
+     "decile": 6,
+     "n_events": 3385,
+     "mean_predicted": 0.014713258090984702,
+     "predicted_deaths": 49.8,
+     "actual_deaths": 31,
+     "fatal_events": 23
+    },
+    {
+     "decile": 7,
+     "n_events": 3386,
+     "mean_predicted": 0.016049143899694578,
+     "predicted_deaths": 54.3,
+     "actual_deaths": 72,
+     "fatal_events": 41
+    },
+    {
+     "decile": 8,
+     "n_events": 3385,
+     "mean_predicted": 0.017998952704430367,
+     "predicted_deaths": 60.9,
+     "actual_deaths": 122,
+     "fatal_events": 51
+    },
+    {
+     "decile": 9,
+     "n_events": 3385,
+     "mean_predicted": 0.021977575640505283,
+     "predicted_deaths": 74.4,
+     "actual_deaths": 68,
+     "fatal_events": 42
+    },
+    {
+     "decile": 10,
+     "n_events": 3385,
+     "mean_predicted": 0.1496255326479833,
+     "predicted_deaths": 506.5,
+     "actual_deaths": 567,
+     "fatal_events": 179
+    }
+   ],
+   "by_event_type": {
+    "Tornado": {
+     "n_events": 9427,
+     "n_fatal_events": 147,
+     "deaths_actual": 403,
+     "deaths_predicted": 445.1,
+     "poisson_deviance": 0.14665,
+     "poisson_deviance_baseline": 0.39956,
+     "auc_fatal": 0.9557,
+     "deviance_explained": 0.633,
+     "recall_fatal_top1pct": 0.3333,
+     "share_deaths_top1pct": 0.5806,
+     "recall_fatal_top5pct": 0.7891,
+     "share_deaths_top5pct": 0.8734,
+     "recall_fatal_top10pct": 0.8776,
+     "share_deaths_top10pct": 0.9404
+    },
+    "Flash Flood": {
+     "n_events": 24426,
+     "n_fatal_events": 254,
+     "deaths_actual": 591,
+     "deaths_predicted": 450.4,
+     "poisson_deviance": 0.25501,
+     "poisson_deviance_baseline": 0.25913,
+     "auc_fatal": 0.6317,
+     "deviance_explained": 0.0159,
+     "recall_fatal_top1pct": 0.0079,
+     "share_deaths_top1pct": 0.0068,
+     "recall_fatal_top5pct": 0.1063,
+     "share_deaths_top5pct": 0.0829,
+     "recall_fatal_top10pct": 0.2126,
+     "share_deaths_top10pct": 0.3299
+    }
+   },
+   "without_events_40plus_deaths": {
+    "n_events": 33851,
+    "n_fatal_events": 399,
+    "deaths_actual": 888,
+    "deaths_predicted": 895.5,
+    "poisson_deviance": 0.18389,
+    "poisson_deviance_baseline": 0.25424,
+    "auc_fatal": 0.7774,
+    "deviance_explained": 0.2767,
+    "recall_fatal_top1pct": 0.2682,
+    "share_deaths_top1pct": 0.3806,
+    "recall_fatal_top5pct": 0.3659,
+    "share_deaths_top5pct": 0.4606,
+    "recall_fatal_top10pct": 0.4436,
+    "share_deaths_top10pct": 0.5191
+   },
+   "events_40plus_deaths": [
+    {
+     "year": 2025,
+     "state": "TEXAS",
+     "event_type": "Flash Flood",
+     "deaths": 61,
+     "predicted": 0.03
+    },
+    {
+     "year": 2025,
+     "state": "TEXAS",
+     "event_type": "Flash Flood",
+     "deaths": 45,
+     "predicted": 0.03
+    }
+   ]
+  },
+  "features": [
+   "is_tornado",
+   "ef_rating",
+   "tor_length_mi",
+   "tor_width_yd",
+   "hour",
+   "month",
+   "mh_share",
+   "age65_share",
+   "noveh_share",
+   "log_pop_density",
+   "svi"
+  ],
+  "params": {
+   "objective": "poisson",
+   "learning_rate": 0.03,
+   "num_leaves": 15,
+   "min_data_in_leaf": 100,
+   "feature_fraction": 0.8,
+   "bagging_fraction": 0.8,
+   "bagging_freq": 1,
+   "lambda_l2": 1.0,
+   "verbose": -1,
+   "seed": 7
+  }
+ },
+ "location": {
+  "features": [
+   "is_tornado",
+   "ef_rating",
+   "ef_missing",
+   "log_length",
+   "log_width",
+   "hour_sin",
+   "hour_cos",
+   "is_night",
+   "month_sin",
+   "month_cos",
+   "mh_share",
+   "age65_share",
+   "noveh_share",
+   "log_pop_density",
+   "svi"
+  ],
+  "C": 0.5,
+  "classes": [
+   "MH",
+   "RES",
+   "PUBLIC",
+   "VEHICLE",
+   "WATER",
+   "OUTDOOR",
+   "OTHER"
+  ],
+  "group_kfold_by_state": [
+   {
+    "n_deaths": 809,
+    "n_events": 385,
+    "log_loss_event_weighted": 1.199,
+    "log_loss_event_weighted_baseline": 1.2755,
+    "log_loss_per_death": 1.5019,
+    "log_loss_per_death_baseline": 1.5621,
+    "improvement_event_weighted": 0.06,
+    "improvement_per_death": 0.0385,
+    "fold": 1
+   },
+   {
+    "n_deaths": 810,
+    "n_events": 323,
+    "log_loss_event_weighted": 1.1775,
+    "log_loss_event_weighted_baseline": 1.2122,
+    "log_loss_per_death": 1.1479,
+    "log_loss_per_death_baseline": 1.2464,
+    "improvement_event_weighted": 0.0286,
+    "improvement_per_death": 0.079,
+    "fold": 2
+   },
+   {
+    "n_deaths": 809,
+    "n_events": 359,
+    "log_loss_event_weighted": 1.2808,
+    "log_loss_event_weighted_baseline": 1.3035,
+    "log_loss_per_death": 1.3646,
+    "log_loss_per_death_baseline": 1.4738,
+    "improvement_event_weighted": 0.0174,
+    "improvement_per_death": 0.0741,
+    "fold": 3
+   },
+   {
+    "n_deaths": 810,
+    "n_events": 403,
+    "log_loss_event_weighted": 1.3697,
+    "log_loss_event_weighted_baseline": 1.3738,
+    "log_loss_per_death": 1.3634,
+    "log_loss_per_death_baseline": 1.3658,
+    "improvement_event_weighted": 0.003,
+    "improvement_per_death": 0.0018,
+    "fold": 4
+   },
+   {
+    "n_deaths": 809,
+    "n_events": 377,
+    "log_loss_event_weighted": 1.346,
+    "log_loss_event_weighted_baseline": 1.4132,
+    "log_loss_per_death": 1.3838,
+    "log_loss_per_death_baseline": 1.4972,
+    "improvement_event_weighted": 0.0476,
+    "improvement_per_death": 0.0757,
+    "fold": 5
+   }
+  ],
+  "time_split": {
+   "n_deaths": 899,
+   "n_events": 383,
+   "log_loss_event_weighted": 1.3685,
+   "log_loss_event_weighted_baseline": 1.4481,
+   "log_loss_per_death": 1.6982,
+   "log_loss_per_death_baseline": 1.7392,
+   "improvement_event_weighted": 0.055,
+   "improvement_per_death": 0.0236
+  },
+  "examples": {
+   "EF3 tornado, 2 AM, high mobile home county": {
+    "MH": 0.714,
+    "RES": 0.224,
+    "PUBLIC": 0.012,
+    "VEHICLE": 0.042,
+    "WATER": 0.0,
+    "OUTDOOR": 0.007,
+    "OTHER": 0.001
+   },
+   "EF3 tornado, 3 PM, high mobile home county": {
+    "MH": 0.608,
+    "RES": 0.22,
+    "PUBLIC": 0.034,
+    "VEHICLE": 0.088,
+    "WATER": 0.001,
+    "OUTDOOR": 0.039,
+    "OTHER": 0.01
+   },
+   "EF3 tornado, 3 PM, low mobile home county": {
+    "MH": 0.288,
+    "RES": 0.244,
+    "PUBLIC": 0.132,
+    "VEHICLE": 0.177,
+    "WATER": 0.003,
+    "OUTDOOR": 0.133,
+    "OTHER": 0.021
+   }
+  }
+ }
+}

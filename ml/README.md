@@ -17,7 +17,13 @@ County features come from SVI 2022, which includes ACS 2018-2022 county counts. 
 ml/.venv/bin/python ml/download.py       # raw files -> data/raw/  (~320 MB, cached)
 ml/.venv/bin/python ml/build_tables.py   # -> data/processed/*.parquet
 ml/.venv/bin/python ml/check_phase1.py   # sanity checks
+ml/.venv/bin/python ml/patterns.py       # hour / month / location tables
+ml/.venv/bin/python ml/train_risk.py     # national risk model + SHAP + county map
+ml/.venv/bin/python ml/train_location.py # location model
+ml/.venv/bin/python ml/traffic_curve.py  # hourly traffic curve for crossings
 ```
+
+Outputs land in `ml/exports/` (see its README for formats), `ml/figures/`, and `ml/work/` (models, gitignored).
 
 ## Tables (data/processed/, not in git)
 

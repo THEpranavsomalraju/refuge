@@ -1,0 +1,303 @@
+{
+ "note": "Mean absolute SHAP value on the log of expected deaths. relative_risk = exp(mean SHAP) vs the average event.",
+ "sample_size": 30000,
+ "importance": [
+  {
+   "feature": "ef_rating",
+   "label": "EF rating",
+   "mean_abs_shap": 0.37343224929263563
+  },
+  {
+   "feature": "tor_length_mi",
+   "label": "Path length (mi)",
+   "mean_abs_shap": 0.16323517550184719
+  },
+  {
+   "feature": "tor_width_yd",
+   "label": "Path width (yd)",
+   "mean_abs_shap": 0.1594106452351504
+  },
+  {
+   "feature": "log_pop_density",
+   "label": "Population density (log)",
+   "mean_abs_shap": 0.12648492030276595
+  },
+  {
+   "feature": "svi",
+   "label": "Social Vulnerability Index",
+   "mean_abs_shap": 0.11725073992981169
+  },
+  {
+   "feature": "hour",
+   "label": "Hour of day",
+   "mean_abs_shap": 0.11512825856989593
+  },
+  {
+   "feature": "month",
+   "label": "Month",
+   "mean_abs_shap": 0.08765019708777365
+  },
+  {
+   "feature": "mh_share",
+   "label": "Mobile home share",
+   "mean_abs_shap": 0.07211252222521998
+  },
+  {
+   "feature": "age65_share",
+   "label": "Share age 65+",
+   "mean_abs_shap": 0.07034445198208573
+  },
+  {
+   "feature": "noveh_share",
+   "label": "No-vehicle households",
+   "mean_abs_shap": 0.04568315385884404
+  },
+  {
+   "feature": "is_tornado",
+   "label": "Tornado (vs flash flood)",
+   "mean_abs_shap": 0.006221806420800749
+  }
+ ],
+ "dependence": {
+  "hour": [
+   {
+    "x": 0,
+    "mean_shap": 0.2329738463426846,
+    "relative_risk": 1.262348463866389,
+    "n": 786
+   },
+   {
+    "x": 1,
+    "mean_shap": 0.20215506338444544,
+    "relative_risk": 1.2240377968398037,
+    "n": 828
+   },
+   {
+    "x": 2,
+    "mean_shap": 0.15717347079619728,
+    "relative_risk": 1.1701985915764448,
+    "n": 664
+   },
+   {
+    "x": 3,
+    "mean_shap": 0.1777293714243437,
+    "relative_risk": 1.1945020111104094,
+    "n": 621
+   },
+   {
+    "x": 4,
+    "mean_shap": 0.2115793332825208,
+    "relative_risk": 1.2356279881646994,
+    "n": 591
+   },
+   {
+    "x": 5,
+    "mean_shap": 0.15648114038970845,
+    "relative_risk": 1.1693887078957645,
+    "n": 626
+   },
+   {
+    "x": 6,
+    "mean_shap": 0.008009410824884312,
+    "relative_risk": 1.0080415719623455,
+    "n": 694
+   },
+   {
+    "x": 7,
+    "mean_shap": -0.09827392662711976,
+    "relative_risk": 0.9064005824901896,
+    "n": 806
+   },
+   {
+    "x": 8,
+    "mean_shap": -0.09684669379611684,
+    "relative_risk": 0.9076951507649794,
+    "n": 840
+   },
+   {
+    "x": 9,
+    "mean_shap": -0.09869413056757549,
+    "relative_risk": 0.9060197894047765,
+    "n": 880
+   },
+   {
+    "x": 10,
+    "mean_shap": -0.09460299050445105,
+    "relative_risk": 0.9097340358338031,
+    "n": 868
+   },
+   {
+    "x": 11,
+    "mean_shap": -0.10043345201229413,
+    "relative_risk": 0.9044452994247527,
+    "n": 859
+   },
+   {
+    "x": 12,
+    "mean_shap": -0.09748488374651543,
+    "relative_risk": 0.9071160536483706,
+    "n": 922
+   },
+   {
+    "x": 13,
+    "mean_shap": -0.08989972319556164,
+    "relative_risk": 0.9140228359651063,
+    "n": 997
+   },
+   {
+    "x": 14,
+    "mean_shap": -0.0901460002506995,
+    "relative_risk": 0.9137977608292945,
+    "n": 1479
+   },
+   {
+    "x": 15,
+    "mean_shap": -0.08791725974984588,
+    "relative_risk": 0.9158366501420596,
+    "n": 1839
+   },
+   {
+    "x": 16,
+    "mean_shap": -0.0860627533624136,
+    "relative_risk": 0.9175366509035088,
+    "n": 2225
+   },
+   {
+    "x": 17,
+    "mean_shap": -0.08354861305724466,
+    "relative_risk": 0.9198463690401204,
+    "n": 2446
+   },
+   {
+    "x": 18,
+    "mean_shap": -0.08410397751514184,
+    "relative_risk": 0.9193356608877343,
+    "n": 2420
+   },
+   {
+    "x": 19,
+    "mean_shap": -0.07403790142695992,
+    "relative_risk": 0.9286364965259317,
+    "n": 2427
+   },
+   {
+    "x": 20,
+    "mean_shap": -0.04838606346522111,
+    "relative_risk": 0.9527658879656188,
+    "n": 2102
+   },
+   {
+    "x": 21,
+    "mean_shap": 0.11042325139096588,
+    "relative_risk": 1.1167506367050035,
+    "n": 1651
+   },
+   {
+    "x": 22,
+    "mean_shap": 0.24789430115101982,
+    "relative_risk": 1.2813244905123151,
+    "n": 1396
+   },
+   {
+    "x": 23,
+    "mean_shap": 0.33109145949820423,
+    "relative_risk": 1.3924871426597294,
+    "n": 1033
+   }
+  ],
+  "ef_rating": [
+   {
+    "x": 0,
+    "mean_shap": -1.2316492646280996,
+    "relative_risk": 0.29181090718167424,
+    "n": 4495
+   },
+   {
+    "x": 1,
+    "mean_shap": 0.041179087981949136,
+    "relative_risk": 1.042038705444952,
+    "n": 2634
+   },
+   {
+    "x": 2,
+    "mean_shap": 1.5716577481454774,
+    "relative_risk": 4.814623014199936,
+    "n": 786
+   },
+   {
+    "x": 3,
+    "mean_shap": 3.0551940414370096,
+    "relative_risk": 21.225303715783443,
+    "n": 221
+   },
+   {
+    "x": 4,
+    "mean_shap": 4.403736201482693,
+    "relative_risk": 81.75575472445081,
+    "n": 41
+   }
+  ],
+  "mh_share": [
+   {
+    "x": "0.000-0.017",
+    "mean_shap": -0.06836610728093227,
+    "relative_risk": 0.9339184966194964,
+    "n": 2982
+   },
+   {
+    "x": "0.017-0.033",
+    "mean_shap": -0.06396569652643584,
+    "relative_risk": 0.9380371769123288,
+    "n": 2986
+   },
+   {
+    "x": "0.033-0.049",
+    "mean_shap": -0.06649198452886416,
+    "relative_risk": 0.9356704156654829,
+    "n": 2983
+   },
+   {
+    "x": "0.049-0.070",
+    "mean_shap": -0.0656710866374275,
+    "relative_risk": 0.9364388208847438,
+    "n": 2981
+   },
+   {
+    "x": "0.070-0.091",
+    "mean_shap": -0.06063263547721608,
+    "relative_risk": 0.9411689283494852,
+    "n": 2979
+   },
+   {
+    "x": "0.091-0.117",
+    "mean_shap": -0.04356218998769223,
+    "relative_risk": 0.957373013223654,
+    "n": 2984
+   },
+   {
+    "x": "0.117-0.147",
+    "mean_shap": 0.045452642618868694,
+    "relative_risk": 1.0465014438726927,
+    "n": 2989
+   },
+   {
+    "x": "0.147-0.184",
+    "mean_shap": 0.08602855329192365,
+    "relative_risk": 1.0898374463076195,
+    "n": 2985
+   },
+   {
+    "x": "0.184-0.239",
+    "mean_shap": 0.06544389190314606,
+    "relative_risk": 1.0676328327865627,
+    "n": 2986
+   },
+   {
+    "x": "0.239-0.556",
+    "mean_shap": 0.13374784041696722,
+    "relative_risk": 1.1431045385359522,
+    "n": 2986
+   }
+  ]
+ }
+}
