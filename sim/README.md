@@ -1,0 +1,166 @@
+# Simulation calibration CLI
+
+First deliverable: tornado expected deaths and seeded simulation on building
+inventories. Supports lightweight backtest places and Node 22 (tested on
+22.6.0). The pure `core/` also typechecks without Node or browser DOM imports
+for later use in a web worker. Flood, protections, cell maps, and vehicle
+exposure are subsequent chunks. Unsupported scenarios fail explicitly.
+
+## Install and run
+
+Run from the repository root. There is no root package.json: **use `--prefix sim`
+for both installation and build**. Built `dist/` files are not committed.
+
+```sh
+npm ci --prefix sim
+npm run build --prefix sim
+node sim/dist/cli.js --batch ml/work/scenarios.jsonl --places data/backtest/places --params ml/work/candidate_001.json --mode expected
+```
+
+Or use the pinned local TypeScript runner after installation:
+
+```sh
+./sim/node_modules/.bin/tsx sim/cli.ts --batch ml/work/scenarios.jsonl --places data/backtest/places --params ml/work/candidate_001.json --mode expected
+```
+
+Use built JS for repeated calibration calls. `--params` is required and accepts
+any file path. All relative paths resolve from the process working directory.
+Copy `sim/params/sim_params.default.json` into your own candidate files; the
+CLI reads but never rewrites them. ML owns the final `sim/params/sim_params.json`.
+
+For one scenario, replace `--batch` with `--scenario path/to/scenario.json`.
+Pass `--mode simulate` for p05/p95. `--help` lists arguments. No automatic
+parameter discovery or implicit mode selection occurs.
+
+## Python calibration loop
+
+```python
+import json
+import subprocess
+
+completed = subprocess.run(
+    ["node", "sim/dist/cli.js", "--batch", "ml/work/scenarios.jsonl",
+     "--places", "data/backtest/places", "--params", "ml/work/candidate_001.json",
+     "--mode", "expected"],
+    check=True, capture_output=True, text=True,
+)
+results = [json.loads(line) for line in completed.stdout.splitlines()]
+```
+
+One input JSON object per nonempty JSONL line; an ordinary final newline and
+CRLF are supported. Blank interior lines are errors rather than skipped rows.
+Each successful result includes `place_id`, in input order, including duplicate
+IDs. The whole batch is validated and evaluated before any results are written.
+Failure means exit code 1, a diagnostic on stderr, and no results on stdout.
+
+The CLI reads `<places>/<place_id>/buildings.json`. It does not require terrain,
+crossings, scene geometry, or flood elevations. Extra building fields are
+accepted. Consumed fields are `id`, `lon`, `lat`, `cls`, `basement`, and all four
+`pop_day_*`/`pop_night_*` values. Populations may be fractional but must be finite
+and nonnegative; duplicate IDs and unknown classes fail validation. Empty
+inventories are valid. Existing `cells.json`, `place.json`, and empty
+`crossings.json` from `write_place_lite` can remain alongside the buildings.
+
+The ML historical catalog `ml/backtest/tornadoes.json` wraps metadata and
+records; it is **not** JSONL. ML's `backtest_select.py` produces scenario JSON
+files in `data/backtest/scenarios/`. To assemble training rows only:
+
+```python
+from pathlib import Path
+
+catalog = json.loads(Path("ml/backtest/tornadoes.json").read_text())
+records = [r for r in catalog["tornadoes"] if r["split"] == "train"]
+with Path("ml/work/scenarios.jsonl").open("w") as output:
+    for r in records:
+        scenario = json.loads(Path(f"data/backtest/scenarios/{r['place_id']}.json").read_text())
+        output.write(json.dumps(scenario) + "\n")
+```
+
+## Model contract
+
+- Night is **20:00–05:59 local clock time**, for both population choice and
+  lethality modifier. No additional timezone or DST adjustment.
+- `width_m` is full width. Distance is to the nearest finite segment of the
+  complete lon/lat path, including rounded end caps. Wind tapers linearly to
+  zero at half-width. Supplied width is required; no default is guessed.
+- Age-specific probability = base probability for class/damage × class-group
+  multiplier × night factor × basement factor × `exp(-warning_per_min * warning_min)`;
+  over-65 probability additionally multiplies by `over65`. Clamp each age group
+  separately to [0,1], then sum population × probability.
+- `people_exposed` counts the selected-hour occupants of buildings at damage
+  level 1 or above. This is not everyone inside the geometric path and does
+  not change when only a lethality multiplier changes.
+- `expected_deaths` and `by_class` are analytic expectations in **both modes**,
+  not sample means. Expected mode does no sampling and ignores seed/run count
+  for computation, although supplied fields must still be valid.
+- Simulate uses the requested positive integer `runs` (default 500) and uint32
+  `seed` (default 42). p05/p95 use empirical nearest-rank percentiles. These
+  are conditional sampling intervals, not full model uncertainty intervals.
+
+Every result's `by_class` includes these ten keys, with zero for absent classes:
+
+```text
+MH RES_WOOD RES_MASONRY MULTI SCHOOL WORSHIP COMMERCIAL BIGROOF OTHER VEHICLE
+```
+
+Group them for fitting as follows:
+
+| Fit parameter | Result keys |
+|---|---|
+| MH | MH |
+| RES | RES_WOOD, RES_MASONRY, MULTI |
+| PUBLIC | SCHOOL, WORSHIP, COMMERCIAL, BIGROOF |
+| VEHICLE | VEHICLE (always zero in this chunk) |
+
+OTHER has a fixed multiplier of 1. As agreed with ML, exclude OTHER and the
+unmodeled WATER/OUTDOOR locations from the location-share penalty. The engine
+does not estimate outdoor or tornado vehicle exposure.
+
+Hard inclusive parameter limits:
+
+| Key | Default | Range |
+|---|---:|---:|
+| lethality_multiplier.MH/RES/PUBLIC/VEHICLE | 1 each | 0.05–20 |
+| modifiers.night | 1.5 | 1–4 |
+| modifiers.basement | 0.25 | 0.05–1 |
+| modifiers.warning_per_min | 0.02 | 0–0.1 |
+| modifiers.over65 | 1.5 | 1–3 |
+
+ML currently fits MH/RES/PUBLIC, night, basement; the other values stay fixed.
+Regularization toward 1 and tying PUBLIC to RES are done in Python. Supply the
+entire version-1 parameter object, not a partial override. Unknown parameter
+keys and out-of-bounds values fail rather than being silently ignored/clamped.
+See [parameter sources](params/sim_params.sources.md) for every default and its
+limitations. All base death probabilities are provisional pending calibration.
+
+## Verification and smoke test
+
+```sh
+npm test --prefix sim
+npm run smoke --prefix sim
+npm run benchmark --prefix sim
+```
+
+Smoke creates 200 synthetic buildings spanning all nine classes in a fresh
+temporary directory, then runs the actual Illinois training scenario
+`bt_2021_996712` in simulate mode. It prints the result and a complete rerun
+command; generated files remain available for inspection. Its cell identifier
+is an opaque fixture, not geographic H3 data. This verifies the CLI pipeline,
+not the accuracy of the historical prediction or the scene renderer.
+
+Benchmark times one new expected-mode CLI process with 50 distinct synthetic
+places × 3,000 buildings. Timing includes reads, validation, computation, and
+stdout; fixture generation is excluded. It reports the machine and elapsed
+time, fails if the run exceeds 3 seconds, and removes only its own temporary
+fixtures. The OS file cache is not cleared, so this is not a cold-disk test.
+
+To run the same scenario on the real Structures place once it is available:
+
+```sh
+node sim/dist/cli.js --scenario sim/tests/fixtures/bt_2021_996712.scenario.json --places data/backtest/places --params sim/params/sim_params.default.json --mode simulate
+```
+
+The fixture path/width/hour were copied from ML's training record; the 10-minute
+warning, 500 runs, and seed 42 match its scenario producer. No held-out results
+were used to tune defaults. Compatibility with the actual `write_place_lite`
+producer must be tested once its files are available.

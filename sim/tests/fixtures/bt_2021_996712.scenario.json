@@ -1,0 +1,13 @@
+{
+  "place_id": "bt_2021_996712",
+  "hazard": "tornado",
+  "ef": 3,
+  "path": [[-90.058, 38.757], [-89.986, 38.781]],
+  "width_m": 274.3,
+  "flood_height_m": null,
+  "hour": 20,
+  "warning_min": 10,
+  "protections": [],
+  "runs": 500,
+  "seed": 42
+}
