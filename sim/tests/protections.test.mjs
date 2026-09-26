@@ -113,3 +113,12 @@ test('CLI accepts --protections for scenarios with safe rooms', () => {
   assert.equal(r.status, 0, r.stderr);
   near(JSON.parse(r.stdout).sheltered, 0.9);
 });
+
+test('detailed results record who goes to which room, summing to sheltered', () => {
+  const place = { buildings: [building({ id: 'a' }), building({ id: 'b', lon: -90.001 })] };
+  const r = core.simulateDetailed(storm([room(100), room(-100)]), place, params(), config());
+  assert.ok(r.shelter_assignments.length >= 2);
+  near(r.shelter_assignments.reduce((s, a) => s + a.people, 0), r.sheltered);
+  for (const a of r.shelter_assignments) assert.ok(a.room === 0 || a.room === 1);
+  assert.equal(core.simulateDetailed(storm([]), place, params(), config()).shelter_assignments, undefined);
+});

@@ -1,4 +1,4 @@
-import type { Place, ProtectionConfig, SafeRoom, SafeRoomConfig, Scenario, SimParams, TornadoScenario } from './types.js';
+import type { Place, ProtectionConfig, SafeRoom, ShelterAssignment, SafeRoomConfig, Scenario, SimParams, TornadoScenario } from './types.js';
 import { distanceM } from './geometry.js';
 import { expected, isNight, occupants } from './engine.js';
 
@@ -14,11 +14,12 @@ export function reachM(scenario: Scenario, room: SafeRoomConfig): number {
  * once, so overlapping rooms never double-count.
  */
 export function assignShelters(scenario: Scenario, place: Place, config: ProtectionConfig):
-  { share: Float64Array; total: number } {
+  { share: Float64Array; total: number; assignments: ShelterAssignment[] } {
   const n = place.buildings.length;
   const share = new Float64Array(n);
+  const assignments: ShelterAssignment[] = [];
   const rooms = scenario.protections;
-  if (rooms.length === 0) return { share, total: 0 };
+  if (rooms.length === 0) return { share, total: 0, assignments };
   const cfg = config.safe_room;
   const reach = reachM(scenario, cfg);
   const night = isNight(scenario.hour);
@@ -44,6 +45,7 @@ export function assignShelters(scenario: Scenario, place: Place, config: Protect
     if (take <= 0) continue;
     goers[i]! -= take; capacity[j]! -= take;
     share[i]! += take; total += take;
+    assignments.push({ building_id: place.buildings[i]!.id, room: j, people: take });
   }
   for (let i = 0; i < n; i++) {
     if (share[i]! > 0) {
@@ -51,7 +53,7 @@ export function assignShelters(scenario: Scenario, place: Place, config: Protect
       share[i] = share[i]! / (u + o);
     }
   }
-  return { share, total };
+  return { share, total, assignments };
 }
 
 export interface SafeRoomSite { h3: string; lon: number; lat: number; reachable: number }

@@ -102,7 +102,9 @@ historical building inventory. Repeated seeds require the same building order.
 ML observed that with the calibrated params (MH 1.02, RES 1.66) the riskiest
 EF4 cells can be apartments (MULTI) rather than mobile homes. Cause: at the EF4
 centerline every class reaches damage level 4, so per-person risk is
-0.05 x group multiplier, and RES > MH after fitting.
+0.05 x group multiplier, and RES > MH after fitting. (Correction: not every
+class reaches level 4 there. MH, RES_MASONRY and MULTI do (127, 180, 180 mph
+thresholds vs the 183 mph EF4 peak); RES_WOOD needs 200 mph and stops at level 3.)
 
 Averaged across the whole damage swath (uniform lateral position, 2 AM, 10 min
 warning, no basements), the calibrated model gives MH/RES_WOOD per-person risk
@@ -113,7 +115,8 @@ so the model already matches or exceeds them. Raising the MH top level to 0.15
 would give up to 427x. On the real `bt_2024_1181735` town (97 mobile homes),
 the four riskiest cells at both EF3 and EF4 are mobile-home cells. MULTI only
 ranks first where apartments sit on an EF4 centerline. Methods note: at the core
-of a violent tornado every class is destroyed and ranks by its fitted multiplier.
+of an EF4, classes that reach level 4 rank by their fitted multiplier. The
+whole-swath MH/wood ratios above are diagnostics, not validation.
 
 ## Flood and vehicle defaults (approved 2026-09-26, uncalibrated)
 

@@ -231,6 +231,11 @@ export function simulateDetailed(scenario: Scenario, place: Place, params: SimPa
   const cellOf: string[] = [];
   const result = evaluate(scenario, place, params, protections, exposures, cellOf);
   const { p05, p95, cellRuns } = sampleRuns(scenario, exposures, cellOf);
-  return { ...result, p05, p95, building_prob: buildingProbabilities(scenario, place, params, protections),
+  const detailed: DetailedResult = { ...result, p05, p95,
+    building_prob: buildingProbabilities(scenario, place, params, protections),
     cells: aggregateCells(cellRuns, place, scenario, params, protections) };
+  if (scenario.hazard === 'tornado' && scenario.protections.length > 0) {
+    detailed.shelter_assignments = assignShelters(scenario, place, requireProtections(protections)).assignments;
+  }
+  return detailed;
 }

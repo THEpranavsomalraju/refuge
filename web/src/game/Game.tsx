@@ -41,7 +41,7 @@ function Phase() {
       <>
         <BeforeAfter />
         <Views options={['before', 'yours']} />
-        <button style={primary} onClick={() => void g.compare()}>Compare with the optimal plan</button>
+        <button style={primary} onClick={() => void g.compare()}>Compare with the best plan</button>
         <button style={secondary} onClick={() => void g.plan()}>Change my plan</button>
       </>
     );
@@ -93,6 +93,8 @@ function Planning() {
         Community safe rooms hold {safeRoom.capacity} people. Mobile-home residents within a {g.warning - safeRoom.mobilize_min > 0
           ? `${Math.round(safeRoom.walk_speed_mps * (g.warning - safeRoom.mobilize_min) * 60)} m` : 'zero'} walk
         can reach one in {g.warning} minutes of warning; about {Math.round(safeRoom.compliance * 100)}% go.
+        Built to FEMA P-361 (250 mph), so people inside are modeled as safe. {usd(safeRoom.cost_usd)} each
+        (provisional). Tornado shelter only: not a flood evacuation site.
       </div>
       <div style={row}><span>Budget</span><span style={mono}>{usd(spent)} of {usd(g.budget)}</span></div>
       <div style={{ display: 'grid', gap: 4 }}>
@@ -125,6 +127,7 @@ function BeforeAfter() {
       <div style={row}><span>With your {g.placed.size} room{g.placed.size === 1 ? '' : 's'}</span><span style={mono}>{deaths(g.yours!.expected_deaths)}</span></div>
       <div style={{ ...row, fontWeight: 700 }}><span>Lives saved</span><span style={mono}>{saved.toFixed(1)}</span></div>
       <div style={muted}>{Math.round(g.yours!.sheltered ?? 0)} people in safe rooms · range {g.yours!.p05}–{g.yours!.p95}</div>
+      <div style={muted}>{HOME_NOTE}</div>
     </div>
   );
 }
@@ -133,16 +136,23 @@ function Compare() {
   const g = useGame();
   const yourSaved = g.baseline!.expected_deaths - g.yours!.expected_deaths;
   const plan = g.optimal!.plan;
-  const pct = plan.lives_saved > 0 ? Math.round(100 * yourSaved / plan.lives_saved) : 100;
+  const none = plan.lives_saved <= 1e-9;
+  const pct = none ? null : Math.round(100 * yourSaved / plan.lives_saved);
   // Plan sites come back from the worker as copies: match them by cell id.
   const optimalNames = plan.sites.map(s => `Site ${g.sites.findIndex(x => x.h3 === s.h3) + 1}`).join(', ') || 'no rooms';
   return (
     <>
-      <div style={{ fontSize: 30, fontWeight: 700, lineHeight: 1 }}>{pct}%</div>
-      <div style={muted}>of the lives the optimal plan saves</div>
+      {none
+        ? <div style={{ fontWeight: 600 }}>No safe-room plan among these sites saves lives in this storm.</div>
+        : <><div style={{ fontSize: 30, fontWeight: 700, lineHeight: 1 }}>{pct}%</div>
+          <div style={muted}>of the lives the best plan saves</div></>}
       <div style={row}><span>Your plan saves</span><span style={mono}>{yourSaved.toFixed(1)} · {usd(g.placed.size * safeRoom.cost_usd)}</span></div>
-      <div style={row}><span>Optimal plan saves</span><span style={mono}>{plan.lives_saved.toFixed(1)} · {usd(plan.cost_usd)}</span></div>
-      <div style={muted}>Optimal: {optimalNames}. Searched all {plan.evaluated} plans within {usd(g.budget)}.</div>
+      <div style={row}><span>Best plan saves</span><span style={mono}>{plan.lives_saved.toFixed(1)} · {usd(plan.cost_usd)}</span></div>
+      <div style={muted}>
+        Best plan: {optimalNames}, {deaths(g.optimal!.result.expected_deaths)} expected deaths remain. Best among
+        all {plan.evaluated} combinations of these {g.sites.length} sites within {usd(g.budget)}, under this model's assumptions.
+      </div>
+      <div style={muted}>{HOME_NOTE}</div>
       <Views options={['before', 'yours', 'optimal']} />
       <button style={secondary} onClick={() => void g.plan()}>Try another plan</button>
       <button style={secondary} onClick={g.restart}>New storm</button>
@@ -150,7 +160,8 @@ function Compare() {
   );
 }
 
-const VIEW_WORDS: Record<MapView, string> = { before: 'No protections', yours: 'Your plan', optimal: 'Optimal plan' };
+const VIEW_WORDS: Record<MapView, string> = { before: 'No protections', yours: 'Your plan', optimal: 'Best plan' };
+const HOME_NOTE = 'The map shows risk where people live: residents who reach a safe room still count in their home cell, with no risk.';
 function Views({ options }: { options: MapView[] }) {
   const g = useGame();
   return (

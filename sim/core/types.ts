@@ -154,7 +154,12 @@ export type CellRuns = ReadonlyMap<string, readonly number[]>;
 export interface DetailedResult extends SimulationResult {
   building_prob: Record<string, number>;
   cells: Record<string, CellResult>;
+  /** Only when the scenario has protections: who goes to which room (sums to `sheltered`). */
+  shelter_assignments?: ShelterAssignment[];
 }
+/** Origin building -> safe room (index into scenario.protections), for animation and audits. */
+export interface ShelterAssignment { building_id: string; room: number; people: number }
+
 export interface CellDiff { delta_expected_deaths: number; delta_risk: number }
 
 export const CALIBRATION_GROUP: Readonly<Record<BuildingClass, Exclude<CalibrationGroup, 'VEHICLE'> | null>> = {
