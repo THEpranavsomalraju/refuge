@@ -1,0 +1,6 @@
+knob,meaning,before,after
+Mobile home death rate multiplier,"How deadly a damaged mobile home is, relative to the engineering starting value",1.0,1.022
+House and apartment death rate multiplier,"Same, for houses and apartments",1.0,1.664
+Public building death rate multiplier,"Same, for schools, churches, businesses, big-box stores",1.0,0.976
+Night multiplier,"Extra risk for storms between 8 PM and 6 AM (people asleep, warnings missed)",1.5,1.259
+Basement factor,"Risk in a building with a basement, relative to one without (lower = safer)",0.25,0.244

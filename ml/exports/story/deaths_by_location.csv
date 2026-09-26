@@ -1,0 +1,8 @@
+where,tornado_share,tornado_night_share,tornado_day_share,flash_flood_share,tornado_deaths,flash_flood_deaths
+Mobile home,0.419,0.535,0.3498,0.0187,866,37
+House or apartment,0.3711,0.342,0.3884,0.098,767,194
+"School, church, business",0.0943,0.0466,0.1228,0.0273,195,54
+Vehicle,0.0769,0.0544,0.0903,0.451,159,893
+Outdoors,0.0329,0.0181,0.0417,0.1455,68,288
+Other or not recorded,0.0048,0.0013,0.0069,0.0222,10,44
+In water,0.001,0.0026,0.0,0.2374,2,470

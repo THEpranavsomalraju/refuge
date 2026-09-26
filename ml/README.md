@@ -1,0 +1,56 @@
+# ml/
+
+National risk + location models trained on NOAA Storm Events deaths, calibration of `sim/params/sim_params.json`, backtest on historical tornadoes, and landing page data.
+
+## Setup
+
+```bash
+python3.12 -m venv ml/.venv
+ml/.venv/bin/pip install -r ml/requirements.txt
+```
+
+County features come from SVI 2022, which includes ACS 2018-2022 county counts. Territories (PR, Guam, etc.) are left out of the models since SVI has no county rows for them.
+
+## Run
+
+```bash
+ml/.venv/bin/python ml/download.py       # raw files -> data/raw/  (~320 MB, cached)
+ml/.venv/bin/python ml/build_tables.py   # -> data/processed/*.parquet
+ml/.venv/bin/python ml/check_phase1.py   # sanity checks
+ml/.venv/bin/python ml/patterns.py       # hour / month / location tables
+ml/.venv/bin/python ml/train_risk.py     # national risk model + SHAP + county map
+ml/.venv/bin/python ml/train_location.py # location model
+ml/.venv/bin/python ml/traffic_curve.py  # hourly traffic curve for crossings
+```
+
+Outputs land in `ml/exports/` (see its README for formats), `ml/figures/`, and `ml/work/` (models, gitignored).
+
+## Simulation integration
+
+See [INTEGRATION.md](INTEGRATION.md) for the Lumberton demo baseline, flood data blockers, and shelter/replay acceptance checks. After building Simulation, run `node ml/check_sim_integration.mjs`; use `--sim-root` and `--places` to check teammate checkouts before merging. This uses cached backtest data and does not retrain models.
+
+The final parameter file includes calibrated tornado knobs and **uncalibrated** flood/vehicle blocks. `heatmap_bands.py` preserves those blocks if an older calibration cache lacks them. The script's fixed risk bands are presentation choices, not independently validated mortality categories.
+
+## Tables (data/processed/, not in git)
+
+| File | Rows | Notes |
+|---|---|---|
+| `events.parquet` | one per NOAA event, 1996-2025 | tornadoes are one row per county segment |
+| `fatalities.parquet` | one per death | `location_class` in MH, RES, PUBLIC, VEHICLE, WATER, OUTDOOR, OTHER |
+| `county_features.parquet` | one per county | mh_share, age65_share, noveh_share, pop_density, svi |
+| `narratives.parquet` | tornado + flash flood events | NOAA event and episode text |
+
+## Conventions shared with the rest of the team
+
+- **hour** is local clock time (0-23), same as the scenario `hour` field. NOAA stores local standard time, so we convert with real DST rules. The original is kept as `hour_lst`.
+- **county_fips** is a 5 character string, for example `"37021"`.
+- **widths**: NOAA gives yards (`tor_width_yd`). `tor_width_m` matches the scenario `width_m`.
+- **Death location classes** vs simulator building classes (used for calibration):
+
+| NOAA class | sim `cls` / `by_class` keys |
+|---|---|
+| MH | MH |
+| RES | RES_WOOD, RES_MASONRY, MULTI |
+| PUBLIC | SCHOOL, WORSHIP, COMMERCIAL, BIGROOF |
+| VEHICLE | VEHICLE |
+| OUTDOOR, WATER, OTHER | no match (sim `OTHER` buildings too), left out of the location mix penalty |
