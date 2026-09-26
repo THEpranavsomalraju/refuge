@@ -8,8 +8,11 @@ import { loadPlace } from './data';
 import { makeFrame, type Frame } from './geo';
 import { Lines } from './Lines';
 import { PALETTE } from './palette';
+import { Protections } from './Protections';
+import { RiskMap } from './RiskMap';
 import { useSceneStore } from './store';
 import { Terrain } from './Terrain';
+import { TornadoPath } from './TornadoPath';
 import type { PlaceData } from './types';
 
 export type LoadState = { state: 'loading' } | { state: 'ready'; place: PlaceData } | { state: 'error'; message: string };
@@ -46,6 +49,9 @@ function Place({ place }: { place: PlaceData }) {
       <Terrain place={place} frame={frame} />
       <Lines place={place} frame={frame} />
       <Buildings place={place} frame={frame} />
+      <TornadoPath frame={frame} />
+      <Protections frame={frame} />
+      <RiskMap place={place} frame={frame} />
       <CellHover frame={frame} />
     </>
   );

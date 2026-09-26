@@ -23,6 +23,14 @@ function placesPlugin(): Plugin {
         res.setHeader('Content-Type', file.endsWith('.json') ? 'application/json' : 'application/octet-stream');
         createReadStream(file).pipe(res);
       });
+      // Dev only: sample simulation results in the gitignored data/dev_results/ folder.
+      const devResults = resolve(HERE, '..', 'data', 'dev_results');
+      server.middlewares.use('/dev-results', (req, res, next) => {
+        const file = join(devResults, normalize(decodeURIComponent((req.url ?? '').split('?')[0])));
+        if (!file.startsWith(devResults) || !existsSync(file) || !statSync(file).isFile()) return next();
+        res.setHeader('Content-Type', 'application/json');
+        createReadStream(file).pipe(res);
+      });
     },
     closeBundle() {
       const out = resolve(HERE, 'dist', 'places');
