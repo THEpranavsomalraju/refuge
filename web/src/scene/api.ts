@@ -1,4 +1,5 @@
 import { cellToLatLng } from 'h3-js';
+import { hurricaneCells, tornadoCells } from './RiskMap';
 import { useSceneStore } from './store';
 import type { LonLat, SceneAPI } from './types';
 
@@ -62,8 +63,14 @@ export const scene: SceneAPI = {
   onCellHover(cb) {
     useSceneStore.setState({ onCellHover: cb });
   },
-  showRiskMap(cells, bands) {
-    useSceneStore.setState({ risk: { cells, bands, shownAt: performance.now() }, diff: null });
+  showRiskMap(cells) {
+    // Only cells present in the result are drawn (absent = unaffected). Band cutoffs
+    // are applied by the sim; the legend (RiskLegend) shows them.
+    useSceneStore.setState({ risk: { hazard: 'tornado', cells: tornadoCells(cells), shownAt: performance.now() }, diff: null });
+    return new Promise(resolve => setTimeout(resolve, RISK_RISE_MS));
+  },
+  showDisplacementMap(cells) {
+    useSceneStore.setState({ risk: { hazard: 'hurricane', cells: hurricaneCells(cells), shownAt: performance.now() }, diff: null });
     return new Promise(resolve => setTimeout(resolve, RISK_RISE_MS));
   },
   hideRiskMap() {

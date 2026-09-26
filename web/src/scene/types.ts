@@ -1,3 +1,6 @@
+import type { HurricaneCells } from '../shared/contract';
+import type { DiffCells } from './store';
+
 // Shapes of the place files in places/<place_id>/ (see places/README.md) and of the
 // scene API the game calls. Result types mirror sim/core/types.ts on Mahil's branch.
 
@@ -120,14 +123,17 @@ export interface SceneAPI {
   removeProtection(id: string): void;
   onBuildingClick(cb: ((b: BuildingRecord) => void) | null): void;
   onCellHover(cb: ((h3: string | null) => void) | null): void;
-  showRiskMap(cells: Record<string, CellResult>, bands: RiskBands): Promise<void>;
+  /** Tornado map. Only cells present in `cells` are drawn; absent cells were unaffected. */
+  showRiskMap(cells: Record<string, CellResult>, bands?: RiskBands): Promise<void>;
+  /** Hurricane map: same hexes, colored by share displaced, height = displaced people. */
+  showDisplacementMap(cells: HurricaneCells): Promise<void>;
   /** Hides the risk map and the difference map. */
   hideRiskMap(): void;
   /**
    * Difference view: cells where expected deaths dropped rise in blue, height = lives
    * saved; unchanged cells with people stay gray and flat. Replaces the risk map.
    */
-  showDifference(before: Record<string, CellResult>, after: Record<string, CellResult>): Promise<void>;
+  showDifference(before: DiffCells, after: DiffCells): Promise<void>;
 
   /** Clickable markers for protection sites; replaces any shown before. */
   showCandidateSites(sites: CandidateSite[]): void;

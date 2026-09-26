@@ -5,6 +5,7 @@ import { RISK_RISE_MS } from './api';
 import type { Frame } from './geo';
 import { RISK_COLOR } from './palette';
 import { useSceneStore } from './store';
+import type { HurricaneCells } from '../shared/contract';
 import type { CellResult, PlaceData } from './types';
 
 /** Buildings fade to neutral first, then the bands rise one after another. */
@@ -13,8 +14,41 @@ const RISE_ORDER = ['green', 'yellow', 'red', 'deep_red'] as const;
 type RiseBand = typeof RISE_ORDER[number];
 const BAND_MS = (RISK_RISE_MS - RISK_FADE_MS) / RISE_ORDER.length;
 
-/** Prism height from expected deaths in the cell: scaled and capped (meters). */
+/** Tornado prism height from expected deaths in the cell: scaled and capped (meters). */
 export const cellHeightM = (expectedDeaths: number) => Math.min(320, 10 + 95 * Math.sqrt(Math.max(0, expectedDeaths)));
+/** Hurricane prism height from displaced people in the cell: scaled and capped (meters). */
+export const displacedHeightM = (displaced: number) => Math.min(320, 10 + 14 * Math.sqrt(Math.max(0, displaced)));
+
+/**
+ * One drawable cell, whatever the hazard. Both hazards share the colorblind-safe ramp:
+ * the four rising bands are drawn with the same four colors; only the legend differs.
+ */
+export interface RiskCell { band: RiseBand | 'sparse'; heightM: number; hatch: boolean }
+
+const HURRICANE_BAND: Record<string, RiseBand | 'sparse'> = {
+  low: 'green', moderate: 'yellow', severe: 'red', extreme: 'deep_red', sparse: 'sparse',
+};
+
+/** Tornado results (sim CellResult, or contract TornadoCells) -> drawable cells. Absent or 'empty' cells are not drawn. */
+export function tornadoCells(cells: Record<string, CellResult>): Record<string, RiskCell> {
+  const out: Record<string, RiskCell> = {};
+  for (const [h3, c] of Object.entries(cells)) {
+    if (c.band === 'empty') continue;
+    out[h3] = { band: c.band as RiseBand | 'sparse', heightM: cellHeightM(c.expected_deaths), hatch: c.band === 'deep_red' || c.uncertain };
+  }
+  return out;
+}
+
+/** Hurricane results -> drawable cells: color by displacement band, height by displaced people. */
+export function hurricaneCells(cells: HurricaneCells): Record<string, RiskCell> {
+  const out: Record<string, RiskCell> = {};
+  for (const [h3, c] of Object.entries(cells)) {
+    const band = HURRICANE_BAND[c.band];
+    if (!band) continue;
+    out[h3] = { band, heightM: displacedHeightM(c.displaced), hatch: c.band === 'extreme' };
+  }
+  return out;
+}
 
 interface Group {
   prism: THREE.BufferGeometry;
@@ -24,7 +58,7 @@ interface Group {
   lift: Float32Array[];
 }
 
-/** Post-storm risk layer for scene.showRiskMap. */
+/** Post-storm layer for scene.showRiskMap (tornado) and scene.showDisplacementMap (hurricane). */
 export function RiskMap({ place, frame }: { place: PlaceData; frame: Frame }) {
   const risk = useSceneStore(s => s.risk);
   const hatchTex = useMemo(makeHatchTexture, []);
@@ -34,7 +68,7 @@ export function RiskMap({ place, frame }: { place: PlaceData; frame: Frame }) {
   useEffect(() => () => {
     if (!built) return;
     for (const g of Object.values(built.groups)) { g.prism.dispose(); g.hatch?.dispose(); }
-    built.sparse.dispose(); built.unavailable.dispose();
+    built.sparse.dispose();
   }, [built]);
 
   useFrame(() => {
@@ -77,32 +111,22 @@ export function RiskMap({ place, frame }: { place: PlaceData; frame: Frame }) {
       <lineSegments geometry={built.sparse} raycast={() => null}>
         <lineBasicMaterial color={RISK_COLOR.sparse} transparent opacity={0.7} />
       </lineSegments>
-      <mesh geometry={built.unavailable} raycast={() => null}>
-        <meshBasicMaterial color={RISK_COLOR.unavailable} map={hatchTex} transparent opacity={0.9} depthWrite={false} />
-      </mesh>
     </group>
   );
 }
 
-export function buildLayer(place: PlaceData, frame: Frame, cells: Record<string, CellResult>) {
+export function buildLayer(place: PlaceData, frame: Frame, cells: Record<string, RiskCell>) {
   const acc: Record<RiseBand, { pos: number[]; base: number[]; lift: number[]; hPos: number[]; hBase: number[]; hLift: number[]; hUv: number[] }> =
     Object.fromEntries(RISE_ORDER.map(b => [b, { pos: [], base: [], lift: [], hPos: [], hBase: [], hLift: [], hUv: [] }])) as never;
   const sparse: number[] = [];
-  const unavail: number[] = [];
-  const unavailUv: number[] = [];
 
+  // Only cells present in the results are drawn; absent cells were unaffected.
   for (const cell of place.cells) {
+    const r = cells[cell.h3];
+    if (!r) continue;
     const ring = cell.boundary.map(([lon, lat]) => frame.toXZ(lon, lat));
     let ground = Infinity;
     for (const [x, z] of ring) ground = Math.min(ground, frame.groundY(x, z));
-    const r = cells[cell.h3];
-
-    if (!r) {
-      // No result for a cell with people: data unavailable. Never drawn as safe.
-      if (cell.pop_night + cell.pop_day > 0) flatTile(ring, ground + 1.5, unavail, unavailUv);
-      continue;
-    }
-    if (r.band === 'empty') continue;
     if (r.band === 'sparse') {
       for (let k = 0; k < ring.length; k++) {
         const [ax, az] = ring[k], [bx, bz] = ring[(k + 1) % ring.length];
@@ -110,11 +134,11 @@ export function buildLayer(place: PlaceData, frame: Frame, cells: Record<string,
       }
       continue;
     }
-    const a = acc[r.band as RiseBand];
+    const a = acc[r.band];
     if (!a) continue;
-    const h = cellHeightM(r.expected_deaths);
+    const h = r.heightM;
     prism(ring, ground - 1, h + 1, a.pos, a.base, a.lift);
-    if (r.band === 'deep_red' || r.uncertain) {
+    if (r.hatch) {
       const start = a.hPos.length / 3;
       flatTile(ring, 0, a.hPos, a.hUv);
       for (let v = start; v < a.hPos.length / 3; v++) { a.hBase.push(ground - 1 + 0.4); a.hLift.push(h + 1); }
@@ -144,10 +168,7 @@ export function buildLayer(place: PlaceData, frame: Frame, cells: Record<string,
 
   const sparseGeo = new THREE.BufferGeometry();
   sparseGeo.setAttribute('position', new THREE.Float32BufferAttribute(sparse, 3));
-  const unavailable = new THREE.BufferGeometry();
-  unavailable.setAttribute('position', new THREE.Float32BufferAttribute(unavail, 3));
-  unavailable.setAttribute('uv', new THREE.Float32BufferAttribute(unavailUv, 2));
-  return { groups, sparse: sparseGeo, unavailable };
+  return { groups, sparse: sparseGeo };
 }
 
 /** Hexagonal prism (walls + top) as triangles; records base y and lift per vertex. */

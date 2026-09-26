@@ -3,27 +3,32 @@ import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { RISK_RISE_MS } from './api';
 import type { Frame } from './geo';
-import { DIFF_COLOR, RISK_COLOR } from './palette';
-import { cellHeightM, flatTile, makeHatchTexture, prism, RISK_FADE_MS } from './RiskMap';
-import { useSceneStore } from './store';
-import type { CellResult, PlaceData } from './types';
+import { DIFF_COLOR } from './palette';
+import { cellHeightM, displacedHeightM, flatTile, prism, RISK_FADE_MS } from './RiskMap';
+import { useSceneStore, type DiffCells } from './store';
+import type { PlaceData } from './types';
 
-/** Changes smaller than this (expected deaths) count as unchanged. */
+/** Changes smaller than this (expected deaths or displaced people) count as unchanged. */
 const EPS = 0.001;
 
+type DiffCell = DiffCells[string];
+/** The compared value: expected deaths (tornado) or displaced people (hurricane). Absent = 0. */
+const value = (c: DiffCell | undefined) => (c ? c.expected_deaths ?? c.displaced ?? 0 : 0);
+const peopleIn = (c: DiffCell | undefined) => (c ? c.people ?? c.residents ?? 0 : 0);
+
 /**
- * Difference view for scene.showDifference: cells whose expected deaths dropped rise in
- * blue (height = lives saved, shade = share of the cell's deaths prevented); unchanged
- * cells with people are flat gray; cells missing from either result are unavailable.
+ * Difference view for scene.showDifference: cells whose expected deaths (tornado) or
+ * displaced people (hurricane) dropped rise in blue (height = lives saved or people kept
+ * housed, shade = share of the cell's value prevented); unchanged cells are flat gray.
+ * A cell absent from a result was unaffected there, so it counts as 0.
  */
 export function DifferenceMap({ place, frame }: { place: PlaceData; frame: Frame }) {
   const diff = useSceneStore(s => s.diff);
-  const hatchTex = useMemo(makeHatchTexture, []);
   const built = useMemo(() => (diff ? buildDiff(place, frame, diff.before, diff.after) : null), [diff, place, frame]);
   const riseRef = useRef(-1);
 
   useEffect(() => { riseRef.current = -1; }, [built]);
-  useEffect(() => () => { if (built) { built.bars.dispose(); built.flat.dispose(); built.unavailable.dispose(); } }, [built]);
+  useEffect(() => () => { if (built) { built.bars.dispose(); built.flat.dispose(); } }, [built]);
 
   useFrame(() => {
     if (!diff || !built) return;
@@ -46,37 +51,32 @@ export function DifferenceMap({ place, frame }: { place: PlaceData; frame: Frame
       <mesh geometry={built.flat} raycast={() => null}>
         <meshBasicMaterial color={DIFF_COLOR.unchanged} transparent opacity={0.75} depthWrite={false} />
       </mesh>
-      <mesh geometry={built.unavailable} raycast={() => null}>
-        <meshBasicMaterial color={RISK_COLOR.unavailable} map={hatchTex} transparent opacity={0.9} depthWrite={false} />
-      </mesh>
     </group>
   );
 }
 
-export function buildDiff(place: PlaceData, frame: Frame, before: Record<string, CellResult>, after: Record<string, CellResult>) {
+export function buildDiff(place: PlaceData, frame: Frame, before: DiffCells, after: DiffCells) {
   const pos: number[] = [], base: number[] = [], lift: number[] = [], col: number[] = [];
   const flat: number[] = [], flatUv: number[] = [];
-  const unavail: number[] = [], unavailUv: number[] = [];
   const lo = new THREE.Color(DIFF_COLOR.savedLow), hi = new THREE.Color(DIFF_COLOR.savedHigh), worse = new THREE.Color(DIFF_COLOR.worse);
   const c = new THREE.Color();
-  let saved = 0, improved = 0, unchanged = 0, worsened = 0, missing = 0;
+  let saved = 0, improved = 0, unchanged = 0, worsened = 0;
+  const hurricane = [...Object.values(before), ...Object.values(after)].some(c => c.displaced !== undefined);
+  const heightOf = hurricane ? displacedHeightM : cellHeightM;
 
   for (const cell of place.cells) {
     const b = before[cell.h3], a = after[cell.h3];
+    if (!b && !a) continue;   // unaffected in both
+    if (Math.max(peopleIn(b), peopleIn(a)) <= 0) continue;
     const ring = cell.boundary.map(([lon, lat]) => frame.toXZ(lon, lat));
     let ground = Infinity;
     for (const [x, z] of ring) ground = Math.min(ground, frame.groundY(x, z));
-    if (!b || !a) {
-      if (cell.pop_night + cell.pop_day > 0) { flatTile(ring, ground + 1.5, unavail, unavailUv); missing++; }
-      continue;
-    }
-    if (Math.max(b.people, a.people) <= 0) continue;
-    const d = b.expected_deaths - a.expected_deaths;
+    const d = value(b) - value(a);
     if (Math.abs(d) <= EPS) { flatTile(ring, ground + 1.2, flat, flatUv); unchanged++; continue; }
     const start = pos.length / 3;
-    prism(ring, ground - 1, cellHeightM(Math.abs(d)) + 1, pos, base, lift);
+    prism(ring, ground - 1, heightOf(Math.abs(d)) + 1, pos, base, lift);
     if (d > 0) {
-      c.copy(lo).lerp(hi, Math.min(1, d / Math.max(EPS, b.expected_deaths)));
+      c.copy(lo).lerp(hi, Math.min(1, d / Math.max(EPS, value(b))));
       saved += d; improved++;
     } else {
       c.copy(worse); worsened++;
@@ -93,8 +93,5 @@ export function buildDiff(place: PlaceData, frame: Frame, before: Record<string,
   for (let v = 0; v < p.count; v++) p.setY(v, b0[v]);
   const flatGeo = new THREE.BufferGeometry();
   flatGeo.setAttribute('position', new THREE.Float32BufferAttribute(flat, 3));
-  const unavailable = new THREE.BufferGeometry();
-  unavailable.setAttribute('position', new THREE.Float32BufferAttribute(unavail, 3));
-  unavailable.setAttribute('uv', new THREE.Float32BufferAttribute(unavailUv, 2));
-  return { bars, base: b0, lift: l0, flat: flatGeo, unavailable, stats: { saved, improved, unchanged, worsened, missing } };
+  return { bars, base: b0, lift: l0, flat: flatGeo, stats: { saved, improved, unchanged, worsened, hurricane } };
 }

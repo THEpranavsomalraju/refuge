@@ -1,5 +1,9 @@
 import { create } from 'zustand';
-import type { BuildingRecord, CandidateSite, CellResult, LonLat, ProtectionType, RiskBands } from './types';
+import type { RiskCell } from './RiskMap';
+import type { BuildingRecord, CandidateSite, LonLat, ProtectionType } from './types';
+
+/** Per-cell values compared by the difference view (tornado or hurricane result cells). */
+export type DiffCells = Record<string, { expected_deaths?: number; displaced?: number; people?: number; residents?: number }>;
 
 export interface Protection { id: string; type: ProtectionType; lon: number; lat: number }
 
@@ -15,8 +19,9 @@ interface SceneState {
   /** Storm progress along the path, 0..1, or null when no storm is playing. */
   stormT: number | null;
   protections: Protection[];
-  risk: { cells: Record<string, CellResult>; bands: RiskBands; shownAt: number } | null;
-  diff: { before: Record<string, CellResult>; after: Record<string, CellResult>; shownAt: number } | null;
+  /** Risk or displacement map: cells already converted to band/height/hatch. */
+  risk: { hazard: 'tornado' | 'hurricane'; cells: Record<string, RiskCell>; shownAt: number } | null;
+  diff: { before: DiffCells; after: DiffCells; shownAt: number } | null;
   sites: CandidateSite[];
   camera: CameraGoal | null;
   onBuildingClick: ((b: BuildingRecord) => void) | null;
