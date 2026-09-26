@@ -1,0 +1,598 @@
+{
+ "note": "Direct deaths by local clock hour of storm start and by month, 1996-2025.",
+ "hour": {
+  "Tornado": [
+   {
+    "hour": 0,
+    "events": 962,
+    "fatal_events": 32,
+    "deaths": 93,
+    "deaths_per_100_events": 9.667,
+    "share_of_deaths": 0.0424
+   },
+   {
+    "hour": 1,
+    "events": 794,
+    "fatal_events": 19,
+    "deaths": 83,
+    "deaths_per_100_events": 10.453,
+    "share_of_deaths": 0.0379
+   },
+   {
+    "hour": 2,
+    "events": 594,
+    "fatal_events": 13,
+    "deaths": 22,
+    "deaths_per_100_events": 3.704,
+    "share_of_deaths": 0.01
+   },
+   {
+    "hour": 3,
+    "events": 563,
+    "fatal_events": 30,
+    "deaths": 79,
+    "deaths_per_100_events": 14.032,
+    "share_of_deaths": 0.0361
+   },
+   {
+    "hour": 4,
+    "events": 529,
+    "fatal_events": 10,
+    "deaths": 19,
+    "deaths_per_100_events": 3.592,
+    "share_of_deaths": 0.0087
+   },
+   {
+    "hour": 5,
+    "events": 541,
+    "fatal_events": 13,
+    "deaths": 24,
+    "deaths_per_100_events": 4.436,
+    "share_of_deaths": 0.011
+   },
+   {
+    "hour": 6,
+    "events": 516,
+    "fatal_events": 14,
+    "deaths": 42,
+    "deaths_per_100_events": 8.14,
+    "share_of_deaths": 0.0192
+   },
+   {
+    "hour": 7,
+    "events": 497,
+    "fatal_events": 1,
+    "deaths": 1,
+    "deaths_per_100_events": 0.201,
+    "share_of_deaths": 0.0005
+   },
+   {
+    "hour": 8,
+    "events": 505,
+    "fatal_events": 6,
+    "deaths": 9,
+    "deaths_per_100_events": 1.782,
+    "share_of_deaths": 0.0041
+   },
+   {
+    "hour": 9,
+    "events": 517,
+    "fatal_events": 4,
+    "deaths": 5,
+    "deaths_per_100_events": 0.967,
+    "share_of_deaths": 0.0023
+   },
+   {
+    "hour": 10,
+    "events": 613,
+    "fatal_events": 6,
+    "deaths": 11,
+    "deaths_per_100_events": 1.794,
+    "share_of_deaths": 0.005
+   },
+   {
+    "hour": 11,
+    "events": 815,
+    "fatal_events": 13,
+    "deaths": 18,
+    "deaths_per_100_events": 2.209,
+    "share_of_deaths": 0.0082
+   },
+   {
+    "hour": 12,
+    "events": 1112,
+    "fatal_events": 15,
+    "deaths": 35,
+    "deaths_per_100_events": 3.147,
+    "share_of_deaths": 0.016
+   },
+   {
+    "hour": 13,
+    "events": 1577,
+    "fatal_events": 16,
+    "deaths": 33,
+    "deaths_per_100_events": 2.093,
+    "share_of_deaths": 0.0151
+   },
+   {
+    "hour": 14,
+    "events": 2420,
+    "fatal_events": 22,
+    "deaths": 80,
+    "deaths_per_100_events": 3.306,
+    "share_of_deaths": 0.0365
+   },
+   {
+    "hour": 15,
+    "events": 3255,
+    "fatal_events": 58,
+    "deaths": 230,
+    "deaths_per_100_events": 7.066,
+    "share_of_deaths": 0.105
+   },
+   {
+    "hour": 16,
+    "events": 4212,
+    "fatal_events": 72,
+    "deaths": 234,
+    "deaths_per_100_events": 5.556,
+    "share_of_deaths": 0.1068
+   },
+   {
+    "hour": 17,
+    "events": 4810,
+    "fatal_events": 65,
+    "deaths": 301,
+    "deaths_per_100_events": 6.258,
+    "share_of_deaths": 0.1374
+   },
+   {
+    "hour": 18,
+    "events": 4840,
+    "fatal_events": 60,
+    "deaths": 170,
+    "deaths_per_100_events": 3.512,
+    "share_of_deaths": 0.0776
+   },
+   {
+    "hour": 19,
+    "events": 4500,
+    "fatal_events": 75,
+    "deaths": 226,
+    "deaths_per_100_events": 5.022,
+    "share_of_deaths": 0.1031
+   },
+   {
+    "hour": 20,
+    "events": 3601,
+    "fatal_events": 52,
+    "deaths": 146,
+    "deaths_per_100_events": 4.054,
+    "share_of_deaths": 0.0666
+   },
+   {
+    "hour": 21,
+    "events": 2268,
+    "fatal_events": 41,
+    "deaths": 103,
+    "deaths_per_100_events": 4.541,
+    "share_of_deaths": 0.047
+   },
+   {
+    "hour": 22,
+    "events": 1547,
+    "fatal_events": 40,
+    "deaths": 117,
+    "deaths_per_100_events": 7.563,
+    "share_of_deaths": 0.0534
+   },
+   {
+    "hour": 23,
+    "events": 1162,
+    "fatal_events": 39,
+    "deaths": 110,
+    "deaths_per_100_events": 9.466,
+    "share_of_deaths": 0.0502
+   }
+  ],
+  "Flash Flood": [
+   {
+    "hour": 0,
+    "events": 3217,
+    "fatal_events": 52,
+    "deaths": 95,
+    "deaths_per_100_events": 2.953,
+    "share_of_deaths": 0.0462
+   },
+   {
+    "hour": 1,
+    "events": 3248,
+    "fatal_events": 58,
+    "deaths": 82,
+    "deaths_per_100_events": 2.525,
+    "share_of_deaths": 0.0399
+   },
+   {
+    "hour": 2,
+    "events": 2837,
+    "fatal_events": 35,
+    "deaths": 41,
+    "deaths_per_100_events": 1.445,
+    "share_of_deaths": 0.02
+   },
+   {
+    "hour": 3,
+    "events": 2556,
+    "fatal_events": 35,
+    "deaths": 77,
+    "deaths_per_100_events": 3.013,
+    "share_of_deaths": 0.0375
+   },
+   {
+    "hour": 4,
+    "events": 2653,
+    "fatal_events": 44,
+    "deaths": 175,
+    "deaths_per_100_events": 6.596,
+    "share_of_deaths": 0.0852
+   },
+   {
+    "hour": 5,
+    "events": 2711,
+    "fatal_events": 40,
+    "deaths": 81,
+    "deaths_per_100_events": 2.988,
+    "share_of_deaths": 0.0394
+   },
+   {
+    "hour": 6,
+    "events": 3063,
+    "fatal_events": 36,
+    "deaths": 52,
+    "deaths_per_100_events": 1.698,
+    "share_of_deaths": 0.0253
+   },
+   {
+    "hour": 7,
+    "events": 3281,
+    "fatal_events": 35,
+    "deaths": 44,
+    "deaths_per_100_events": 1.341,
+    "share_of_deaths": 0.0214
+   },
+   {
+    "hour": 8,
+    "events": 3761,
+    "fatal_events": 34,
+    "deaths": 50,
+    "deaths_per_100_events": 1.329,
+    "share_of_deaths": 0.0243
+   },
+   {
+    "hour": 9,
+    "events": 3876,
+    "fatal_events": 29,
+    "deaths": 51,
+    "deaths_per_100_events": 1.316,
+    "share_of_deaths": 0.0248
+   },
+   {
+    "hour": 10,
+    "events": 3682,
+    "fatal_events": 36,
+    "deaths": 71,
+    "deaths_per_100_events": 1.928,
+    "share_of_deaths": 0.0345
+   },
+   {
+    "hour": 11,
+    "events": 3448,
+    "fatal_events": 37,
+    "deaths": 56,
+    "deaths_per_100_events": 1.624,
+    "share_of_deaths": 0.0273
+   },
+   {
+    "hour": 12,
+    "events": 3403,
+    "fatal_events": 22,
+    "deaths": 27,
+    "deaths_per_100_events": 0.793,
+    "share_of_deaths": 0.0131
+   },
+   {
+    "hour": 13,
+    "events": 3720,
+    "fatal_events": 38,
+    "deaths": 71,
+    "deaths_per_100_events": 1.909,
+    "share_of_deaths": 0.0345
+   },
+   {
+    "hour": 14,
+    "events": 4786,
+    "fatal_events": 45,
+    "deaths": 69,
+    "deaths_per_100_events": 1.442,
+    "share_of_deaths": 0.0336
+   },
+   {
+    "hour": 15,
+    "events": 5981,
+    "fatal_events": 44,
+    "deaths": 94,
+    "deaths_per_100_events": 1.572,
+    "share_of_deaths": 0.0457
+   },
+   {
+    "hour": 16,
+    "events": 7023,
+    "fatal_events": 61,
+    "deaths": 86,
+    "deaths_per_100_events": 1.225,
+    "share_of_deaths": 0.0418
+   },
+   {
+    "hour": 17,
+    "events": 7698,
+    "fatal_events": 71,
+    "deaths": 114,
+    "deaths_per_100_events": 1.481,
+    "share_of_deaths": 0.0555
+   },
+   {
+    "hour": 18,
+    "events": 7565,
+    "fatal_events": 60,
+    "deaths": 76,
+    "deaths_per_100_events": 1.005,
+    "share_of_deaths": 0.037
+   },
+   {
+    "hour": 19,
+    "events": 7461,
+    "fatal_events": 66,
+    "deaths": 110,
+    "deaths_per_100_events": 1.474,
+    "share_of_deaths": 0.0535
+   },
+   {
+    "hour": 20,
+    "events": 6841,
+    "fatal_events": 64,
+    "deaths": 101,
+    "deaths_per_100_events": 1.476,
+    "share_of_deaths": 0.0491
+   },
+   {
+    "hour": 21,
+    "events": 6189,
+    "fatal_events": 92,
+    "deaths": 140,
+    "deaths_per_100_events": 2.262,
+    "share_of_deaths": 0.0681
+   },
+   {
+    "hour": 22,
+    "events": 5050,
+    "fatal_events": 79,
+    "deaths": 163,
+    "deaths_per_100_events": 3.228,
+    "share_of_deaths": 0.0793
+   },
+   {
+    "hour": 23,
+    "events": 4012,
+    "fatal_events": 62,
+    "deaths": 129,
+    "deaths_per_100_events": 3.215,
+    "share_of_deaths": 0.0628
+   }
+  ]
+ },
+ "month": {
+  "Tornado": [
+   {
+    "month": 1,
+    "events": 1543,
+    "fatal_events": 41,
+    "deaths": 81,
+    "deaths_per_100_events": 5.25,
+    "share_of_deaths": 0.037
+   },
+   {
+    "month": 2,
+    "events": 1398,
+    "fatal_events": 64,
+    "deaths": 203,
+    "deaths_per_100_events": 14.521,
+    "share_of_deaths": 0.0927
+   },
+   {
+    "month": 3,
+    "events": 3496,
+    "fatal_events": 104,
+    "deaths": 291,
+    "deaths_per_100_events": 8.324,
+    "share_of_deaths": 0.1328
+   },
+   {
+    "month": 4,
+    "events": 7020,
+    "fatal_events": 180,
+    "deaths": 657,
+    "deaths_per_100_events": 9.359,
+    "share_of_deaths": 0.2999
+   },
+   {
+    "month": 5,
+    "events": 9319,
+    "fatal_events": 125,
+    "deaths": 515,
+    "deaths_per_100_events": 5.526,
+    "share_of_deaths": 0.2351
+   },
+   {
+    "month": 6,
+    "events": 6252,
+    "fatal_events": 36,
+    "deaths": 62,
+    "deaths_per_100_events": 0.992,
+    "share_of_deaths": 0.0283
+   },
+   {
+    "month": 7,
+    "events": 3577,
+    "fatal_events": 13,
+    "deaths": 18,
+    "deaths_per_100_events": 0.503,
+    "share_of_deaths": 0.0082
+   },
+   {
+    "month": 8,
+    "events": 2673,
+    "fatal_events": 15,
+    "deaths": 20,
+    "deaths_per_100_events": 0.748,
+    "share_of_deaths": 0.0091
+   },
+   {
+    "month": 9,
+    "events": 2094,
+    "fatal_events": 19,
+    "deaths": 25,
+    "deaths_per_100_events": 1.194,
+    "share_of_deaths": 0.0114
+   },
+   {
+    "month": 10,
+    "events": 2028,
+    "fatal_events": 15,
+    "deaths": 25,
+    "deaths_per_100_events": 1.233,
+    "share_of_deaths": 0.0114
+   },
+   {
+    "month": 11,
+    "events": 1806,
+    "fatal_events": 54,
+    "deaths": 126,
+    "deaths_per_100_events": 6.977,
+    "share_of_deaths": 0.0575
+   },
+   {
+    "month": 12,
+    "events": 1544,
+    "fatal_events": 50,
+    "deaths": 168,
+    "deaths_per_100_events": 10.881,
+    "share_of_deaths": 0.0767
+   }
+  ],
+  "Flash Flood": [
+   {
+    "month": 1,
+    "events": 3762,
+    "fatal_events": 55,
+    "deaths": 83,
+    "deaths_per_100_events": 2.206,
+    "share_of_deaths": 0.0404
+   },
+   {
+    "month": 2,
+    "events": 3314,
+    "fatal_events": 37,
+    "deaths": 51,
+    "deaths_per_100_events": 1.539,
+    "share_of_deaths": 0.0248
+   },
+   {
+    "month": 3,
+    "events": 4912,
+    "fatal_events": 76,
+    "deaths": 109,
+    "deaths_per_100_events": 2.219,
+    "share_of_deaths": 0.053
+   },
+   {
+    "month": 4,
+    "events": 7285,
+    "fatal_events": 78,
+    "deaths": 101,
+    "deaths_per_100_events": 1.386,
+    "share_of_deaths": 0.0491
+   },
+   {
+    "month": 5,
+    "events": 13826,
+    "fatal_events": 144,
+    "deaths": 209,
+    "deaths_per_100_events": 1.512,
+    "share_of_deaths": 0.1017
+   },
+   {
+    "month": 6,
+    "events": 17885,
+    "fatal_events": 137,
+    "deaths": 237,
+    "deaths_per_100_events": 1.325,
+    "share_of_deaths": 0.1153
+   },
+   {
+    "month": 7,
+    "events": 20016,
+    "fatal_events": 162,
+    "deaths": 380,
+    "deaths_per_100_events": 1.898,
+    "share_of_deaths": 0.1849
+   },
+   {
+    "month": 8,
+    "events": 16375,
+    "fatal_events": 153,
+    "deaths": 321,
+    "deaths_per_100_events": 1.96,
+    "share_of_deaths": 0.1562
+   },
+   {
+    "month": 9,
+    "events": 11034,
+    "fatal_events": 188,
+    "deaths": 338,
+    "deaths_per_100_events": 3.063,
+    "share_of_deaths": 0.1645
+   },
+   {
+    "month": 10,
+    "events": 4796,
+    "fatal_events": 72,
+    "deaths": 121,
+    "deaths_per_100_events": 2.523,
+    "share_of_deaths": 0.0589
+   },
+   {
+    "month": 11,
+    "events": 2367,
+    "fatal_events": 38,
+    "deaths": 56,
+    "deaths_per_100_events": 2.366,
+    "share_of_deaths": 0.0273
+   },
+   {
+    "month": 12,
+    "events": 2490,
+    "fatal_events": 35,
+    "deaths": 49,
+    "deaths_per_100_events": 1.968,
+    "share_of_deaths": 0.0238
+   }
+  ]
+ },
+ "tornado_night": {
+  "night_hours": "8 PM to 6 AM",
+  "share_of_tornadoes": 0.2938,
+  "share_of_deaths": 0.3633,
+  "deaths_per_100_tornadoes_night": 6.337,
+  "deaths_per_100_tornadoes_day": 4.621
+ }
+}

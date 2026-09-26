@@ -1,0 +1,120 @@
+{
+ "note": "Direct deaths by where the person was. 'Unknown' location excluded from shares (count given).",
+ "classes": [
+  "MH",
+  "RES",
+  "PUBLIC",
+  "VEHICLE",
+  "WATER",
+  "OUTDOOR",
+  "OTHER"
+ ],
+ "by_event_type": {
+  "Tornado": {
+   "deaths_known_location": 2067,
+   "deaths_unknown_location": 111,
+   "counts": {
+    "MH": 866,
+    "RES": 767,
+    "PUBLIC": 195,
+    "VEHICLE": 159,
+    "WATER": 2,
+    "OUTDOOR": 68,
+    "OTHER": 10
+   },
+   "shares": {
+    "MH": 0.419,
+    "RES": 0.3711,
+    "PUBLIC": 0.0943,
+    "VEHICLE": 0.0769,
+    "WATER": 0.001,
+    "OUTDOOR": 0.0329,
+    "OTHER": 0.0048
+   },
+   "shares_night": {
+    "MH": 0.535,
+    "RES": 0.342,
+    "PUBLIC": 0.0466,
+    "VEHICLE": 0.0544,
+    "WATER": 0.0026,
+    "OUTDOOR": 0.0181,
+    "OTHER": 0.0013
+   },
+   "deaths_night": 772,
+   "shares_day": {
+    "MH": 0.3498,
+    "RES": 0.3884,
+    "PUBLIC": 0.1228,
+    "VEHICLE": 0.0903,
+    "WATER": 0.0,
+    "OUTDOOR": 0.0417,
+    "OTHER": 0.0069
+   },
+   "deaths_day": 1295
+  },
+  "Flash Flood": {
+   "deaths_known_location": 1980,
+   "deaths_unknown_location": 73,
+   "counts": {
+    "MH": 37,
+    "RES": 194,
+    "PUBLIC": 54,
+    "VEHICLE": 893,
+    "WATER": 470,
+    "OUTDOOR": 288,
+    "OTHER": 44
+   },
+   "shares": {
+    "MH": 0.0187,
+    "RES": 0.098,
+    "PUBLIC": 0.0273,
+    "VEHICLE": 0.451,
+    "WATER": 0.2374,
+    "OUTDOOR": 0.1455,
+    "OTHER": 0.0222
+   },
+   "shares_night": {
+    "MH": 0.0203,
+    "RES": 0.1342,
+    "PUBLIC": 0.0396,
+    "VEHICLE": 0.4527,
+    "WATER": 0.1921,
+    "OUTDOOR": 0.1438,
+    "OTHER": 0.0174
+   },
+   "deaths_night": 1036,
+   "shares_day": {
+    "MH": 0.0169,
+    "RES": 0.0583,
+    "PUBLIC": 0.0138,
+    "VEHICLE": 0.4492,
+    "WATER": 0.2871,
+    "OUTDOOR": 0.1472,
+    "OTHER": 0.0275
+   },
+   "deaths_day": 944
+  },
+  "All storm types": {
+   "deaths_known_location": 16040,
+   "deaths_unknown_location": 2660,
+   "counts": {
+    "MH": 1183,
+    "RES": 3379,
+    "PUBLIC": 454,
+    "VEHICLE": 2893,
+    "WATER": 2561,
+    "OUTDOOR": 4080,
+    "OTHER": 1490
+   },
+   "shares": {
+    "MH": 0.0738,
+    "RES": 0.2107,
+    "PUBLIC": 0.0283,
+    "VEHICLE": 0.1804,
+    "WATER": 0.1597,
+    "OUTDOOR": 0.2544,
+    "OTHER": 0.0929
+   }
+  }
+ }
+}

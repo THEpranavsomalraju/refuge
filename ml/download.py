@@ -5,7 +5,8 @@
 
 Storm Events: newest details + fatalities file per year (1996-2025).
 SVI 2022 county parquet (includes ACS 2018-2022 county counts).
-NHTS 2022 (FHWA travel survey) for the hourly traffic curve.
+NHTS 2017 + 2022 (FHWA travel survey) trip files for the hourly traffic curve.
+FHWA Highway Statistics 2023 tables VM-2 (VMT) and HM-20 (road miles) for daily volume per road class.
 """
 import argparse
 import re
@@ -21,7 +22,10 @@ RAW = ROOT / "data" / "raw"
 
 STORM_URL = "https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/"
 SVI_URL = "https://data.source.coop/cboettig/social-vulnerability/2022/SVI2022_US_county.parquet"
-NHTS_URL = "https://nhts.ornl.gov/assets/2022/download/csv.zip"
+NHTS = {  # (url, zip name, trip file inside)
+    "2017": ("https://nhts.ornl.gov/assets/2016/download/csv.zip", "nhts2017_csv.zip", "trippub.csv"),
+    "2022": ("https://nhts.ornl.gov/assets/2022/download/csv.zip", "nhts2022_csv.zip", "tripv2pub.csv"),
+}
 
 YEARS = range(1996, 2026)
 KINDS = ("details", "fatalities")
@@ -98,21 +102,32 @@ def download_svi():
     print(f"svi: {status}")
 
 
+FHWA_TABLES = {t: f"https://www.fhwa.dot.gov/policyinformation/statistics/2023/{t}.cfm" for t in ("vm2", "hm20")}
+
+
+def download_fhwa():
+    out = RAW / "fhwa"
+    out.mkdir(parents=True, exist_ok=True)
+    for name, url in FHWA_TABLES.items():
+        print(f"fhwa {name}: {download_file(url, out / f'{name}_2023.html')}")
+
+
 def download_nhts():
     out = RAW / "nhts"
     out.mkdir(parents=True, exist_ok=True)
-    zpath = out / "nhts2022_csv.zip"
-    status = download_file(NHTS_URL, zpath)
-    with zipfile.ZipFile(zpath) as z:
-        z.extract("tripv2pub.csv", out)
-    print(f"nhts: {status}")
+    for year, (url, zname, trip) in NHTS.items():
+        status = download_file(url, out / zname)
+        if not (out / trip).exists():
+            with zipfile.ZipFile(out / zname) as z:
+                z.extract(trip, out)
+        print(f"nhts {year}: {status}")
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--only", choices=["storm", "svi", "nhts"])
+    ap.add_argument("--only", choices=["storm", "svi", "nhts", "fhwa"])
     args = ap.parse_args()
-    steps = {"storm": download_storm, "svi": download_svi, "nhts": download_nhts}
+    steps = {"storm": download_storm, "svi": download_svi, "nhts": download_nhts, "fhwa": download_fhwa}
     for name, fn in steps.items():
         if args.only in (None, name):
             fn()
