@@ -96,3 +96,21 @@ p05 and p95 are nearest-rank percentiles (0.05 and 0.95) of simulated integer
 death totals. They describe randomness conditional on fixed model inputs, not
 uncertainty in parameters, exposure estimates, damage thresholds, or the
 historical building inventory. Repeated seeds require the same building order.
+
+## Class ranking check (2026-09-26, decision: keep one shared lethality table)
+
+ML observed that with the calibrated params (MH 1.02, RES 1.66) the riskiest
+EF4 cells can be apartments (MULTI) rather than mobile homes. Cause: at the EF4
+centerline every class reaches damage level 4, so per-person risk is
+0.05 x group multiplier, and RES > MH after fitting.
+
+Averaged across the whole damage swath (uniform lateral position, 2 AM, 10 min
+warning, no basements), the calibrated model gives MH/RES_WOOD per-person risk
+ratios of 1.7 (EF1), 19 (EF2), 138 (EF3), 25 (EF4), 2.2 (EF5). Published US
+estimates are 10–20x ([Fricker & Friesenhahn 2022](https://journals.ametsoc.org/view/journals/wcas/14/1/WCAS-D-21-0028.1.xml);
+[Sutter & Simmons 2010](https://link.springer.com/article/10.1007/s11069-009-9416-x)),
+so the model already matches or exceeds them. Raising the MH top level to 0.15
+would give up to 427x. On the real `bt_2024_1181735` town (97 mobile homes),
+the four riskiest cells at both EF3 and EF4 are mobile-home cells. MULTI only
+ranks first where apartments sit on an EF4 centerline. Methods note: at the core
+of a violent tornado every class is destroyed and ranks by its fitted multiplier.
