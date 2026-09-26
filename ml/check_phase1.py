@@ -91,8 +91,18 @@ print(misses)
 print("null counts in county_features:")
 print(cf.null_count().transpose(include_header=True, column_names=["nulls"]).filter(pl.col("nulls") > 0))
 
-section("timezones (should be standard time)")
-print(ev.group_by("timezone").len().sort("len", descending=True))
+section("clock time conversion")
+print(ev.group_by("iana").agg(n=pl.len(), shifted=(pl.col("hour") != pl.col("hour_lst")).mean()).sort("n", descending=True))
+# spot checks: July tornado in Oklahoma should shift +1, January should not, Arizona July should not
+for label, f in [
+    ("OK July", (pl.col("state") == "OKLAHOMA") & (pl.col("month") == 7)),
+    ("OK January", (pl.col("state") == "OKLAHOMA") & (pl.col("month") == 1)),
+    ("AZ July", (pl.col("state") == "ARIZONA") & (pl.col("month") == 7)),
+    ("IN July 2003 (no DST then)", (pl.col("state") == "INDIANA") & (pl.col("month") == 7) & (pl.col("year") == 2003) & (pl.col("iana") == "America/Indiana/Indianapolis")),
+    ("IN July 2010", (pl.col("state") == "INDIANA") & (pl.col("month") == 7) & (pl.col("year") == 2010) & (pl.col("iana") == "America/Indiana/Indianapolis")),
+]:
+    s = ev.filter(f)
+    print(f"{label:28s} n={s.height:>6}  share shifted +1h: {((pl.Series(s['hour']) - s['hour_lst']) % 24 == 1).mean():.3f}")
 
 section("samples")
 cols_ev = ["event_id", "event_type", "year", "month", "hour", "state", "county_fips", "ef_rating",

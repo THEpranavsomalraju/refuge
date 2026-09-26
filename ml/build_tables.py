@@ -71,6 +71,48 @@ def coord(col, lo, hi):
     return pl.when((v >= lo) & (v <= hi) & (v != 0)).then(v).otherwise(None)
 
 
+# NOAA records times in local standard time ("CST-6"). The simulator uses local clock time,
+# so convert: standard time -> UTC -> IANA zone (which applies the real DST rules per year).
+STD_OFFSET = {"E": -5, "C": -6, "M": -7, "P": -8, "AK": -9, "H": -10, "A": -4, "S": -11, "G": 10}
+IANA = {
+    "E": "America/New_York", "C": "America/Chicago", "M": "America/Denver", "P": "America/Los_Angeles",
+    "AK": "America/Anchorage", "H": "Pacific/Honolulu", "A": "America/Puerto_Rico",
+    "S": "Pacific/Pago_Pago", "G": "Pacific/Guam",
+}
+
+
+def add_local_clock_time(ev):
+    tz = pl.col("tz_raw")
+    family = pl.when(tz.str.starts_with("AK")).then(pl.lit("AK")).otherwise(tz.str.slice(0, 1))
+    ev = ev.with_columns(
+        tz_family=family,
+        already_daylight=tz.str.slice(1, 2) == "DT",
+    ).with_columns(
+        iana=pl.when((pl.col("state") == "ARIZONA") & (pl.col("tz_family") == "M")).then(pl.lit("America/Phoenix"))
+        .when((pl.col("state") == "INDIANA") & (pl.col("tz_family") == "E")).then(pl.lit("America/Indiana/Indianapolis"))
+        .otherwise(pl.col("tz_family").replace_strict(IANA, default=None)),
+        std_offset_h=pl.col("tz_family").replace_strict(STD_OFFSET, default=None),
+    )
+    parts = []
+    for (zone,), part in ev.partition_by("iana", as_dict=True, include_key=True).items():
+        if zone is None:
+            parts.append(part.with_columns(begin_time_local=pl.col("begin_time")))
+            continue
+        utc = pl.col("begin_time") - pl.duration(hours=pl.col("std_offset_h"))
+        local = utc.dt.replace_time_zone("UTC").dt.convert_time_zone(zone).dt.replace_time_zone(None)
+        parts.append(part.with_columns(
+            begin_time_local=pl.when(pl.col("already_daylight")).then(pl.col("begin_time")).otherwise(local)
+        ))
+    ev = pl.concat(parts).sort("event_id")
+    shifted = ev.filter(pl.col("begin_time_local") != pl.col("begin_time")).height
+    unknown = ev.filter(pl.col("iana").is_null()).height
+    print(f"  clock time: {shifted:,} rows shifted for DST, {unknown} rows with unknown zone left as recorded")
+    return ev.with_columns(
+        hour_lst=pl.col("hour"),
+        hour=pl.col("begin_time_local").dt.hour().cast(pl.Int8),
+    ).drop("tz_family", "already_daylight", "std_offset_h", "tz_raw")
+
+
 def build_events():
     raw = read_storm("details")
     print(f"details: {raw.height:,} raw rows")
@@ -91,8 +133,7 @@ def build_events():
         hour=(hhmm_b // 100).cast(pl.Int8),
         begin_time=pl.datetime(ym_b // 100, ym_b % 100, num("BEGIN_DAY", pl.Int32), hhmm_b // 100, hhmm_b % 100),
         end_time=pl.datetime(ym_e // 100, ym_e % 100, num("END_DAY", pl.Int32), hhmm_e // 100, hhmm_e % 100),
-        # zones like "CST-6" / "CST" -> "CST"; NOAA times are local standard time
-        timezone=pl.col("CZ_TIMEZONE").str.strip_chars().str.slice(0, 3).str.to_uppercase(),
+        tz_raw=pl.col("CZ_TIMEZONE").str.strip_chars().str.to_uppercase(),
         state=pl.col("STATE").str.strip_chars(),
         state_fips=num("STATE_FIPS", pl.Int32),
         cz_type=pl.col("CZ_TYPE").str.strip_chars(),
@@ -141,7 +182,7 @@ def build_events():
     raw_hour = pl.col("begin_date_time_raw").str.extract(r" (\d{2}):").cast(pl.Int8, strict=False)
     mismatch = ev.filter(raw_hour != pl.col("hour")).height
     print(f"  hour mismatch vs BEGIN_DATE_TIME: {mismatch}")
-    ev = ev.drop("begin_date_time_raw")
+    ev = add_local_clock_time(ev.drop("begin_date_time_raw"))
 
     narr = raw.select(
         event_id=num("EVENT_ID", pl.Int64),
