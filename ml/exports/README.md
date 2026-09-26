@@ -7,6 +7,10 @@ ml/.venv/bin/python ml/patterns.py        # deaths_by_hour, deaths_by_location, 
 ml/.venv/bin/python ml/train_risk.py      # model_metrics (risk), shap_summary, county_risk
 ml/.venv/bin/python ml/train_location.py  # model_metrics (location)
 ml/.venv/bin/python ml/traffic_curve.py   # traffic_by_hour
+ml/.venv/bin/python ml/calibrate.py fit        # calibration.json (needs the sim CLI and backtest places)
+ml/.venv/bin/python ml/heatmap_bands.py        # heatmap_bands.json + writes sim/params/sim_params.json
+ml/.venv/bin/python ml/calibrate.py backtest   # backtest.json
+ml/.venv/bin/python ml/story_exports.py        # story/ (Flourish CSVs)
 ```
 
 All deaths are NOAA Storm Events direct deaths, 50 states + DC, 1996-2025. Hours are local clock time.
@@ -20,4 +24,8 @@ All deaths are NOAA Storm Events direct deaths, 50 states + DC, 1996-2025. Hours
 | `model_metrics.json` | methods section | `risk`: grouped by state folds, time split, calibration by decile. `location`: log loss vs baseline. |
 | `fatalities_dots.csv` | Story lead (Flourish) | one row per death: year, event_type, location_class, age_band, sex, fatality_type (D direct, I indirect). |
 | `traffic_by_hour.json` | Structures (`cars_per_hour` in crossings.json) | `cars_per_hour[h] = daily_volume_by_osm_tag["rural"][highway] * curves.weekday_rural.share[h]`. Shares: 24 values summing to 1, from FHWA NHTS 2017. Daily volumes: FHWA Highway Statistics 2023 (VM-2 / HM-20), keyed by OSM `highway` tag, rural and urban. |
+| `backtest.json` | landing page (backtest chart) | `storms`: one row per held-out tornado with `recorded`, `recorded_in_buildings`, and `{expected, p05, p95}` for `calibrated`, `default_params`, `national_model`. `summary.building_deaths` / `summary.all_recorded_deaths`: totals, rank correlation, p05-p95 coverage per method. |
+| `calibration.json` | methods section | fitted knobs vs defaults, bounds, loss parts before/after, optimizer trace. |
+| `heatmap_bands.json` | methods section | final `risk_bands` and the share of storm cells per band for EF1-EF4, day and night, for each candidate cutoff set. |
+| `story/` | Story lead | Flourish-ready CSVs + README with headline numbers, chart ideas and caveats. |
 | `tornado_width_by_ef.json` | Simulation (default widths) | `by_ef.EF3.width_m.median` etc., p10 to p90, 2007-2025 tornado segments. |

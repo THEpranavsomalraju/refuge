@@ -1,0 +1,330 @@
+{
+ "note": "Share of populated H3 cells in each band when the calibrated sim runs EF1-EF4 tornadoes through the 79 backtest towns. share_of_touched_cells counts only cells with nonzero expected deaths. Interim: confirm on the three featured places before freezing.",
+ "chosen": "one_decade_lower",
+ "bands": {
+  "yellow": 1e-05,
+  "red": 0.001,
+  "deep_red": 0.01
+ },
+ "min_cell_people": 5,
+ "python_vs_cli_max_rel_diff": 3.2896411217558436e-15,
+ "by_storm": [
+  {
+   "ef": 1,
+   "hour": 2,
+   "green": 20214,
+   "yellow": 130,
+   "red": 0,
+   "deep_red": 0,
+   "sparse": 21380,
+   "share_of_touched_cells": {
+    "green": 0.851,
+    "yellow": 0.149,
+    "red": 0.0,
+    "deep_red": 0.0
+   },
+   "touched_risk_p50": 4.084717654594489e-06,
+   "touched_risk_p90": 1.2370100790450018e-05,
+   "touched_risk_max": 0.00010249450902641906
+  },
+  {
+   "ef": 1,
+   "hour": 15,
+   "green": 16083,
+   "yellow": 44,
+   "red": 0,
+   "deep_red": 0,
+   "sparse": 21890,
+   "share_of_touched_cells": {
+    "green": 0.928,
+    "yellow": 0.072,
+    "red": 0.0,
+    "deep_red": 0.0
+   },
+   "touched_risk_p50": 3.6323537307018564e-06,
+   "touched_risk_p90": 8.517297933553262e-06,
+   "touched_risk_max": 6.979855022096297e-05
+  },
+  {
+   "ef": 2,
+   "hour": 2,
+   "green": 19423,
+   "yellow": 894,
+   "red": 27,
+   "deep_red": 0,
+   "sparse": 21380,
+   "share_of_touched_cells": {
+    "green": 0.405,
+    "yellow": 0.578,
+    "red": 0.017,
+    "deep_red": 0.0
+   },
+   "touched_risk_p50": 1.3880785170517588e-05,
+   "touched_risk_p90": 8.73719963099387e-05,
+   "touched_risk_max": 0.004759809009311946
+  },
+  {
+   "ef": 2,
+   "hour": 15,
+   "green": 15626,
+   "yellow": 494,
+   "red": 7,
+   "deep_red": 0,
+   "sparse": 21890,
+   "share_of_touched_cells": {
+    "green": 0.565,
+    "yellow": 0.429,
+    "red": 0.006,
+    "deep_red": 0.0
+   },
+   "touched_risk_p50": 8.276577429242088e-06,
+   "touched_risk_p90": 6.232818868494788e-05,
+   "touched_risk_max": 0.0021222693232934523
+  },
+  {
+   "ef": 3,
+   "hour": 2,
+   "green": 17882,
+   "yellow": 2338,
+   "red": 69,
+   "deep_red": 55,
+   "sparse": 21380,
+   "share_of_touched_cells": {
+    "green": 0.274,
+    "yellow": 0.69,
+    "red": 0.02,
+    "deep_red": 0.016
+   },
+   "touched_risk_p50": 3.5000474435337354e-05,
+   "touched_risk_p90": 0.00018224606845824288,
+   "touched_risk_max": 0.06252514600174705
+  },
+  {
+   "ef": 3,
+   "hour": 15,
+   "green": 14486,
+   "yellow": 1554,
+   "red": 70,
+   "deep_red": 17,
+   "sparse": 21890,
+   "share_of_touched_cells": {
+    "green": 0.386,
+    "yellow": 0.581,
+    "red": 0.026,
+    "deep_red": 0.006
+   },
+   "touched_risk_p50": 1.931417709620151e-05,
+   "touched_risk_p90": 0.000147545862367817,
+   "touched_risk_max": 0.052290609196658254
+  },
+  {
+   "ef": 4,
+   "hour": 2,
+   "green": 15917,
+   "yellow": 3062,
+   "red": 999,
+   "deep_red": 366,
+   "sparse": 21380,
+   "share_of_touched_cells": {
+    "green": 0.183,
+    "yellow": 0.565,
+    "red": 0.184,
+    "deep_red": 0.068
+   },
+   "touched_risk_p50": 8.352418373790126e-05,
+   "touched_risk_p90": 0.006737148779083802,
+   "touched_risk_max": 0.12474597199280797
+  },
+  {
+   "ef": 4,
+   "hour": 15,
+   "green": 12969,
+   "yellow": 2059,
+   "red": 704,
+   "deep_red": 395,
+   "sparse": 21890,
+   "share_of_touched_cells": {
+    "green": 0.259,
+    "yellow": 0.483,
+    "red": 0.165,
+    "deep_red": 0.093
+   },
+   "touched_risk_p50": 6.276302210591692e-05,
+   "touched_risk_p90": 0.008713676021695727,
+   "touched_risk_max": 0.0799707973641408
+  }
+ ],
+ "candidates": {
+  "start": {
+   "bands": {
+    "yellow": 0.0001,
+    "red": 0.01,
+    "deep_red": 0.1
+   },
+   "share_of_touched_cells": {
+    "EF1_02h": {
+     "green": 0.999,
+     "yellow": 0.001,
+     "red": 0.0,
+     "deep_red": 0.0
+    },
+    "EF2_02h": {
+     "green": 0.924,
+     "yellow": 0.076,
+     "red": 0.0,
+     "deep_red": 0.0
+    },
+    "EF3_02h": {
+     "green": 0.716,
+     "yellow": 0.267,
+     "red": 0.016,
+     "deep_red": 0.0
+    },
+    "EF3_15h": {
+     "green": 0.802,
+     "yellow": 0.192,
+     "red": 0.006,
+     "deep_red": 0.0
+    },
+    "EF4_02h": {
+     "green": 0.529,
+     "yellow": 0.404,
+     "red": 0.067,
+     "deep_red": 0.0
+    },
+    "EF4_15h": {
+     "green": 0.587,
+     "yellow": 0.32,
+     "red": 0.093,
+     "deep_red": 0.0
+    },
+    "EF1_15h": {
+     "green": 1.0,
+     "yellow": 0.0,
+     "red": 0.0,
+     "deep_red": 0.0
+    },
+    "EF2_15h": {
+     "green": 0.969,
+     "yellow": 0.031,
+     "red": 0.0,
+     "deep_red": 0.0
+    }
+   }
+  },
+  "half_decade_lower": {
+   "bands": {
+    "yellow": 3e-05,
+    "red": 0.003,
+    "deep_red": 0.03
+   },
+   "share_of_touched_cells": {
+    "EF1_02h": {
+     "green": 0.981,
+     "yellow": 0.019,
+     "red": 0.0,
+     "deep_red": 0.0
+    },
+    "EF2_02h": {
+     "green": 0.704,
+     "yellow": 0.293,
+     "red": 0.003,
+     "deep_red": 0.0
+    },
+    "EF3_02h": {
+     "green": 0.475,
+     "yellow": 0.498,
+     "red": 0.022,
+     "deep_red": 0.005
+    },
+    "EF3_15h": {
+     "green": 0.548,
+     "yellow": 0.437,
+     "red": 0.013,
+     "deep_red": 0.001
+    },
+    "EF4_02h": {
+     "green": 0.348,
+     "yellow": 0.48,
+     "red": 0.149,
+     "deep_red": 0.023
+    },
+    "EF4_15h": {
+     "green": 0.391,
+     "yellow": 0.419,
+     "red": 0.149,
+     "deep_red": 0.041
+    },
+    "EF1_15h": {
+     "green": 0.992,
+     "yellow": 0.008,
+     "red": 0.0,
+     "deep_red": 0.0
+    },
+    "EF2_15h": {
+     "green": 0.797,
+     "yellow": 0.203,
+     "red": 0.0,
+     "deep_red": 0.0
+    }
+   }
+  },
+  "one_decade_lower": {
+   "bands": {
+    "yellow": 1e-05,
+    "red": 0.001,
+    "deep_red": 0.01
+   },
+   "share_of_touched_cells": {
+    "EF1_02h": {
+     "green": 0.851,
+     "yellow": 0.149,
+     "red": 0.0,
+     "deep_red": 0.0
+    },
+    "EF2_02h": {
+     "green": 0.405,
+     "yellow": 0.578,
+     "red": 0.017,
+     "deep_red": 0.0
+    },
+    "EF3_02h": {
+     "green": 0.274,
+     "yellow": 0.69,
+     "red": 0.02,
+     "deep_red": 0.016
+    },
+    "EF3_15h": {
+     "green": 0.386,
+     "yellow": 0.581,
+     "red": 0.026,
+     "deep_red": 0.006
+    },
+    "EF4_02h": {
+     "green": 0.183,
+     "yellow": 0.565,
+     "red": 0.184,
+     "deep_red": 0.068
+    },
+    "EF4_15h": {
+     "green": 0.259,
+     "yellow": 0.483,
+     "red": 0.165,
+     "deep_red": 0.093
+    },
+    "EF1_15h": {
+     "green": 0.928,
+     "yellow": 0.072,
+     "red": 0.0,
+     "deep_red": 0.0
+    },
+    "EF2_15h": {
+     "green": 0.565,
+     "yellow": 0.429,
+     "red": 0.006,
+     "deep_red": 0.0
+    }
+   }
+  }
+ }
+}

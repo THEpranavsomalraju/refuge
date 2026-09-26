@@ -157,9 +157,9 @@
     ]
   },
   "risk_bands": {
-    "yellow": 0.0001,
-    "red": 0.01,
-    "deep_red": 0.1
+    "yellow": 1e-05,
+    "red": 0.001,
+    "deep_red": 0.01
   },
   "min_cell_people": 5
 }
