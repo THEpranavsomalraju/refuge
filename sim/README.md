@@ -164,6 +164,25 @@ const r = simulateDetailed(scenario, { buildings, cells }, params);
 Real-data check: Joplin box (25,277 buildings, 4,987 cells), EF4 at 2 AM with
 ML's calibrated params: 94 ms, cell deaths sum exactly to the town total.
 
+## Featured places (verified 2026-09-26, `places/phase-1` @ 2ee3e93)
+
+Tornado runs through the center of each town (EF3/EF4, 2 AM and 2 PM, 800 m
+wide) with ML's calibrated params: all modes exit 0, and every `simulateDetailed`
+run has cell deaths summing to the town total. Runtimes are 82–121 ms per
+scenario (morganton 13,595 buildings, lumberton 14,551, chapel_hill 21,065).
+Null `hand_m` is read as "no flood data" and is never used by tornado scenarios.
+
+Proposed showcase storm: `sim/scenarios/lumberton_tornado.json`, a SW-to-NE
+path (12.4 km) through Lumberton's two largest mobile-home clusters, with
+width = ML's EF3 median (640.1 m, `ml/exports/tornado_width_by_ef.json`).
+
+| Storm | Expected | p05–p95 | MH share | Deep-red cells |
+|---|---|---|---|---|
+| EF3, 2 AM | 18.9 | 12–27 | 99% | 17 |
+| EF3, 2 PM | 9.1 | 4–14 | 95% | 12 |
+| EF4 (965.6 m), 2 AM | 44.0 | 34–56 | 90% | 40 |
+| EF4 (965.6 m), 2 PM | 29.6 | 21–38 | 59% | 48 |
+
 ## Verification and smoke test
 
 ```sh
