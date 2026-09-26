@@ -1,0 +1,8 @@
+# python 3.12
+# Full place pipeline: core plus terrain, streams, and OSM.
+-r requirements-core.txt
+py3dep==0.19.0
+pynhd==0.20.0
+osmnx==2.1.1
+openlocationcode==1.0.1
+scipy==1.18.1
