@@ -76,6 +76,7 @@ BIGROOF uses `ftprntsqft` (the building's footprint), not `sqft`. `sqft` is the 
 | `ground_elev_m` | NSI `grnd_elv_m` (meters). Featured places replace it with 3DEP, from the same DEM as the streams, so `hand_m` stays consistent. |
 | `firmzone` | Raw NSI string, including `"AREA NOT INCLUDED"` |
 | `pop_night_*` / `pop_day_*` | NSI `pop2amu65`, `pop2amo65`, `pop2pmu65`, `pop2pmo65` |
+| `footprint_sqft` | NSI `ftprntsqft` as an integer (the whole building's footprint), `null` if missing. Added 2026-09-26 for shelter capacity and cost |
 | `footprint`, `hand_m` | `null` here; filled in by the featured-place pipeline |
 
 ### Tested areas
@@ -155,7 +156,7 @@ Every key in a format is always written. A field that isn't computed yet is `nul
 | `ground_elev_m` | cells.json | `terrain.py` (featured places, 3DEP) | `null` in backtest folders |
 
 ### `buildings.json` (frozen, overview §1)
-One record per NSI structure, keys in this order: `id`, `lon`, `lat`, `h3`, `cbfips`, `footprint`, `occtype`, `cls`, `stories`, `basement`, `ground_elev_m`, `first_floor_ht_m`, `hand_m`, `firmzone`, `pop_night_u65`, `pop_night_o65`, `pop_day_u65`, `pop_day_o65`.
+One record per NSI structure, keys in this order: `id`, `lon`, `lat`, `h3`, `cbfips`, `footprint`, `footprint_sqft`, `occtype`, `cls`, `stories`, `basement`, `ground_elev_m`, `first_floor_ht_m`, `hand_m`, `firmzone`, `pop_night_u65`, `pop_night_o65`, `pop_day_u65`, `pop_day_o65`.
 
 ### `cells.json` (**proposed**, needs Simulation sign-off)
 ```json

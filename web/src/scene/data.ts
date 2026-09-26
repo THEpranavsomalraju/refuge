@@ -1,6 +1,5 @@
+import { placeUrl, type PlaceSource } from './places';
 import type { BuildingRecord, CellRecord, CrossingRecord, PlaceData, PlaceMeta } from './types';
-
-const BASE = `${import.meta.env.BASE_URL}places`;
 
 async function json<T>(url: string): Promise<T> {
   const res = await fetch(url);
@@ -8,9 +7,9 @@ async function json<T>(url: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-/** Loads places/<id>/ (buildings, cells, crossings, place.json, terrain.bin). */
-export async function loadPlace(id: string): Promise<PlaceData> {
-  const dir = `${BASE}/${id}`;
+/** Loads a place folder (buildings, cells, crossings, place.json, terrain.bin). */
+export async function loadPlace(id: string, source: PlaceSource = 'featured'): Promise<PlaceData> {
+  const dir = placeUrl(id, source);
   const [meta, buildings, cells, crossings] = await Promise.all([
     json<PlaceMeta>(`${dir}/place.json`),
     json<BuildingRecord[]>(`${dir}/buildings.json`),

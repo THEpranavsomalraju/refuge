@@ -1,8 +1,13 @@
+import { cellToLatLng } from 'h3-js';
 import { useSceneStore } from './store';
-import type { SceneAPI } from './types';
+import type { LonLat, SceneAPI } from './types';
 
-/** Duration of the hexagon rise in showRiskMap, ms (bands rise one after another). */
+/** Duration of the hexagon rise in showRiskMap / showDifference, ms. */
 export const RISK_RISE_MS = 2400;
+/** Default duration of a camera move, ms. */
+export const CAMERA_MS = 1600;
+/** Camera moves never frame less than this radius, so a single cell isn't a close-up. */
+const MIN_FRAME_RADIUS_M = 450;
 
 let protectionSeq = 0;
 
@@ -58,10 +63,48 @@ export const scene: SceneAPI = {
     useSceneStore.setState({ onCellHover: cb });
   },
   showRiskMap(cells, bands) {
-    useSceneStore.setState({ risk: { cells, bands, shownAt: performance.now() } });
+    useSceneStore.setState({ risk: { cells, bands, shownAt: performance.now() }, diff: null });
     return new Promise(resolve => setTimeout(resolve, RISK_RISE_MS));
   },
   hideRiskMap() {
-    useSceneStore.setState({ risk: null });
+    useSceneStore.setState({ risk: null, diff: null });
+  },
+  showDifference(before, after) {
+    useSceneStore.setState({ diff: { before, after, shownAt: performance.now() }, risk: null });
+    return new Promise(resolve => setTimeout(resolve, RISK_RISE_MS));
+  },
+  showCandidateSites(sites) {
+    useSceneStore.setState({ sites: sites.map(s => ({ ...s })) });
+  },
+  hideCandidateSites() {
+    useSceneStore.setState({ sites: [] });
+  },
+  onSiteClick(cb) {
+    useSceneStore.setState({ onSiteClick: cb });
+  },
+  frameCoords(coords, ms = CAMERA_MS, marginM = 300) {
+    if (!coords.length) return;
+    let minLon = Infinity, minLat = Infinity, maxLon = -Infinity, maxLat = -Infinity;
+    for (const [lon, lat] of coords) {
+      minLon = Math.min(minLon, lon); maxLon = Math.max(maxLon, lon);
+      minLat = Math.min(minLat, lat); maxLat = Math.max(maxLat, lat);
+    }
+    const lat0 = (minLat + maxLat) / 2;
+    const halfW = ((maxLon - minLon) / 2) * 111_320 * Math.cos((lat0 * Math.PI) / 180);
+    const halfH = ((maxLat - minLat) / 2) * 110_900;
+    const radiusM = Math.max(MIN_FRAME_RADIUS_M, Math.hypot(halfW, halfH) + marginM);
+    const seq = (useSceneStore.getState().camera?.seq ?? 0) + 1;
+    useSceneStore.setState({ camera: { center: [(minLon + maxLon) / 2, lat0], radiusM, ms, seq } });
+  },
+  frameStormPath(ms = CAMERA_MS) {
+    const t = useSceneStore.getState().tornado;
+    if (t) scene.frameCoords(t.coords, ms, t.widthM);
+  },
+  focusCells(h3s, ms = CAMERA_MS) {
+    const pts: LonLat[] = [];
+    for (const h of h3s) {
+      try { const [lat, lon] = cellToLatLng(h); pts.push([lon, lat]); } catch { /* not an H3 id */ }
+    }
+    scene.frameCoords(pts, ms, 250);
   },
 };

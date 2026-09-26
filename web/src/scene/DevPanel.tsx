@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { scene } from './api';
+import { PlacePicker, type PlaceRef } from './PlacePicker';
 import { useSceneStore } from './store';
 import type { LoadState } from './Town';
 import type { BuildingRecord, CellResult, LonLat, RiskBands } from './types';
@@ -20,7 +21,7 @@ const GLOW_FULL_AT = 0.02; // death probability that shows as full glow
  * Developer overlay for testing the scene before the game UI exists: load status,
  * a showcase tornado run, the hovered cell, and the clicked building. Not part of the product.
  */
-export function DevPanel({ load }: { load: LoadState }) {
+export function DevPanel({ load, place: current, onPick }: { load: LoadState; place?: PlaceRef; onPick?: (p: PlaceRef) => void }) {
   const [cell, setCell] = useState<string | null>(null);
   const [picked, setPicked] = useState<BuildingRecord | null>(null);
   const [status, setStatus] = useState<string>('');
@@ -44,7 +45,7 @@ export function DevPanel({ load }: { load: LoadState }) {
     busy.current = true;
     try {
       setStatus('Loading sample result…');
-      const res = await fetch(`/dev-results/${place.meta.place_id}_tornado.json`);
+      const res = await fetch(`${import.meta.env.BASE_URL}dev-results/${place.meta.place_id}_tornado.json`);
       if (!res.ok) throw new Error(`No sample result for ${place.meta.place_id} (HTTP ${res.status}).`);
       const r = (await res.json()) as DevResult;
       setResult(r);
@@ -71,7 +72,12 @@ export function DevPanel({ load }: { load: LoadState }) {
     }
   };
 
-  const reset = () => { scene.hideRiskMap(); scene.hideTornadoPath(); scene.clearBuildingGlow(); setStatus(''); };
+  const reset = () => {
+    scene.hideRiskMap(); scene.hideTornadoPath(); scene.clearBuildingGlow();
+    for (const p of useSceneStore.getState().protections) scene.removeProtection(p.id);
+    setStatus('');
+  };
+  const pick = (p: PlaceRef) => { reset(); setResult(null); setPicked(null); onPick?.(p); };
   const placeShelter = () => { if (picked) scene.placeProtection('safe_room', picked.lon, picked.lat); };
 
   const c = cell ? cells.get(cell) : null;
@@ -84,6 +90,7 @@ export function DevPanel({ load }: { load: LoadState }) {
         {load.state === 'error' && `Could not load: ${load.message}`}
         {place && `${place.meta.name} · ${place.buildings.length.toLocaleString()} buildings`}
       </div>
+      {current && onPick && <PlacePicker current={current} onPick={pick} />}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
         <button style={btn} onClick={playTornado} disabled={!place}>Play showcase tornado</button>
         <button style={btn} onClick={() => scene.hideRiskMap()} disabled={!riskShown}>Hide risk map</button>
