@@ -1,0 +1,109 @@
+{
+ "id": "estill_sc_2020",
+ "title": "Estill, South Carolina",
+ "subtitle": "EF4 tornado, April 13, 2020, 6:10 AM",
+ "hazard": "tornado",
+ "date_local": "2020-04-13 06:10:00",
+ "state": "South Carolina",
+ "counties": [
+  "45049"
+ ],
+ "recorded": {
+  "deaths_direct": 5,
+  "injuries_direct": 60,
+  "death_locations": {
+   "Mobile/Trailer Home": 5
+  },
+  "source": "NOAA Storm Events",
+  "noaa_event_ids": [
+   889068
+  ]
+ },
+ "scenario": {
+  "place_id": "estill_sc_2020",
+  "hazard": "tornado",
+  "ef": 4,
+  "path": [
+   [
+    -81.28995,
+    32.70445
+   ],
+   [
+    -81.23094,
+    32.73207
+   ],
+   [
+    -81.20974,
+    32.73896
+   ],
+   [
+    -81.20051,
+    32.74283
+   ],
+   [
+    -81.15845,
+    32.76098
+   ],
+   [
+    -81.12262,
+    32.77329
+   ],
+   [
+    -81.07245,
+    32.78877
+   ],
+   [
+    -81.00876,
+    32.80652
+   ],
+   [
+    -80.91298,
+    32.82816
+   ],
+   [
+    -80.91435,
+    32.82787
+   ],
+   [
+    -80.9092,
+    32.82902
+   ]
+  ],
+  "width_m": 1188.7,
+  "flood_height_m": null,
+  "hour": 6,
+  "warning_min": 10,
+  "protections": [],
+  "runs": 500,
+  "seed": 42
+ },
+ "path_source": {
+  "name": "NWS Damage Assessment Toolkit surveyed track",
+  "points": 11,
+  "length_mi": 24.03,
+  "max_width_yd": 1300.0,
+  "efscale": "EF4",
+  "fatalities": 5
+ },
+ "bbox_for_build_place": [
+  -81.31,
+  32.6844,
+  -80.8892,
+  32.849
+ ],
+ "noaa_narrative": [
+  "A National Weather Service Storm Survey Team confirmed an EF-4 tornado with an estimated maximum wind speed of 175 mph in central Hampton County. ||The tornado began just north of Collie Road, approximately 3 miles west-northwest of Scotia, South Carolina, snapping and uprooting trees and causing damage to the Federal Correctional Institution of Estill along its northeast track. The tornado then continued northeast, crossing over Highway 321 near the intersection with County Road S-25-35 before gaining strength and causing substantial damage. Beyond this point, the unusually long track and wide tornado damaged and destroyed many residences, including mobile and single family homes along its entire path. A few automobiles were also tossed/rolled 50 to 75 yards from their original locations. In addition, the tornado reached a maximum width of about 0.75 mile, causing extensive damage to thousands of trees and numerous power lines. At times, the damage pattern suggested that the tornado may have consisted of multiple vortices, which can occur in stronger tornadoes.||The most significant structural damage occurred just south of Estill, South Carolina and across Nixville, South Carolina, where at least six residences were destroyed. After crossing Highway 321 and continuing a northeast track, the tornado began producing EF-2 to EF-3 damage to residences along Sprayfield Road to Lena Expressway. The tornado then continued northeast where it completely destroyed a mobile home near the intersection of Highway 3 and Highway 601, tragically claiming the lives of 2 adult males. Continuing on a northeast track, the tornado heavily damaged homes near the intersection of Turner Expressway and Brandy Lane, including completely destroying a mobile home that tragically claimed the lives of 2 adult females and 1 adult male. The tornado then reached peak EF-4 intensity along Lento Road where the roof and all exterior/interior walls of a two story home were removed and dispersed across the yard. The tornado then began a weakening trend while tracking further northeast, eventually crossing Highway 278, Yemassee Highway and ending approximately 1 mile beyond the intersection of Old Salkehatchie Highway and Archie Road before the Hampton/Colleton County line. ||Overall, the tornado path stretched approximately 24 miles, claiming the lives of 5 individuals in the hardest hit areas just south of Estill, South Carolina and across Nixville, South Carolina. Additionally, 60 people sustained injuries associated with the tornado tracking through this hardest hit area, including a few individuals that were thrown 30 to 50 yards from mobile homes and individuals that were in homes that received EF-3 to EF-4 damage."
+ ],
+ "notes": [
+  "Width is the surveyed maximum, applied along the whole path.",
+  "Warning time is the fixed 10-minute assumption used everywhere, not this storm's actual lead time.",
+  "Buildings and populations are today's NSI records, not the town as it was on the storm date."
+ ],
+ "focus_bbox_for_build_place": [
+  -81.2742,
+  32.6928,
+  -81.1887,
+  32.7652
+ ],
+ "focus_share_of_simulated_deaths": 0.655
+}
