@@ -59,8 +59,9 @@ export function assignShelters(scenario: Scenario, place: Place, config: Protect
 export interface SafeRoomSite { h3: string; lon: number; lat: number; reachable: number }
 
 /**
- * Candidate sites: empty cells (no buildings) ranked by how many eligible people
- * would come (occupants at the scenario hour x compliance, capped at capacity),
+ * Candidate sites: any cell center (including cells inside mobile-home parks, which
+ * often have common lots) ranked by how many eligible people would come
+ * (occupants at the scenario hour x compliance, capped at capacity),
  * taken greedily at least `site_spacing_reach` x reach apart. Depends on the hour
  * and warning time, not on the storm path.
  */
@@ -70,7 +71,6 @@ export function safeRoomSites(place: Place, scenario: Scenario, config: Protecti
   if (reach <= 0 || cfg.candidate_sites === 0) return [];
   const night = isNight(scenario.hour);
   const eligible = new Set<string>(cfg.eligible_classes);
-  const occupied = new Set(place.buildings.map(b => b.h3));
   const homes: { lon: number; lat: number; goers: number }[] = [];
   for (const b of place.buildings) {
     if (!eligible.has(b.cls)) continue;
@@ -80,7 +80,7 @@ export function safeRoomSites(place: Place, scenario: Scenario, config: Protecti
   const dLat = reach / 111_000;
   const scored: SafeRoomSite[] = [];
   for (const c of place.cells ?? []) {
-    if (!c.center || occupied.has(c.h3)) continue;
+    if (!c.center) continue;
     const [lon, lat] = c.center;
     const dLon = dLat / Math.max(0.01, Math.cos(lat * Math.PI / 180));
     let goers = 0;

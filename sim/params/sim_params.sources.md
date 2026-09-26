@@ -157,6 +157,9 @@ water). It keeps night, warning, over65, and the VEHICLE multiplier.
 | inside death probability | 0 | P-361 rooms are designed for 250 mph winds |
 
 Reach = `walk_speed_mps x max(0, warning_min - mobilize_min) x 60` (321 m at 10
-minutes). (home, room) pairs within reach are filled nearest-first until each
+minutes). Candidate sites (approved 2026-09-26): any H3 cell center, occupied or
+not (mobile-home parks often have common lots), ranked by reachable residents
+x compliance (capped at capacity), taken greedily at least 2 x reach apart;
+8 sites, every affordable subset searched. (home, room) pairs within reach are filled nearest-first until each
 room holds `capacity`; each person is assigned at most once. Sheltered people
 stay counted in their home cell, with zero deaths.

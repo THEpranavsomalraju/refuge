@@ -83,9 +83,10 @@ function parkTown() {
   return { buildings, cells };
 }
 
-test('candidate sites are empty cells ranked by reachable eligible people, spaced apart', () => {
+test('candidate sites are cells (occupied or not) ranked by reachable eligible people, spaced apart', () => {
   const sites = core.safeRoomSites(parkTown(), storm([]), config());
-  assert.deepEqual(sites.map(s => s.h3), ['nearA', 'nearB']);
+  // A, nearA and nearA2 all reach park A (tie broken by h3); nearA/nearA2 are then too close.
+  assert.deepEqual(sites.map(s => s.h3), ['A', 'B']);
   assert.ok(sites[0].reachable > sites[1].reachable);
 });
 
@@ -94,8 +95,8 @@ test('optimizer tries every affordable plan and returns the best', () => {
   const s = scenario({ warning_min: 10, path: [[-90.01, 38], [-89.96, 38]] });
   const sites = core.safeRoomSites(town, s, config());
   const best = core.optimizeSafeRooms(s, town, params(), config(), sites, 225000);
-  assert.equal(best.evaluated, 3); // {}, {nearA}, {nearB}
-  assert.deepEqual(best.sites.map(x => x.h3), ['nearA']);
+  assert.equal(best.evaluated, 3); // {}, {A}, {B}
+  assert.deepEqual(best.sites.map(x => x.h3), ['A']);
   const both = core.optimizeSafeRooms(s, town, params(), config(), sites, 450000);
   assert.equal(both.sites.length, 2);
   assert.ok(both.expected_deaths < best.expected_deaths);
