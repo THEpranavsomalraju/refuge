@@ -30,7 +30,8 @@ test('simulateDetailed matches simulate totals and adds cells and building_prob'
   const plain = core.simulate(s, place, p);
   const detailed = core.simulateDetailed(s, place, p);
   for (const key of ['expected_deaths', 'p05', 'p95', 'people_exposed']) assert.equal(detailed[key], plain[key]);
-  assert.deepEqual(Object.keys(detailed.cells).sort(), [CENTER, EDGE, EMPTY].sort());
+  // Unaffected cells (zero expected deaths) are omitted from tornado results.
+  assert.deepEqual(Object.keys(detailed.cells), [CENTER]);
   assert.ok(detailed.building_prob.mh_center > 0);
   assert.equal(detailed.building_prob.masonry_edge, undefined, 'undamaged buildings are omitted');
 });
@@ -43,20 +44,17 @@ test('mobile homes at the center of an EF3 at night are high risk', () => {
   assert.deepEqual(cell.drivers, ['MH', 'no_basement', 'night']);
 });
 
-test('a masonry house with a basement at the path edge is low risk', () => {
-  const cell = core.simulateDetailed(scenario(), town(), params()).cells[EDGE];
-  assert.equal(cell.people, 6);
-  assert.equal(cell.expected_deaths, 0);
-  assert.equal(cell.band, 'green');
-  assert.deepEqual(cell.drivers, []);
+test('a masonry house with a basement at the path edge has no risk; its cell is omitted', () => {
+  const r = core.simulateDetailed(scenario(), town(), params());
+  assert.equal(r.cells[EDGE], undefined);
+  assert.equal(r.building_prob.masonry_edge, undefined);
 });
 
-test('cells with nobody are empty; cells under min_cell_people are sparse', () => {
+test('cells with nobody are omitted; affected cells under min_cell_people are sparse', () => {
   const place = town();
   place.buildings.push(building({ id: 'tiny', h3: '8a2661c94837fff', pop_night_u65: 2, pop_night_o65: 0 }));
   const cells = core.simulateDetailed(scenario(), place, params()).cells;
-  assert.deepEqual({ people: cells[EMPTY].people, band: cells[EMPTY].band, uncertain: cells[EMPTY].uncertain },
-    { people: 0, band: 'empty', uncertain: false });
+  assert.equal(cells[EMPTY], undefined);
   assert.equal(cells['8a2661c94837fff'].band, 'sparse');
 });
 

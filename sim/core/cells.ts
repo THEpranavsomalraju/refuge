@@ -23,7 +23,8 @@ export function riskBand(risk: number, params: SimParams): Band {
 
 /**
  * Per-cell people at the scenario hour, expected deaths, run quantiles, risk, band,
- * and drivers. Cells come from place.cells plus every building's h3 (and every
+ * and drivers. Tornado results omit cells with zero expected deaths, so the risk
+ * map shows only the storm's footprint. Cells come from place.cells plus every building's h3 (and every
  * crossing's h3 for floods). Tornado cells count building occupants only; flood
  * cells add drivers passing crossings during the exposure window.
  */
@@ -47,6 +48,7 @@ export function aggregateCells(runs: CellRuns, place: Place, scenario: Scenario,
   const zeros = new Array<number>(scenario.runs).fill(0);
   const cells: Record<string, CellResult> = {};
   for (const [h3, t] of tallies) {
+    if (scenario.hazard === 'tornado' && t.expected <= 0) continue;
     const sorted = [...(runs.get(h3) ?? zeros)].sort((a, b) => a - b);
     const p05 = nearestRank(sorted, 0.05);
     const p95 = nearestRank(sorted, 0.95);
