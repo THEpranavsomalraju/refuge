@@ -126,7 +126,7 @@ export function forEachUnit(scenario: Scenario, place: Place, params: SimParams,
   const missing = { buildings: 0, crossings: 0 };
   if (scenario.hazard === 'tornado') {
     const shelter = scenario.protections.length > 0
-      ? assignShelters(scenario, place, requireProtections(protections)) : null;
+      ? assignShelters(scenario, place, params, requireProtections(protections)) : null;
     const distance = preparePath(scenario.path);
     for (let i = 0; i < place.buildings.length; i++) {
       const b = place.buildings[i]!;
@@ -235,7 +235,7 @@ export function simulateDetailed(scenario: Scenario, place: Place, params: SimPa
     building_prob: buildingProbabilities(scenario, place, params, protections),
     cells: aggregateCells(cellRuns, place, scenario, params, protections) };
   if (scenario.hazard === 'tornado' && scenario.protections.length > 0) {
-    detailed.shelter_assignments = assignShelters(scenario, place, requireProtections(protections)).assignments;
+    detailed.shelter_assignments = assignShelters(scenario, place, params, requireProtections(protections)).assignments;
   }
   return detailed;
 }

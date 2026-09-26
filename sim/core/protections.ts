@@ -1,141 +1,288 @@
-import type { Place, ProtectionConfig, SafeRoom, ShelterAssignment, SafeRoomConfig, Scenario, SimParams, TornadoScenario } from './types.js';
-import { distanceM } from './geometry.js';
-import { expected, isNight, occupants } from './engine.js';
+import type { Building, Place, ProtectionConfig, Scenario, ShelterAssignment, SimParams,
+  TornadoScenario } from './types.js';
+import { distanceM, preparePath } from './geometry.js';
+import { damageLevel, expectedExposure, exposure, isNight, occupants, windAt } from './engine.js';
+
+/*
+ * Shelters are existing public/commercial buildings converted into FEMA P-361
+ * hardened cores. Tornado: the building's own occupants go first, then a compliant
+ * share of mobile-home residents within walking reach; sheltered people have zero
+ * death probability. Every path (engine, "alone" effectiveness, optimizer) fills
+ * the same sorted (home, shelter) pairs, so their numbers always agree.
+ */
 
 /** Walking reach: speed x time left after hearing the warning and getting moving. */
-export function reachM(scenario: Scenario, room: SafeRoomConfig): number {
-  return room.walk_speed_mps * Math.max(0, scenario.warning_min - room.mobilize_min) * 60;
+export function tornadoReachM(scenario: Scenario, config: ProtectionConfig): number {
+  const t = config.shelter.tornado;
+  return t.walk_speed_mps * Math.max(0, scenario.warning_min - t.mobilize_min) * 60;
+}
+
+/** floor(hardened share x footprint / sq ft per person), clamped; null if not eligible. */
+export function shelterCapacity(b: Building, config: ProtectionConfig, hazard: 'tornado' | 'hurricane'): number | null {
+  const s = config.shelter;
+  const f = b.footprint_sqft;
+  if (!s.eligible_classes.includes(b.cls) || typeof f !== 'number' || !(f > 0)) return null;
+  const h = s[hazard];
+  return Math.min(h.capacity_max, Math.max(h.capacity_min, Math.floor(s.hardened_share * f / h.sqft_per_person)));
+}
+export const shelterCost = (capacity: number, config: ProtectionConfig, hazard: 'tornado' | 'hurricane'): number =>
+  capacity * config.shelter[hazard].cost_per_person;
+
+/** People who may go, and the value of sheltering one of them (deaths averted per person). */
+interface Demand { home: number; goers: number; value: number }
+/** [distance m, demand index, shelter slot] sorted nearest first. */
+type Pair = [number, number, number];
+
+/** Expected deaths and occupants per building for a tornado with no protections. */
+export function tornadoBuildingDeaths(scenario: TornadoScenario, place: Place, params: SimParams) {
+  const n = place.buildings.length;
+  const deaths = new Float64Array(n);
+  const people = new Float64Array(n);
+  const distance = preparePath(scenario.path);
+  const night = isNight(scenario.hour);
+  for (let i = 0; i < n; i++) {
+    const b = place.buildings[i]!;
+    const [u, o] = occupants(b, night);
+    people[i] = u + o;
+    const damage = damageLevel(b.cls, windAt(distance(b.lon, b.lat), scenario, params), params);
+    if (damage > 0) deaths[i] = expectedExposure(exposure(b, damage, scenario, params));
+  }
+  return { deaths, people };
+}
+
+/** Lon/lat bucket index for "who lives within r meters of this point". */
+class Grid {
+  private readonly cells = new Map<string, number[]>();
+  constructor(private readonly place: Place, members: readonly number[], private readonly cellDeg: number) {
+    for (const i of members) {
+      const b = place.buildings[i]!;
+      const k = this.key(Math.floor(b.lon / cellDeg), Math.floor(b.lat / cellDeg));
+      let list = this.cells.get(k);
+      if (!list) this.cells.set(k, list = []);
+      list.push(i);
+    }
+  }
+  private key(x: number, y: number) { return `${x},${y}`; }
+  /** Members within r meters of (lon, lat), with their distances. */
+  near(lon: number, lat: number, r: number): [number, number][] {
+    const out: [number, number][] = [];
+    const span = Math.ceil(r / (111_000 * this.cellDeg * Math.max(0.2, Math.cos(lat * Math.PI / 180)))) + 1;
+    const x0 = Math.floor(lon / this.cellDeg), y0 = Math.floor(lat / this.cellDeg);
+    for (let dx = -span; dx <= span; dx++) for (let dy = -span; dy <= span; dy++) {
+      for (const i of this.cells.get(this.key(x0 + dx, y0 + dy)) ?? []) {
+        const b = this.place.buildings[i]!;
+        const d = distanceM(lon, lat, b.lon, b.lat);
+        if (d <= r) out.push([i, d]);
+      }
+    }
+    return out;
+  }
+}
+
+/** Tornado demand and pairs for a set of shelter buildings (indices into place.buildings). */
+function tornadoPairs(scenario: TornadoScenario, place: Place, params: SimParams, config: ProtectionConfig,
+  shelters: readonly number[], precomputed?: ReturnType<typeof tornadoBuildingDeaths>) {
+  const t = config.shelter.tornado;
+  const { deaths, people } = precomputed ?? tornadoBuildingDeaths(scenario, place, params);
+  const reach = tornadoReachM(scenario, config);
+  const served = new Set<string>(t.served_classes);
+  const homes: number[] = [];
+  place.buildings.forEach((b, i) => { if (served.has(b.cls) && people[i]! > 0) homes.push(i); });
+  const demands: Demand[] = [];
+  const homeDemand = new Map<number, number>();
+  const pairs: Pair[] = [];
+  const grid = new Grid(place, homes, Math.max(reach, 50) / 111_000);
+  shelters.forEach((k, slot) => {
+    const b = place.buildings[k]!;
+    // The building's own occupants shelter first (distance 0, everyone goes).
+    if (people[k]! > 0) {
+      demands.push({ home: k, goers: people[k]!, value: deaths[k]! / people[k]! });
+      pairs.push([0, demands.length - 1, slot]);
+    }
+    if (reach <= 0) return;
+    for (const [i, d] of grid.near(b.lon, b.lat, reach)) {
+      if (i === k) continue;
+      let di = homeDemand.get(i);
+      if (di === undefined) {
+        demands.push({ home: i, goers: people[i]! * t.compliance, value: deaths[i]! / people[i]! });
+        homeDemand.set(i, di = demands.length - 1);
+      }
+      pairs.push([d, di, slot]);
+    }
+  });
+  const byHome = (p: Pair) => demands[p[1]]!.home;
+  pairs.sort((a, b) => a[0] - b[0] || byHome(a) - byHome(b) || a[2] - b[2]);
+  return { demands, pairs, deaths, people };
 }
 
 /**
- * Share of each building's occupants inside a safe room. Occupants of eligible
- * classes within reach go with probability `compliance`; (home, room) pairs are
- * filled nearest-first until each room is full, and a person is assigned at most
- * once, so overlapping rooms never double-count.
+ * Fill pairs nearest-first for the shelters whose slot is in `active` (all when
+ * omitted). Each person is assigned at most once; each shelter stops at capacity.
  */
-export function assignShelters(scenario: Scenario, place: Place, config: ProtectionConfig):
-  { share: Float64Array; total: number; assignments: ShelterAssignment[] } {
-  const n = place.buildings.length;
-  const share = new Float64Array(n);
-  const assignments: ShelterAssignment[] = [];
-  const rooms = scenario.protections;
-  if (rooms.length === 0) return { share, total: 0, assignments };
-  const cfg = config.safe_room;
-  const reach = reachM(scenario, cfg);
-  const night = isNight(scenario.hour);
-  const eligible = new Set<string>(cfg.eligible_classes);
-  const goers = new Float64Array(n);
-  const pairs: [distance: number, building: number, room: number][] = [];
-  for (let i = 0; i < n; i++) {
-    const b = place.buildings[i]!;
-    if (!eligible.has(b.cls)) continue;
-    const [u, o] = occupants(b, night);
-    if (u + o <= 0) continue;
-    goers[i] = (u + o) * cfg.compliance;
-    rooms.forEach((r, j) => {
-      const d = distanceM(b.lon, b.lat, r.lon, r.lat);
-      if (d <= reach) pairs.push([d, i, j]);
-    });
-  }
-  pairs.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
-  const capacity = rooms.map(() => cfg.capacity);
-  let total = 0;
-  for (const [, i, j] of pairs) {
-    const take = Math.min(goers[i]!, capacity[j]!);
+function fill(demands: readonly Demand[], pairs: readonly Pair[], capacity: readonly number[], active?: ReadonlySet<number>) {
+  const left = demands.map(d => d.goers);
+  const cap = [...capacity];
+  const taken: [demand: number, slot: number, people: number][] = [];
+  let value = 0;
+  for (const [, di, slot] of pairs) {
+    if (active && !active.has(slot)) continue;
+    const take = Math.min(left[di]!, cap[slot]!);
     if (take <= 0) continue;
-    goers[i]! -= take; capacity[j]! -= take;
-    share[i]! += take; total += take;
-    assignments.push({ building_id: place.buildings[i]!.id, room: j, people: take });
+    left[di]! -= take; cap[slot]! -= take;
+    value += take * demands[di]!.value;
+    taken.push([di, slot, take]);
   }
-  for (let i = 0; i < n; i++) {
-    if (share[i]! > 0) {
-      const [u, o] = occupants(place.buildings[i]!, night);
-      share[i] = share[i]! / (u + o);
+  return { taken, value };
+}
+
+function shelterIndices(scenario: Scenario, place: Place, config: ProtectionConfig): number[] {
+  const index = new Map(place.buildings.map((b, i) => [b.id, i]));
+  return scenario.protections.map(p => {
+    const k = index.get(p.building_id);
+    if (k === undefined) throw new Error(`protections: unknown building ${p.building_id}`);
+    if (shelterCapacity(place.buildings[k]!, config, 'tornado') === null) {
+      throw new Error(`protections: ${p.building_id} cannot be a shelter (needs ${config.shelter.eligible_classes.join('/')} and footprint_sqft)`);
     }
+    return k;
+  });
+}
+
+/** Share of each building's occupants inside a shelter, plus who went where. */
+export function assignShelters(scenario: TornadoScenario, place: Place, params: SimParams, config: ProtectionConfig):
+  { share: Float64Array; total: number; assignments: ShelterAssignment[] } {
+  const share = new Float64Array(place.buildings.length);
+  const shelters = shelterIndices(scenario, place, config);
+  if (shelters.length === 0) return { share, total: 0, assignments: [] };
+  const { demands, pairs, people } = tornadoPairs(scenario, place, params, config, shelters);
+  const capacity = shelters.map(k => shelterCapacity(place.buildings[k]!, config, 'tornado')!);
+  let total = 0;
+  const assignments: ShelterAssignment[] = [];
+  for (const [di, slot, take] of fill(demands, pairs, capacity).taken) {
+    const home = demands[di]!.home;
+    share[home]! += take / people[home]!;
+    total += take;
+    assignments.push({ building_id: place.buildings[home]!.id, shelter_id: place.buildings[shelters[slot]!]!.id, people: take });
   }
   return { share, total, assignments };
 }
 
-export interface SafeRoomSite { h3: string; lon: number; lat: number; reachable: number }
-
-/**
- * Candidate sites: any cell center (including cells inside mobile-home parks, which
- * often have common lots) ranked by how many eligible people would come
- * (occupants at the scenario hour x compliance, capped at capacity),
- * taken greedily at least `site_spacing_reach` x reach apart. Depends on the hour
- * and warning time, not on the storm path.
- */
-export function safeRoomSites(place: Place, scenario: Scenario, config: ProtectionConfig): SafeRoomSite[] {
-  const cfg = config.safe_room;
-  const reach = reachM(scenario, cfg);
-  if (reach <= 0 || cfg.candidate_sites === 0) return [];
-  const night = isNight(scenario.hour);
-  const eligible = new Set<string>(cfg.eligible_classes);
-  const homes: { lon: number; lat: number; goers: number }[] = [];
-  for (const b of place.buildings) {
-    if (!eligible.has(b.cls)) continue;
-    const [u, o] = occupants(b, night);
-    if (u + o > 0) homes.push({ lon: b.lon, lat: b.lat, goers: (u + o) * cfg.compliance });
-  }
-  const dLat = reach / 111_000;
-  const scored: SafeRoomSite[] = [];
-  for (const c of place.cells ?? []) {
-    if (!c.center) continue;
-    const [lon, lat] = c.center;
-    const dLon = dLat / Math.max(0.01, Math.cos(lat * Math.PI / 180));
-    let goers = 0;
-    for (const h of homes) {
-      if (Math.abs(h.lat - lat) > dLat || Math.abs(h.lon - lon) > dLon) continue;
-      if (distanceM(lon, lat, h.lon, h.lat) <= reach) goers += h.goers;
-    }
-    if (goers > 0) scored.push({ h3: c.h3, lon, lat, reachable: Math.min(cfg.capacity, goers) });
-  }
-  scored.sort((a, b) => b.reachable - a.reachable || (a.h3 < b.h3 ? -1 : a.h3 > b.h3 ? 1 : 0));
-  const picked: SafeRoomSite[] = [];
-  for (const s of scored) {
-    if (picked.length >= cfg.candidate_sites) break;
-    if (picked.every(p => distanceM(p.lon, p.lat, s.lon, s.lat) >= cfg.site_spacing_reach * reach)) picked.push(s);
-  }
-  return picked;
-}
-
-export interface SafeRoomPlan {
-  sites: SafeRoomSite[];
-  protections: SafeRoom[];
+export interface ShelterCandidate {
+  building_id: string;
+  cls: string;
+  lon: number;
+  lat: number;
+  footprint_sqft: number;
+  capacity: number;
   cost_usd: number;
-  expected_deaths: number;
-  baseline_deaths: number;
-  lives_saved: number;
-  /** Number of affordable plans evaluated (every subset of sites within budget). */
-  evaluated: number;
+  /** Tornado: mobile-home residents within walking reach at the scenario hour. */
+  people_in_reach: number;
+  mh_homes_in_reach: number;
+  /** Tornado: lives saved if this building alone becomes a shelter. */
+  effectiveness: number;
 }
 
-export const siteRooms = (sites: readonly SafeRoomSite[]): SafeRoom[] =>
-  sites.map(s => ({ type: 'safe_room', lon: s.lon, lat: s.lat }));
+/** Every eligible building for the current storm, most effective first (ties by id). */
+export function shelterCandidates(scenario: Scenario, place: Place, params: SimParams,
+  config: ProtectionConfig): ShelterCandidate[] {
+  if (scenario.hazard !== 'tornado') throw new Error('shelterCandidates: only tornado is implemented so far');
+  const pre = tornadoBuildingDeaths(scenario, place, params);
+  const reach = tornadoReachM(scenario, config);
+  const served = new Set<string>(config.shelter.tornado.served_classes);
+  const mh: number[] = [];
+  place.buildings.forEach((b, i) => { if (served.has(b.cls)) mh.push(i); });
+  const grid = new Grid(place, mh, Math.max(reach, 50) / 111_000);
+  const out: ShelterCandidate[] = [];
+  place.buildings.forEach((b, k) => {
+    const capacity = shelterCapacity(b, config, 'tornado');
+    if (capacity === null) return;
+    const near = reach > 0 ? grid.near(b.lon, b.lat, reach).filter(([i]) => i !== k) : [];
+    const { demands, pairs } = tornadoPairs(scenario, place, params, config, [k], pre);
+    out.push({ building_id: b.id, cls: b.cls, lon: b.lon, lat: b.lat, footprint_sqft: b.footprint_sqft!, capacity,
+      cost_usd: shelterCost(capacity, config, 'tornado'),
+      people_in_reach: near.reduce((s, [i]) => s + pre.people[i]!, 0), mh_homes_in_reach: near.length,
+      effectiveness: fill(demands, pairs, [capacity]).value });
+  });
+  return out.sort((a, b) => b.effectiveness - a.effectiveness || (a.building_id < b.building_id ? -1 : 1));
+}
+
+export interface ShelterPlan {
+  building_ids: string[];
+  cost_usd: number;
+  /** Tornado: lives saved (expected deaths averted) by the whole plan. */
+  value: number;
+  baseline_deaths: number;
+  expected_deaths: number;
+  /** Plans scored (every affordable subset when exhaustive). */
+  evaluated: number;
+  method: 'exhaustive' | 'greedy';
+  /** "best" for an exhaustive search over the candidates; "best found" for greedy. */
+  label: 'best' | 'best found';
+  candidates: string[];
+}
 
 /**
- * Exhaustive search: every subset of candidate sites that fits the budget, scored by
- * expected deaths for this storm. Ties go to the cheaper plan. Existing protections
- * on the scenario are ignored (the optimal plan starts from nothing).
+ * Candidates = the top N by effectiveness plus every building the user selected.
+ * Up to `exhaustive_max` candidates: every affordable subset. Otherwise greedy by
+ * value per dollar, then single swaps until nothing improves. Ties go to the cheaper plan.
  */
-export function optimizeSafeRooms(scenario: TornadoScenario, place: Place, params: SimParams,
-  config: ProtectionConfig, sites: readonly SafeRoomSite[], budgetUsd: number): SafeRoomPlan {
-  const cost = config.safe_room.cost_usd;
-  const maxRooms = Math.floor(budgetUsd / cost + 1e-9);
-  const baseline = expected({ ...scenario, protections: [] }, place, params, config).expected_deaths;
-  let best = { mask: 0, rooms: 0, deaths: baseline };
+export function optimizeShelters(scenario: TornadoScenario, place: Place, params: SimParams, config: ProtectionConfig,
+  budgetUsd: number, selected: readonly string[] = []): ShelterPlan {
+  const ranked = shelterCandidates(scenario, place, params, config);
+  const byId = new Map(ranked.map(c => [c.building_id, c]));
+  for (const id of selected) if (!byId.has(id)) throw new Error(`optimizer: ${id} cannot be a shelter`);
+  const ids = [...new Set([...ranked.slice(0, config.optimizer.top_candidates).map(c => c.building_id), ...selected])];
+  const index = new Map(place.buildings.map((b, i) => [b.id, i]));
+  const shelters = ids.map(id => index.get(id)!);
+  const pre = tornadoBuildingDeaths(scenario, place, params);
+  const { demands, pairs } = tornadoPairs(scenario, place, params, config, shelters, pre);
+  const capacity = ids.map(id => byId.get(id)!.capacity);
+  const cost = ids.map(id => byId.get(id)!.cost_usd);
+  const baseline = pre.deaths.reduce((a, b) => a + b, 0);
+  const score = (slots: readonly number[]) => fill(demands, pairs, capacity, new Set(slots)).value;
+  const costOf = (slots: readonly number[]) => slots.reduce((s, i) => s + cost[i]!, 0);
+  const better = (v: number, c: number, bv: number, bc: number) => v > bv + 1e-12 || (Math.abs(v - bv) <= 1e-12 && c < bc);
+
+  let best: number[] = [];
+  let bestValue = 0;
   let evaluated = 0;
-  for (let mask = 0; mask < 1 << sites.length; mask++) {
-    const chosen = sites.filter((_, i) => mask & (1 << i));
-    if (chosen.length > maxRooms) continue;
-    evaluated++;
-    if (mask === 0) continue;
-    const deaths = expected({ ...scenario, protections: siteRooms(chosen) }, place, params, config).expected_deaths;
-    if (deaths < best.deaths - 1e-12 || (Math.abs(deaths - best.deaths) <= 1e-12 && chosen.length < best.rooms)) {
-      best = { mask, rooms: chosen.length, deaths };
+  const exhaustive = ids.length <= config.optimizer.exhaustive_max;
+  if (exhaustive) {
+    for (let mask = 0; mask < 1 << ids.length; mask++) {
+      const slots = ids.map((_, i) => i).filter(i => mask & (1 << i));
+      const c = costOf(slots);
+      if (c > budgetUsd) continue;
+      evaluated++;
+      const v = slots.length ? score(slots) : 0;
+      if (better(v, c, bestValue, costOf(best))) { best = slots; bestValue = v; }
+    }
+  } else {
+    const alone = ids.map(id => byId.get(id)!.effectiveness);
+    const order = ids.map((_, i) => i).sort((a, b) => alone[b]! / cost[b]! - alone[a]! / cost[a]! || a - b);
+    for (const i of order) {
+      const trial = [...best, i];
+      if (costOf(trial) > budgetUsd) continue;
+      evaluated++;
+      const v = score(trial);
+      if (v > bestValue + 1e-12) { best = trial; bestValue = v; }
+    }
+    for (let improved = true; improved;) {
+      improved = false;
+      for (const out of [...best]) {
+        for (const into of order) {
+          if (best.includes(into)) continue;
+          const trial = best.filter(i => i !== out).concat(into);
+          const c = costOf(trial);
+          if (c > budgetUsd) continue;
+          evaluated++;
+          const v = score(trial);
+          if (better(v, c, bestValue, costOf(best))) { best = trial; bestValue = v; improved = true; break; }
+        }
+        if (improved) break;
+      }
     }
   }
-  const chosen = sites.filter((_, i) => best.mask & (1 << i));
-  return { sites: chosen, protections: siteRooms(chosen), cost_usd: chosen.length * cost,
-    expected_deaths: best.deaths, baseline_deaths: baseline, lives_saved: baseline - best.deaths, evaluated };
+  best.sort((a, b) => a - b);
+  return { building_ids: best.map(i => ids[i]!), cost_usd: costOf(best), value: bestValue, baseline_deaths: baseline,
+    expected_deaths: baseline - bestValue, evaluated, method: exhaustive ? 'exhaustive' : 'greedy',
+    label: exhaustive ? 'best' : 'best found', candidates: ids };
 }

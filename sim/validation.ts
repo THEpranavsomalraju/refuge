@@ -1,4 +1,4 @@
-import { BUILDING_CLASSES, type Building, type Crossing, type ProtectionConfig, type SafeRoom, type Scenario, type SimParams, type Coordinate } from './core/types.js';
+import { BUILDING_CLASSES, type Building, type Crossing, type ProtectionConfig, type Scenario, type Shelter, type SimParams, type Coordinate } from './core/types.js';
 
 function fail(at: string, message: string): never { throw new Error(`${at}: ${message}`); }
 function record(value: unknown, at: string): Record<string, unknown> {
@@ -100,11 +100,14 @@ export function parseScenario(value: unknown): Scenario {
   const raw = s.protections ?? [];
   if (!Array.isArray(raw)) fail('protections', 'expected an array');
   if (s.hazard === 'flood' && raw.length > 0) fail('protections', 'flood protections are not implemented yet');
-  const protections: SafeRoom[] = raw.map((p, i) => {
+  const seen = new Set<string>();
+  const protections: Shelter[] = raw.map((p, i) => {
     const r = record(p, `protections[${i}]`);
-    if (r.type !== 'safe_room') fail(`protections[${i}].type`, 'only safe_room is implemented');
-    const [lon, lat] = coordinate([r.lon, r.lat], `protections[${i}].lon_lat`);
-    return { type: 'safe_room', lon, lat };
+    if (r.type !== 'shelter') fail(`protections[${i}].type`, 'only "shelter" (an existing building) is implemented');
+    if (typeof r.building_id !== 'string' || r.building_id.length === 0) fail(`protections[${i}].building_id`, 'expected a building id');
+    if (seen.has(r.building_id)) fail(`protections[${i}].building_id`, `duplicate shelter ${r.building_id}`);
+    seen.add(r.building_id);
+    return { type: 'shelter', building_id: r.building_id };
   });
   const common = {
     place_id: s.place_id,
@@ -167,22 +170,40 @@ export function parseCrossings(value: unknown): Crossing[] {
 
 export function parseProtectionConfig(value: unknown): ProtectionConfig {
   const c = record(value, 'protections');
-  keys(c, ['schema_version', 'default_budget_usd', 'safe_room'], 'protections');
-  if (c.schema_version !== 1) fail('protections.schema_version', 'expected 1');
+  keys(c, ['schema_version', 'default_budget_usd', 'shelter', 'optimizer'], 'protections');
+  if (c.schema_version !== 2) fail('protections.schema_version', 'expected 2');
   number(c.default_budget_usd, 'protections.default_budget_usd');
-  const r = record(c.safe_room, 'protections.safe_room');
-  keys(r, ['name', 'cost_usd', 'capacity', 'walk_speed_mps', 'mobilize_min', 'compliance', 'eligible_classes',
-    'candidate_sites', 'site_spacing_reach'], 'protections.safe_room');
-  if (typeof r.name !== 'string') fail('protections.safe_room.name', 'expected a string');
-  number(r.cost_usd, 'protections.safe_room.cost_usd', Number.MIN_VALUE);
-  number(r.capacity, 'protections.safe_room.capacity', 0);
-  number(r.walk_speed_mps, 'protections.safe_room.walk_speed_mps', 0, 5);
-  number(r.mobilize_min, 'protections.safe_room.mobilize_min', 0, 120);
-  number(r.compliance, 'protections.safe_room.compliance', 0, 1);
-  if (!Array.isArray(r.eligible_classes) || r.eligible_classes.some(x => !BUILDING_CLASSES.includes(x))) {
-    fail('protections.safe_room.eligible_classes', 'expected building classes');
+  const s = record(c.shelter, 'protections.shelter');
+  keys(s, ['eligible_classes', 'hardened_share', 'tornado', 'hurricane'], 'protections.shelter');
+  const classes = (v: unknown, at: string) => {
+    if (!Array.isArray(v) || v.some(x => !BUILDING_CLASSES.includes(x))) fail(at, 'expected building classes');
+  };
+  classes(s.eligible_classes, 'protections.shelter.eligible_classes');
+  number(s.hardened_share, 'protections.shelter.hardened_share', Number.MIN_VALUE, 1);
+  for (const hazard of ['tornado', 'hurricane'] as const) {
+    const h = record(s[hazard], `protections.shelter.${hazard}`);
+    const at = (k: string) => `protections.shelter.${hazard}.${k}`;
+    number(h.sqft_per_person, at('sqft_per_person'), Number.MIN_VALUE);
+    integer(h.capacity_min, at('capacity_min'), 0, 1e6);
+    integer(h.capacity_max, at('capacity_max'), h.capacity_min as number, 1e6);
+    number(h.cost_per_person, at('cost_per_person'));
+    if (hazard === 'tornado') {
+      keys(h, ['sqft_per_person', 'capacity_min', 'capacity_max', 'cost_per_person', 'walk_speed_mps', 'mobilize_min',
+        'compliance', 'served_classes'], `protections.shelter.${hazard}`);
+      number(h.walk_speed_mps, at('walk_speed_mps'), 0, 5);
+      number(h.mobilize_min, at('mobilize_min'), 0, 120);
+      number(h.compliance, at('compliance'), 0, 1);
+      classes(h.served_classes, at('served_classes'));
+    } else {
+      keys(h, ['sqft_per_person', 'capacity_min', 'capacity_max', 'cost_per_person', 'reach_km', 'major_damage_weight'],
+        `protections.shelter.${hazard}`);
+      number(h.reach_km, at('reach_km'), 0, 100);
+      number(h.major_damage_weight, at('major_damage_weight'), 0, 1);
+    }
   }
-  integer(r.candidate_sites, 'protections.safe_room.candidate_sites', 0, 16);
-  number(r.site_spacing_reach, 'protections.safe_room.site_spacing_reach', 0, 100);
+  const o = record(c.optimizer, 'protections.optimizer');
+  keys(o, ['top_candidates', 'exhaustive_max'], 'protections.optimizer');
+  integer(o.top_candidates, 'protections.optimizer.top_candidates', 0, 100);
+  integer(o.exhaustive_max, 'protections.optimizer.exhaustive_max', 0, 20);
   return c as unknown as ProtectionConfig;
 }

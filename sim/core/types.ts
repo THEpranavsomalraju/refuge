@@ -19,6 +19,8 @@ export interface Building {
   pop_day_o65: number;
   /** H3 resolution-10 cell; required by simulateDetailed, ignored by the CLI modes. */
   h3?: string;
+  /** NSI ftprntsqft; required for a building to become a shelter. */
+  footprint_sqft?: number | null;
   // Flood/scene fields are preserved by the loader but not required for tornadoes.
   [key: string]: unknown;
 }
@@ -31,29 +33,32 @@ export interface TornadoScenario {
   width_m: number;
   hour: number;
   warning_min: number;
-  protections: readonly SafeRoom[];
+  protections: readonly Shelter[];
   runs: number;
   seed: number;
 }
 
-/** A community safe room placed by the player or the optimizer (tornado only for now). */
-export interface SafeRoom { type: 'safe_room'; lon: number; lat: number }
-export interface SafeRoomConfig {
-  name: string;
-  cost_usd: number;
-  capacity: number;
-  walk_speed_mps: number;
-  mobilize_min: number;
-  compliance: number;
-  eligible_classes: BuildingClass[];
-  candidate_sites: number;
-  site_spacing_reach: number;
+/** An existing building converted into a shelter (FEMA P-361 hardened core). */
+export interface Shelter { type: 'shelter'; building_id: string }
+export interface ShelterTornadoConfig {
+  sqft_per_person: number; capacity_min: number; capacity_max: number; cost_per_person: number;
+  walk_speed_mps: number; mobilize_min: number; compliance: number; served_classes: BuildingClass[];
+}
+export interface ShelterHurricaneConfig {
+  sqft_per_person: number; capacity_min: number; capacity_max: number; cost_per_person: number;
+  reach_km: number; major_damage_weight: number;
 }
 /** sim/params/protections.json */
 export interface ProtectionConfig {
-  schema_version: 1;
+  schema_version: 2;
   default_budget_usd: number;
-  safe_room: SafeRoomConfig;
+  shelter: {
+    eligible_classes: BuildingClass[];
+    hardened_share: number;
+    tornado: ShelterTornadoConfig;
+    hurricane: ShelterHurricaneConfig;
+  };
+  optimizer: { top_candidates: number; exhaustive_max: number };
 }
 
 /** Water surface height above the nearest stream, uniform across the place. */
@@ -64,7 +69,7 @@ export interface FloodScenario {
   hour: number;
   warning_min: number;
   /** Always empty until flood protections exist (validation rejects others). */
-  protections: readonly SafeRoom[];
+  protections: readonly Shelter[];
   runs: number;
   seed: number;
 }
@@ -157,8 +162,8 @@ export interface DetailedResult extends SimulationResult {
   /** Only when the scenario has protections: who goes to which room (sums to `sheltered`). */
   shelter_assignments?: ShelterAssignment[];
 }
-/** Origin building -> safe room (index into scenario.protections), for animation and audits. */
-export interface ShelterAssignment { building_id: string; room: number; people: number }
+/** Origin building -> shelter building, for animation and audits. */
+export interface ShelterAssignment { building_id: string; shelter_id: string; people: number }
 
 export interface CellDiff { delta_expected_deaths: number; delta_risk: number }
 

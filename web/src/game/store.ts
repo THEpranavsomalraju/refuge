@@ -1,13 +1,15 @@
 import { create } from 'zustand';
 import { scene, type LonLat, type PlaceData } from '../scene';
 import showcase from '../../../sim/scenarios/lumberton_tornado.json';
-import { defaultBudget, riskBands, safeRoom, sim, type DetailedResult, type SafeRoomPlan,
-  type SafeRoomSite, type TornadoScenario } from './simClient';
+import { defaultBudget, riskBands, sim, type DetailedResult, type ShelterCandidate, type ShelterPlan,
+  type TornadoScenario } from './simClient';
 import { stormGlow } from './stormGlow';
 
 /** Median NOAA path width by EF rating, 2007-2025 (ml/exports/tornado_width_by_ef.json). */
 export const WIDTH_BY_EF = [45.7, 137.2, 274.3, 640.1, 965.6, 1207];
 const STORM_MS = 6000;
+/** How many candidate buildings the planning list shows (the optimizer's top set). */
+export const SHOWN_CANDIDATES = 12;
 
 export type Phase = 'loading' | 'setup' | 'simulating' | 'storm' | 'results' | 'planning' | 'replayed' | 'compare';
 export type MapView = 'before' | 'yours' | 'optimal';
@@ -22,38 +24,39 @@ interface GameState {
   path: LonLat[];
   budget: number;
   baseline: DetailedResult | null;
-  sites: SafeRoomSite[];
-  /** Site index -> scene protection id, for the player's placed rooms. */
-  placed: Map<number, string>;
+  /** Every eligible building for this storm, most effective first. */
+  candidates: ShelterCandidate[];
+  /** Selected building id -> scene marker id ('' while hidden). */
+  placed: Map<string, string>;
   yours: DetailedResult | null;
-  optimal: { plan: SafeRoomPlan; result: DetailedResult } | null;
+  optimal: { plan: ShelterPlan; result: DetailedResult } | null;
   view: MapView;
   optimalMarkers: string[];
 
   init(place: PlaceData): Promise<void>;
-  set(patch: Partial<Pick<GameState, 'ef' | 'hour' | 'warning'>>): void;
+  set(patch: Partial<Pick<GameState, 'ef' | 'hour' | 'warning' | 'budget'>>): void;
   play(): Promise<void>;
   plan(): Promise<void>;
-  toggleSite(i: number): void;
+  toggle(buildingId: string): void;
   replay(): Promise<void>;
   compare(): Promise<void>;
   show(view: MapView): void;
   restart(): void;
 }
 
-let optimalJob: Promise<{ plan: SafeRoomPlan; result: DetailedResult }> | null = null;
-
 export const useGame = create<GameState>((set, get) => {
-  const scenarioOf = (rooms: SafeRoomSite[] = []): TornadoScenario => {
+  const scenarioOf = (shelters: string[] = []): TornadoScenario => {
     const { ef, hour, warning, path } = get();
     return { ...(showcase as unknown as TornadoScenario), ef, hour, warning_min: warning, path,
-      width_m: WIDTH_BY_EF[ef]!, protections: rooms.map(s => ({ type: 'safe_room' as const, lon: s.lon, lat: s.lat })) };
+      width_m: WIDTH_BY_EF[ef]!, protections: shelters.map(building_id => ({ type: 'shelter' as const, building_id })) };
   };
-  const placedSites = () => [...get().placed.keys()].sort((a, b) => a - b).map(i => get().sites[i]!);
+  const candidate = (id: string) => get().candidates.find(c => c.building_id === id);
+  const mark = (id: string) => { const c = candidate(id)!; return scene.placeProtection('safe_room', c.lon, c.lat); };
+  const cost = () => [...get().placed.keys()].reduce((s, id) => s + (candidate(id)?.cost_usd ?? 0), 0);
 
   /** Simulate, animate the storm with buildings lighting up as it passes, then raise the risk map. */
-  async function run(rooms: SafeRoomSite[]): Promise<DetailedResult> {
-    const s = scenarioOf(rooms);
+  async function run(shelters: string[]): Promise<DetailedResult> {
+    const s = scenarioOf(shelters);
     scene.hideRiskMap();
     scene.clearBuildingGlow();
     scene.showTornadoPath(s.path as LonLat[], s.width_m);
@@ -71,7 +74,7 @@ export const useGame = create<GameState>((set, get) => {
   return {
     phase: 'loading', error: null, place: null,
     ef: showcase.ef, hour: showcase.hour, warning: showcase.warning_min, path: showcase.path as LonLat[],
-    budget: defaultBudget, baseline: null, sites: [], placed: new Map(), yours: null, optimal: null,
+    budget: defaultBudget, baseline: null, candidates: [], placed: new Map(), yours: null, optimal: null,
     view: 'before', optimalMarkers: [],
 
     async init(place) {
@@ -93,62 +96,59 @@ export const useGame = create<GameState>((set, get) => {
     },
     async plan() {
       try {
-        const s = scenarioOf();
-        const sites = await sim.sites(s);
-        set({ sites, phase: 'planning' });
-        // Search every affordable plan in the background while the player chooses.
-        optimalJob = sim.optimize(s, sites, get().budget);
-        optimalJob.catch(fail);
+        if (get().candidates.length === 0) set({ candidates: await sim.candidates(scenarioOf()) });
+        get().show('before');
+        const placed = new Map<string, string>();
+        for (const id of get().placed.keys()) placed.set(id, mark(id));
+        set({ phase: 'planning', placed });
       } catch (e) { fail(e); }
     },
-    toggleSite(i) {
+    toggle(id) {
       const placed = new Map(get().placed);
-      const id = placed.get(i);
-      if (id) { scene.removeProtection(id); placed.delete(i); }
+      const marker = placed.get(id);
+      if (marker !== undefined) { if (marker) scene.removeProtection(marker); placed.delete(id); }
       else {
-        if ((placed.size + 1) * safeRoom.cost_usd > get().budget) return;
-        const site = get().sites[i]!;
-        placed.set(i, scene.placeProtection('safe_room', site.lon, site.lat));
+        if (cost() + candidate(id)!.cost_usd > get().budget) return;
+        placed.set(id, mark(id));
       }
       set({ placed });
     },
     async replay() {
       try {
-        const yours = await run(placedSites());
+        const yours = await run([...get().placed.keys()]);
         set({ yours, phase: 'replayed', view: 'yours' });
       } catch (e) { fail(e); }
     },
     async compare() {
       try {
-        const optimal = await optimalJob!;
+        set({ phase: 'simulating' });
+        // The user's picks join the top candidates, so the scores are comparable.
+        const optimal = await sim.optimize(scenarioOf(), get().budget, [...get().placed.keys()]);
         set({ optimal, phase: 'compare' });
         get().show('optimal');
       } catch (e) { fail(e); }
     },
     show(view) {
-      const { baseline, yours, optimal, placed, sites } = get();
+      const { baseline, yours, optimal, placed } = get();
       const result = view === 'before' ? baseline : view === 'yours' ? yours : optimal?.result;
       if (!result) return;
-      // Markers: the player's rooms for "yours", the optimizer's rooms for "optimal".
       for (const id of get().optimalMarkers) scene.removeProtection(id);
-      for (const id of placed.values()) scene.removeProtection(id);
-      // A placed site whose marker is hidden keeps its entry with an empty id.
-      const next = new Map<number, string>();
-      for (const i of placed.keys()) {
-        next.set(i, view === 'yours' ? scene.placeProtection('safe_room', sites[i]!.lon, sites[i]!.lat) : '');
-      }
-      const optimalMarkers = view === 'optimal' && optimal
-        ? optimal.plan.sites.map(s => scene.placeProtection('safe_room', s.lon, s.lat)) : [];
+      for (const marker of placed.values()) if (marker) scene.removeProtection(marker);
+      const next = new Map<string, string>();
+      for (const id of placed.keys()) next.set(id, view === 'yours' ? mark(id) : '');
+      const optimalMarkers = view === 'optimal' && optimal ? optimal.plan.building_ids.map(id => {
+        const b = get().place!.buildings.find(x => x.id === id)!;
+        return scene.placeProtection('safe_room', b.lon, b.lat);
+      }) : [];
       set({ view, placed: next, optimalMarkers });
       void scene.showRiskMap(result.cells, riskBands);
     },
     restart() {
-      for (const id of get().placed.values()) if (id) scene.removeProtection(id);
+      for (const marker of get().placed.values()) if (marker) scene.removeProtection(marker);
       for (const id of get().optimalMarkers) scene.removeProtection(id);
       scene.hideRiskMap();
       scene.clearBuildingGlow();
-      optimalJob = null;
-      set({ phase: 'setup', baseline: null, yours: null, optimal: null, sites: [], placed: new Map(),
+      set({ phase: 'setup', baseline: null, yours: null, optimal: null, candidates: [], placed: new Map(),
         optimalMarkers: [], view: 'before', error: null });
       scene.showTornadoPath(get().path, WIDTH_BY_EF[get().ef]!);
     },

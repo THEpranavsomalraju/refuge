@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { scene, type Band, type LoadState } from '../scene';
-import { riskBands, safeRoom, type DetailedResult } from './simClient';
-import { useGame, type MapView } from './store';
+import { riskBands, shelterRules, type DetailedResult } from './simClient';
+import { SHOWN_CANDIDATES, useGame, type MapView } from './store';
 import { BAND_COLOR, BAND_WORDS, GROUPS, deaths, driverWords, hourWords, oneInN, usd } from './format';
 
 /** Game UI for the Lumberton tornado flow: storm -> risk map -> safe rooms -> replay -> optimal plan. */
@@ -84,35 +84,44 @@ function Summary({ title, r, hour }: { title: string; r: DetailedResult; hour: n
   );
 }
 
+const CLASS_WORDS: Record<string, string> = { SCHOOL: 'School', WORSHIP: 'Place of worship', COMMERCIAL: 'Business', BIGROOF: 'Big-box / warehouse' };
+
 function Planning() {
   const g = useGame();
-  const spent = g.placed.size * safeRoom.cost_usd;
+  const t = shelterRules.tornado;
+  const reach = Math.round(t.walk_speed_mps * Math.max(0, g.warning - t.mobilize_min) * 60);
+  const spent = [...g.placed.keys()].reduce((s, id) => s + (g.candidates.find(c => c.building_id === id)?.cost_usd ?? 0), 0);
+  const shown = g.candidates.slice(0, SHOWN_CANDIDATES);
   return (
     <>
       <div style={muted}>
-        Community safe rooms hold {safeRoom.capacity} people. Mobile-home residents within a {g.warning - safeRoom.mobilize_min > 0
-          ? `${Math.round(safeRoom.walk_speed_mps * (g.warning - safeRoom.mobilize_min) * 60)} m` : 'zero'} walk
-        can reach one in {g.warning} minutes of warning; about {Math.round(safeRoom.compliance * 100)}% go.
-        Built to FEMA P-361 (250 mph), so people inside are modeled as safe. {usd(safeRoom.cost_usd)} each
-        (provisional). Tornado shelter only: not a flood evacuation site.
+        Turn existing buildings into tornado shelters (a FEMA P-361 hardened core, {Math.round(shelterRules.hardened_share * 100)}% of
+        the footprint, {t.sqft_per_person} sq ft per person, {usd(t.cost_per_person)} per person). The building's own occupants go first,
+        then about {Math.round(t.compliance * 100)}% of mobile-home residents within a {reach} m walk ({g.warning} min warning).
+        People inside are modeled as safe. Tornado shelter only.
       </div>
-      <div style={row}><span>Budget</span><span style={mono}>{usd(spent)} of {usd(g.budget)}</span></div>
-      <div style={{ display: 'grid', gap: 4 }}>
-        {g.sites.map((s, i) => {
-          const on = g.placed.has(i);
-          const affordable = on || spent + safeRoom.cost_usd <= g.budget;
+      <Row label="Budget">
+        <input type="number" min={0} step={50000} value={g.budget} style={{ ...input, width: 120 }}
+          onChange={e => g.set({ budget: Math.max(0, Number(e.target.value) || 0) })} />
+      </Row>
+      <div style={row}><span>Spent</span><span style={mono}>{usd(spent)} of {usd(g.budget)}</span></div>
+      <div style={muted}>Most effective buildings for this storm (lives saved if converted alone):</div>
+      <div style={{ display: 'grid', gap: 4, maxHeight: 300, overflowY: 'auto' }}>
+        {shown.map(c => {
+          const on = g.placed.has(c.building_id);
+          const affordable = on || spent + c.cost_usd <= g.budget;
           return (
-            <button key={s.h3} disabled={!affordable} onClick={() => g.toggleSite(i)}
-              style={{ ...site, borderColor: on ? '#e3eae7' : '#2c3a37', opacity: affordable ? 1 : 0.4 }}>
-              <span>{on ? '■' : '□'} Site {i + 1}</span>
-              <span style={muted}>up to {Math.round(s.reachable)} people · {usd(safeRoom.cost_usd)}</span>
+            <button key={c.building_id} disabled={!affordable} onClick={() => g.toggle(c.building_id)}
+              style={{ ...site, display: 'grid', gap: 2, borderColor: on ? '#e3eae7' : '#2c3a37', opacity: affordable ? 1 : 0.4 }}>
+              <span style={row}><span>{on ? '■' : '□'} {CLASS_WORDS[c.cls] ?? c.cls}</span><span style={mono}>saves {c.effectiveness.toFixed(1)}</span></span>
+              <span style={muted}>{c.capacity} people · {usd(c.cost_usd)} · {Math.round(c.people_in_reach)} mobile-home residents in reach</span>
             </button>
           );
         })}
-        {g.sites.length === 0 && <div style={muted}>No sites: with this little warning nobody can reach a safe room.</div>}
+        {shown.length === 0 && <div style={muted}>No eligible buildings: needs schools, churches or businesses with a known footprint (footprint_sqft).</div>}
       </div>
       <button style={primary} onClick={() => void g.replay()}>
-        Replay storm with {g.placed.size} safe room{g.placed.size === 1 ? '' : 's'}
+        Replay storm with {g.placed.size} shelter{g.placed.size === 1 ? '' : 's'}
       </button>
     </>
   );
@@ -124,9 +133,9 @@ function BeforeAfter() {
   return (
     <div style={{ display: 'grid', gap: 4 }}>
       <div style={row}><span>Before</span><span style={mono}>{deaths(g.baseline!.expected_deaths)}</span></div>
-      <div style={row}><span>With your {g.placed.size} room{g.placed.size === 1 ? '' : 's'}</span><span style={mono}>{deaths(g.yours!.expected_deaths)}</span></div>
+      <div style={row}><span>With your {g.placed.size} shelter{g.placed.size === 1 ? '' : 's'}</span><span style={mono}>{deaths(g.yours!.expected_deaths)}</span></div>
       <div style={{ ...row, fontWeight: 700 }}><span>Lives saved</span><span style={mono}>{saved.toFixed(1)}</span></div>
-      <div style={muted}>{Math.round(g.yours!.sheltered ?? 0)} people in safe rooms · range {g.yours!.p05}–{g.yours!.p95}</div>
+      <div style={muted}>{Math.round(g.yours!.sheltered ?? 0)} people in shelters · range {g.yours!.p05}–{g.yours!.p95}</div>
       <div style={muted}>{HOME_NOTE}</div>
     </div>
   );
@@ -136,21 +145,23 @@ function Compare() {
   const g = useGame();
   const yourSaved = g.baseline!.expected_deaths - g.yours!.expected_deaths;
   const plan = g.optimal!.plan;
-  const none = plan.lives_saved <= 1e-9;
-  const pct = none ? null : Math.round(100 * yourSaved / plan.lives_saved);
-  // Plan sites come back from the worker as copies: match them by cell id.
-  const optimalNames = plan.sites.map(s => `Site ${g.sites.findIndex(x => x.h3 === s.h3) + 1}`).join(', ') || 'no rooms';
+  const none = plan.value <= 1e-9;
+  const pct = none ? null : Math.round(100 * yourSaved / plan.value);
+  const yourCost = [...g.placed.keys()].reduce((s, id) => s + (g.candidates.find(c => c.building_id === id)?.cost_usd ?? 0), 0);
+  const names = plan.building_ids.map(id => CLASS_WORDS[g.candidates.find(c => c.building_id === id)?.cls ?? ''] ?? id).join(', ') || 'no shelters';
   return (
     <>
       {none
-        ? <div style={{ fontWeight: 600 }}>No safe-room plan among these sites saves lives in this storm.</div>
+        ? <div style={{ fontWeight: 600 }}>No shelter plan among these buildings saves lives in this storm.</div>
         : <><div style={{ fontSize: 30, fontWeight: 700, lineHeight: 1 }}>{pct}%</div>
-          <div style={muted}>of the lives the best plan saves</div></>}
-      <div style={row}><span>Your plan saves</span><span style={mono}>{yourSaved.toFixed(1)} · {usd(g.placed.size * safeRoom.cost_usd)}</span></div>
-      <div style={row}><span>Best plan saves</span><span style={mono}>{plan.lives_saved.toFixed(1)} · {usd(plan.cost_usd)}</span></div>
+          <div style={muted}>of the lives the {plan.label} plan saves</div></>}
+      <div style={row}><span>Your plan saves</span><span style={mono}>{yourSaved.toFixed(1)} · {usd(yourCost)}</span></div>
+      <div style={row}><span>{plan.label === 'best' ? 'Best' : 'Best found'} plan saves</span><span style={mono}>{plan.value.toFixed(1)} · {usd(plan.cost_usd)}</span></div>
       <div style={muted}>
-        Best plan: {optimalNames}, {deaths(g.optimal!.result.expected_deaths)} expected deaths remain. Best among
-        all {plan.evaluated} combinations of these {g.sites.length} sites within {usd(g.budget)}, under this model's assumptions.
+        {plan.label === 'best' ? 'Best' : 'Best found'} plan: {names}; {deaths(plan.expected_deaths)} expected deaths remain.
+        {plan.method === 'exhaustive'
+          ? ` Every affordable combination of the ${plan.candidates.length} top buildings (including yours) was checked: ${plan.evaluated} plans within ${usd(g.budget)}.`
+          : ` Greedy search with swaps over ${plan.candidates.length} buildings (${plan.evaluated} plans); not guaranteed optimal.`}
       </div>
       <div style={muted}>{HOME_NOTE}</div>
       <Views options={['before', 'yours', 'optimal']} />
@@ -161,7 +172,7 @@ function Compare() {
 }
 
 const VIEW_WORDS: Record<MapView, string> = { before: 'No protections', yours: 'Your plan', optimal: 'Best plan' };
-const HOME_NOTE = 'The map shows risk where people live: residents who reach a safe room still count in their home cell, with no risk.';
+const HOME_NOTE = 'The map shows risk where people live: residents who reach a shelter still count in their home cell, with no risk.';
 function Views({ options }: { options: MapView[] }) {
   const g = useGame();
   return (

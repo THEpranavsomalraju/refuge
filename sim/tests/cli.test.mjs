@@ -81,7 +81,7 @@ test('simulate is reproducible and adds quantiles without changing analytic expe
 
 for (const [label, overrides, error] of [
   ['flood with tornado fields', { hazard: 'flood', flood_height_m: 3 }, /must be null for a flood/],
-  ['protections', { protections: [{ type: 'safe_room', lon: -90, lat: 38 }] }, /protection/i],
+  ['protections', { protections: [{ type: 'shelter', building_id: 'synthetic_1' }] }, /protection/i],
   ['unknown hour', { hour: 24 }, /hour/],
   ['negative warning', { warning_min: -1 }, /warning_min/],
   ['invalid width', { width_m: 0 }, /width_m/],

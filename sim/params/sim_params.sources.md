@@ -144,22 +144,24 @@ night x warning`. Flood does **not** use the tornado class multipliers or the
 basement modifier (they were fit to wind, and basements do not protect from
 water). It keeps night, warning, over65, and the VEHICLE multiplier.
 
-## Safe rooms (`protections.json`, approved 2026-09-26, provisional)
+## Shelters in existing buildings (`protections.json`, team plan 2026-09-26)
 
-| Parameter | Value | Source |
-|---|---|---|
-| `capacity` | 150 | 750 sq ft at [FEMA P-361](https://www.fema.gov/node/what-minimum-square-footage-person-tornado-community-safe-room) minimum 5 sq ft per tornado occupant |
-| `cost_usd` | 225,000 | $1,500/occupant. FEMA-funded Tupelo MS room: ~$1.1M for 1,053 people (~$1,045/person); vendors quote $1,500–2,000/occupant. Story lead's sourced cost replaces this. |
-| `walk_speed_mps` | 1.07 | MUTCD pedestrian walking speed (3.5 ft/s) |
-| `mobilize_min` | 5 | Time to receive the warning and start moving (model choice) |
-| `compliance` | 0.30 | Under 30% of mobile-home residents leave home in tornado events ([Chaney & Weaver 2010, Natural Hazards](https://link.springer.com/article/10.1007/s11069-008-9257-z)) |
-| `eligible_classes` | MH | The compliance figure is for mobile-home residents |
-| inside death probability | 0 | P-361 rooms are designed for 250 mph winds |
+Replaces the earlier standalone safe room. Rules from `ml/SHELTER_MODEL.md`.
 
-Reach = `walk_speed_mps x max(0, warning_min - mobilize_min) x 60` (321 m at 10
-minutes). Candidate sites (approved 2026-09-26): any H3 cell center, occupied or
-not (mobile-home parks often have common lots), ranked by reachable residents
-x compliance (capped at capacity), taken greedily at least 2 x reach apart;
-8 sites, every affordable subset searched. (home, room) pairs within reach are filled nearest-first until each
-room holds `capacity`; each person is assigned at most once. Sheltered people
-stay counted in their home cell, with zero deaths.
+| Setting | Tornado | Hurricane (step 6) | Source |
+|---|---|---|---|
+| Eligible | SCHOOL, WORSHIP, COMMERCIAL, BIGROOF with `footprint_sqft` | same | public/commercial buildings people can enter |
+| Hardened area | 25% of `footprint_sqft` | same | model choice (interior core) |
+| Capacity | floor(area / 5 sq ft), clamped 50–1,000 | floor(area / 20 sq ft), clamped 25–1,000 | [FEMA P-361](https://www.fema.gov/node/what-minimum-square-footage-person-tornado-community-safe-room) occupant densities |
+| Cost | $1,500 per person | $6,000 per person | $300 per hardened sq ft; FEMA-funded Tupelo room ~$1,045/person, vendors $1,500–2,000 |
+| Who goes | own occupants (all), then 30% of mobile-home residents within reach | displaced residents within 3 km | [Chaney & Weaver 2010](https://link.springer.com/article/10.1007/s11069-008-9257-z) |
+| Reach | 1.07 m/s (MUTCD) x max(0, warning - 5 min) | 3.0 km (drive before landfall) | |
+| Inside | death probability 0 (P-361, 250 mph) | not "displaced without shelter" | |
+
+(home, shelter) pairs are filled nearest-first until each shelter is full; each
+person is assigned at most once. Sheltered people stay counted in their home cell.
+"Effectiveness" = lives saved by that building alone; the optimizer searches every
+affordable subset of the top 12 plus the user's picks (up to 14), else greedy with
+swaps ("best found"). Lumberton demo: nsi_56640865 3.256, nsi_56677799 2.702,
+nsi_56638583 1.513 lives saved alone (ML reference 3.29 / 2.70 / 1.52; distances
+here are great-circle, ML's are equirectangular).

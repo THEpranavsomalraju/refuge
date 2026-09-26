@@ -2,7 +2,7 @@
 // Runs the simulation engine (sim/core, the same code the CLI uses) off the main
 // thread so the 3D scene keeps animating while 500 runs and the plan search execute.
 import {
-  optimizeSafeRooms, safeRoomSites, simulateDetailed, siteRooms,
+  optimizeShelters, shelterCandidates, simulateDetailed,
   type Place, type ProtectionConfig, type SimParams, type TornadoScenario,
 } from '../../../sim/core/index.js';
 import paramsJson from '../../../sim/params/sim_params.json';
@@ -19,10 +19,11 @@ function handle(req: WorkerRequest): unknown {
   const s = req.scenario as TornadoScenario;
   switch (req.kind) {
     case 'run': return simulateDetailed(s, place, params, protections);
-    case 'sites': return safeRoomSites(place, s, protections);
+    case 'candidates': return shelterCandidates(s, place, params, protections);
     case 'optimize': {
-      const plan = optimizeSafeRooms(s, place, params, protections, req.sites, req.budget);
-      const result = simulateDetailed({ ...s, protections: siteRooms(plan.sites) }, place, params, protections);
+      const plan = optimizeShelters({ ...s, protections: [] }, place, params, protections, req.budget, req.selected);
+      const shelters = plan.building_ids.map(building_id => ({ type: 'shelter' as const, building_id }));
+      const result = simulateDetailed({ ...s, protections: shelters }, place, params, protections);
       return { plan, result };
     }
   }
