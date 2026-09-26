@@ -4,7 +4,17 @@ Owner: Structures and 3D (@soham-patki). Read `REFUGE_overview.md` first.
 
 This folder turns real building, road, stream, and terrain data into one folder of JSON files per featured place. Those files, plus the Python functions in `fetch_nsi.py`, are the only things other parts of Refuge use from here. The overview says only this role edits `places/`.
 
-> **Status:** `fetch_nsi.py` is done and tested. The featured-place pipeline (OSM footprints, full `cells.json`, streams, roads, crossings, 3DEP) is still in progress. Anything marked **TBD** is undecided. Anything marked **proposed** still needs sign-off from the teammate who reads it.
+> **Status:** `fetch_nsi.py` and `build_place.py` are done. The three featured places are built with buildings, footprints, and full `cells.json`. Streams, `hand_m`, roads, crossings, and 3DEP elevation come in Phase 2. Anything marked **TBD** is undecided. Anything marked **proposed** still needs sign-off from the teammate who reads it.
+
+## Featured places
+
+| `place_id` | City (OSM city limits → bounding rectangle) | Buildings | MH | Night / day pop | Cells (empty) |
+|---|---|---|---|---|---|
+| `morganton` | Morganton, NC (Burke, 37023). Western NC, flood | 13,595 | 934 (6.9%) | 27,739 / 35,988 | 10,111 (5,977) |
+| `lumberton` | Lumberton, NC (Robeson, 37155). Eastern NC, mobile homes, tornado | 14,551 | 1,641 (11.3%) | 31,629 / 39,109 | 13,841 (9,821) |
+| `chapel_hill` | Chapel Hill, NC (Orange, 37135) | 21,065 | 56 (0.3%) | 95,189 / 130,258 | 6,902 (2,594) |
+
+Each place is the tidy rectangle around the official city limits, so it includes the outskirts. The pipeline works for any U.S. city. These three are just prebuilt, so the demo never waits on a download.
 
 ---
 
@@ -81,6 +91,28 @@ Known NSI gap: the Amazon DLI4 warehouse in Edwardsville, where all 6 deaths of 
 
 ---
 
+## `build_place.py`: featured places for any U.S. city
+
+```bash
+python -m places.build_place "Lumberton, North Carolina, USA" --place-id lumberton
+python -m places.build_place "Some Big City, State, USA" --place-id big_city --max-buildings 13000
+```
+
+1. **Area:** the city limits come from OpenStreetMap (osmnx geocoding). The place is the bounding rectangle of those limits.
+2. **Large cities:** with `--max-buildings N`, if the rectangle holds more than N buildings, the script keeps the square holding the most people at night with at most N buildings.
+3. **Buildings:** `fetch_buildings` → `to_building_records`, the same conversion the backtest uses.
+4. **Footprints** (for drawing only; the exact shape doesn't matter, color by `cls` tells the types apart):
+   1. The OSM building outline the NSI point falls inside, simplified to 2 m and stored with 5 decimals (about 1 m).
+   2. Otherwise, NSI's own building box: the UBID in NSI's `bid` field decodes to the building's real bounding box, which is scaled to NSI's footprint area (`ftprntsqft`), keeping its center and proportions. Needs the small `openlocationcode` package.
+   3. Otherwise (empty `bid`), a square with the `ftprntsqft` area.
+   - An outline that becomes invalid after simplifying is replaced by its convex hull.
+   - OSM coverage: Morganton 41%, Lumberton 33%, Chapel Hill 92%. Almost all the rest get the NSI box; squares are 1–3%.
+5. **Writes** `buildings.json`, `cells.json` (every H3 cell in the rectangle, empty ones included), `place.json`, and `crossings.json` (`[]` until Phase 2).
+
+A rebuild with a warm cache takes 5–10 s. A new city's first build takes 30–90 s while NSI and OSM download. OSM responses are cached in `data/cache/osmnx/`.
+
+---
+
 ## Output files (one folder per place)
 
 ```
@@ -97,7 +129,7 @@ Every key in a format is always written. A field that isn't computed yet is `nul
 | Field | File | Filled in | Until then |
 |---|---|---|---|
 | `hand_m` | buildings.json | Phase 2 (streams + 3DEP) | `null` → no flood data (not 0) |
-| `footprint` | buildings.json | Phase 1 featured pipeline (OSM match, or a rectangle sized from `sqft`) | `null` |
+| `footprint` | buildings.json | `build_place.py` (featured places) | `null` in backtest folders |
 | `ground_elev_m` | cells.json | featured pipeline (3DEP) | `null` in backtest folders |
 | `cars_per_hour` | crossings.json | Phase 2 | `null` |
 
@@ -128,7 +160,7 @@ Low-water crossings: points where a road line crosses a stream line and the road
 - Chapel Hill uses `"urban"` and `"weekday_urban"`
 
 ### `place.json` (**proposed** keys)
-`place_id`, `county_fips` (the most common county, taken from the buildings' `cbfips[:5]`), `bbox` `[min_lon, min_lat, max_lon, max_lat]`, `center` `[lon, lat]`, `streams`, `roads`. Featured places add camera start and terrain source (keys **TBD**). Backtest folders have empty `streams` / `roads`.
+`place_id`, `name` (the geocoding query; `null` in backtest folders), `county_fips` (the most common county, taken from the buildings' `cbfips[:5]`), `bbox` `[min_lon, min_lat, max_lon, max_lat]`, `center` `[lon, lat]`, `camera` (`null` until Phase 2), `terrain_source` (`null` until Phase 2), `streams`, `roads` (empty until Phase 2, and always empty in backtest folders).
 
 ---
 
@@ -143,7 +175,7 @@ places/.venv/Scripts/python -m pip install -r places/requirements.txt   # Window
 | File | Contents | Who installs it |
 |---|---|---|
 | `requirements-core.txt` | requests, geopandas, shapely, pyproj, numpy, h3 | ML lead (enough for `fetch_nsi.py`) |
-| `requirements.txt` | core + py3dep, pynhd, osmnx | full place pipeline |
+| `requirements.txt` | core + py3dep, pynhd, osmnx, openlocationcode | full place pipeline |
 
 Raw downloads and caches go in `data/` at the repo root (gitignored), never in `places/`.
 
@@ -152,7 +184,7 @@ Raw downloads and caches go in `data/` at the repo root (gitignored), never in `
 | File | Phase | Status |
 |---|---|---|
 | `fetch_nsi.py` | 1 | done |
-| featured-place build script (name TBD) | 1–2 | to do: footprints, full cells.json, then streams, roads, crossings, 3DEP |
+| `build_place.py` | 1–2 | buildings, footprints, cells done; streams, `hand_m`, roads, crossings, 3DEP in Phase 2 |
 | `validate.py` | 3 | to do |
 
 ---
@@ -165,7 +197,7 @@ Raw downloads and caches go in `data/` at the repo root (gitignored), never in `
 - The scene API that Simulation calls (`setBuildingGlow`, `setWaterLevel`, `showTornadoPath`, `placeProtection`, `onBuildingClick`, `onCellHover`, `showRiskMap`, `showDifference`, `showSwipeCompare`, `hideRiskMap`) lives in `web/src/scene/` and will be documented there.
 
 ## Open decisions
-- [ ] First featured place: `place_id` and bbox / FIPS
-- [ ] Footprint source: OSM via osmnx/Overpass, or the Geofabrik NC extract
+- [x] Featured places: Morganton, Lumberton, Chapel Hill (city-limit rectangles)
+- [x] Footprint source: OSM via osmnx, then the NSI UBID box, then a square
 - [ ] `cells.json`, `place.json` keys, and the crossings `h3` key (Simulation)
 - [ ] Simulation CLI runs on a `write_place_lite` folder (Simulation)

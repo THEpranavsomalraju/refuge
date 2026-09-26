@@ -312,7 +312,8 @@ def write_place_lite(area, place_id: str, out_dir: Path | str) -> Path:
         buildings.json   to_building_records(fetch_buildings(area))
         cells.json       every H3 res-10 cell containing a building
                          (h3, center, boundary, ground_elev_m=None, pop_night, pop_day)
-        place.json       place_id, county_fips, bbox, center, streams=[], roads=[]
+        place.json       place_id, name, county_fips, bbox, center, camera, terrain_source,
+                         streams=[], roads=[]
         crossings.json   []
     """
     poly = _to_polygon(area)
@@ -321,21 +322,25 @@ def write_place_lite(area, place_id: str, out_dir: Path | str) -> Path:
     folder = Path(out_dir) / place_id
     folder.mkdir(parents=True, exist_ok=True)
 
-    _write_json(folder / "buildings.json", records)
-    _write_json(folder / "cells.json", cells_from_records(records))
-    _write_json(folder / "place.json", _place_lite(poly, place_id, records))
-    _write_json(folder / "crossings.json", [])
+    write_json(folder / "buildings.json", records)
+    write_json(folder / "cells.json", cells_from_records(records))
+    write_json(folder / "place.json", place_record(poly, place_id, records))
+    write_json(folder / "crossings.json", [])
     return folder
 
 
-def cells_from_records(records: list[dict]) -> list[dict]:
-    """One cells.json entry per H3 cell that contains at least one building."""
+def cells_from_records(records: list[dict], extra_cells=()) -> list[dict]:
+    """One cells.json entry per H3 cell that contains at least one building.
+
+    `extra_cells` adds more cells (e.g. every cell covering a featured place); cells with no
+    buildings get zero population.
+    """
     night, day = Counter(), Counter()
     for r in records:
         night[r["h3"]] += r["pop_night_u65"] + r["pop_night_o65"]
         day[r["h3"]] += r["pop_day_u65"] + r["pop_day_o65"]
     cells = []
-    for cell in sorted(night):
+    for cell in sorted(set(night) | set(extra_cells)):
         lat, lon = h3.cell_to_latlng(cell)
         cells.append({
             "h3": cell,
@@ -348,20 +353,24 @@ def cells_from_records(records: list[dict]) -> list[dict]:
     return cells
 
 
-def _place_lite(poly, place_id, records):
+def place_record(poly, place_id, records, name=None):
+    """place.json contents. Keys not computed yet are None (camera, terrain_source)."""
     min_lon, min_lat, max_lon, max_lat = poly.bounds
     counties = Counter(r["cbfips"][:5] for r in records if r["cbfips"])
     return {
         "place_id": place_id,
+        "name": name,
         "county_fips": counties.most_common(1)[0][0] if counties else None,
         "bbox": [round(min_lon, 6), round(min_lat, 6), round(max_lon, 6), round(max_lat, 6)],
         "center": [round((min_lon + max_lon) / 2, 6), round((min_lat + max_lat) / 2, 6)],
+        "camera": None,
+        "terrain_source": None,
         "streams": [],
         "roads": [],
     }
 
 
-def _write_json(path: Path, obj):
+def write_json(path: Path, obj):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(obj, f, separators=(",", ":"))
 
