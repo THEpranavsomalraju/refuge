@@ -133,6 +133,37 @@ keys and out-of-bounds values fail rather than being silently ignored/clamped.
 See [parameter sources](params/sim_params.sources.md) for every default and its
 limitations. All base death probabilities are provisional pending calibration.
 
+## Game API: cells (`sim/core`, browser-safe)
+
+The CLI output is unchanged. The game calls the core directly:
+
+```ts
+import { simulateDetailed, aggregateCells, diffCells } from '@refuge/sim';
+const r = simulateDetailed(scenario, { buildings, cells }, params);
+// r = simulate() fields + building_prob {id: p} + cells {h3: CellResult}
+```
+
+- `simulateDetailed` gives the same `expected_deaths`/`p05`/`p95` as `simulate`
+  (identical RNG use) and requires `h3` on every building.
+- `cells` covers every `cells.json` entry plus every building's cell.
+  `people` = building occupants at the scenario hour (2 AM or 2 PM NSI
+  snapshot); crossing drivers join with the flood chunk.
+- `risk` = cell expected deaths / people. `band`: `empty` if 0 people,
+  `sparse` if under `min_cell_people`, else `green`/`yellow`/`red`/`deep_red`
+  by `risk_bands` (a value equal to a cutoff takes the higher band).
+- `uncertain`: the p05 and p95 cell risks fall in different bands (banded
+  cells only).
+- `drivers`: dominant class by expected deaths, then `no_basement` (basementless
+  buildings hold over half the deaths; weight = those deaths x (1 - basement
+  modifier)) and `night` (weight = deaths x (1 - 1/night modifier)), ranked by
+  weight. Empty list when the cell has no expected deaths.
+- `diffCells(before, after)` = `{h3: {delta_expected_deaths, delta_risk}}`
+  (after minus before; a missing cell counts as zero). The scene's
+  `showDifference` payload is not agreed yet.
+
+Real-data check: Joplin box (25,277 buildings, 4,987 cells), EF4 at 2 AM with
+ML's calibrated params: 94 ms, cell deaths sum exactly to the town total.
+
 ## Verification and smoke test
 
 ```sh
