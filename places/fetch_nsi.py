@@ -65,7 +65,7 @@ NSI_FIELDS = [
 
 # Key order of one record in buildings.json (REFUGE_overview.md, format 1).
 RECORD_KEYS = [
-    "id", "lon", "lat", "h3", "cbfips", "footprint", "occtype", "cls", "stories",
+    "id", "lon", "lat", "h3", "cbfips", "footprint", "footprint_sqft", "occtype", "cls", "stories",
     "basement", "ground_elev_m", "first_floor_ht_m", "hand_m", "firmzone",
     "pop_night_u65", "pop_night_o65", "pop_day_u65", "pop_day_o65",
 ]
@@ -250,6 +250,8 @@ def to_building_records(raw: gpd.GeoDataFrame) -> list[dict]:
             "h3": h3.latlng_to_cell(lat, lon, H3_RES),
             "cbfips": _str_or_none(row.cbfips),
             "footprint": None,
+            # NSI footprint area of the whole building (shelter capacity and cost use it).
+            "footprint_sqft": _int_or_none(row.ftprntsqft),
             "occtype": row.occtype,
             "cls": classify(
                 row.occtype,

@@ -14,6 +14,8 @@ export interface BuildingRecord {
   h3: string;
   cbfips: string | null;
   footprint: LonLat[] | null;
+  /** NSI footprint area of the whole building (sq ft); shelter capacity and cost use it. */
+  footprint_sqft: number | null;
   occtype: string;
   cls: BuildingClass;
   stories: number | null;
