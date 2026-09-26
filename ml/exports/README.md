@@ -31,5 +31,6 @@ The legacy backtest keys `recorded_in_buildings` and `summary.building_deaths` e
 | `backtest.json` | landing page (backtest chart) | `storms`: one row per held-out tornado with `recorded`, `recorded_in_buildings`, and `{expected, p05, p95}` for `calibrated`, `default_params`, `national_model`. `summary.building_deaths` / `summary.all_recorded_deaths`: totals, rank correlation, p05-p95 coverage per method. |
 | `calibration.json` | methods section | fitted knobs vs defaults, bounds, loss parts before/after, optimizer trace. |
 | `heatmap_bands.json` | methods section | final `risk_bands` and the share of storm cells per band for EF1-EF4, day and night, for each candidate cutoff set. |
+| `featured_towns.json` | Simulation (demo + optimizer), Structures | From `node ml/featured_check.mjs`. Lumberton demo tornado totals, band counts, EF1-EF4 day/night sweep on the demo path, top risk cells, and `shelter_reference_sites` (spots with the most expected deaths within 400 m; reference only, not shelter rules). Chapel Hill and Morganton test tornado band checks. |
 | `story/` | Story lead | Flourish-ready CSVs + README with headline numbers, chart ideas and caveats. |
 | `tornado_width_by_ef.json` | Simulation (default widths) | `by_ef.EF3.width_m.median` etc., p10 to p90, 2007-2025 tornado segments. |
