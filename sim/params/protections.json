@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "default_budget_usd": 900000,
+  "default_budget_usd": { "tornado": 900000, "hurricane": 30000000 },
   "shelter": {
     "eligible_classes": ["SCHOOL", "WORSHIP", "COMMERCIAL", "BIGROOF"],
     "hardened_share": 0.25,

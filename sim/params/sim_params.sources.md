@@ -153,13 +153,15 @@ Replaces the earlier standalone safe room. Rules from `ml/SHELTER_MODEL.md`.
 | Eligible | SCHOOL, WORSHIP, COMMERCIAL, BIGROOF with `footprint_sqft` | same | public/commercial buildings people can enter |
 | Hardened area | 25% of `footprint_sqft` | same | model choice (interior core) |
 | Capacity | floor(area / 5 sq ft), clamped 50–1,000 | floor(area / 20 sq ft), clamped 25–1,000 | [FEMA P-361](https://www.fema.gov/node/what-minimum-square-footage-person-tornado-community-safe-room) occupant densities |
-| Cost | $1,500 per person | $6,000 per person | $300 per hardened sq ft; FEMA-funded Tupelo room ~$1,045/person, vendors $1,500–2,000 |
+| Cost | $1,500 per person | $6,000 per person | $300 per hardened sq ft; FEMA-funded Tupelo room ~$1,045/person, vendors $1,500–2,000. Recent FEMA HMGP multi-use safe rooms run higher: [Crawford County IN](https://www.fema.gov/press-release/20250604/fema-awards-nearly-53m-multi-use-safe-room-springs-valley-community-school) $6.0M for 906 people (~$6,600/person), Springs Valley IN $5.3M for 12,900 sq ft (~$410/sq ft), Copiah-Lincoln MS $18M for 2,000 (~$9,000/person) |
 | Who goes | own occupants (all), then 30% of mobile-home residents within reach | displaced residents within 3 km | [Chaney & Weaver 2010](https://link.springer.com/article/10.1007/s11069-008-9257-z) |
 | Reach | 1.07 m/s (MUTCD) x max(0, warning - 5 min) | 3.0 km (drive before landfall) | |
 | Inside | death probability 0 (P-361, 250 mph) | not "displaced without shelter" | |
 
 (home, shelter) pairs are filled nearest-first until each shelter is full; each
 person is assigned at most once. Sheltered people stay counted in their home cell.
+Default plan budget: tornado $900,000; hurricane $30,000,000 (five 1,000-person
+hurricane shelters at the realistic ~$6M each; approved 2026-09-26, provisional).
 "Effectiveness" = lives saved by that building alone; the optimizer searches every
 affordable subset of the top 12 plus the user's picks (up to 14), else greedy with
 swaps ("best found"). Lumberton demo: nsi_56640865 3.256, nsi_56677799 2.702,
