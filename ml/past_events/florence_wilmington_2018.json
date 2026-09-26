@@ -1,0 +1,222 @@
+{
+ "id": "florence_wilmington_2018",
+ "title": "Wilmington, North Carolina",
+ "subtitle": "Hurricane Florence, Category 1 landfall, September 14, 2018, about 7:15 AM",
+ "hazard": "hurricane",
+ "recorded": {
+  "deaths_direct": 0,
+  "deaths_indirect": 0,
+  "property_damage_usd": 1000000000.0,
+  "by_event_type": {
+   "Hurricane (Typhoon)": {
+    "deaths_direct": 0,
+    "property_damage_usd": 1000000000.0
+   }
+  },
+  "zones": [
+   "INLAND NEW HANOVER",
+   "COASTAL NEW HANOVER"
+  ],
+  "source": "NOAA Storm Events",
+  "noaa_event_ids": [
+   786760
+  ]
+ },
+ "scenario": {
+  "place_id": "florence_wilmington_2018",
+  "hazard": "hurricane",
+  "track": [
+   [
+    -76.5,
+    34.0,
+    90,
+    44.5,
+    1.65,
+    0.0
+   ],
+   [
+    -77.2,
+    34.2,
+    85,
+    46.9,
+    1.6,
+    6.0
+   ],
+   [
+    -77.8,
+    34.2,
+    80,
+    46.3,
+    1.5,
+    11.25
+   ],
+   [
+    -77.9,
+    34.1,
+    80,
+    49.0,
+    1.65,
+    12.0
+   ],
+   [
+    -78.4,
+    34.0,
+    65,
+    56.2,
+    1.65,
+    18.0
+   ],
+   [
+    -78.8,
+    33.9,
+    60,
+    58.7,
+    1.6,
+    24.0
+   ],
+   [
+    -79.3,
+    33.7,
+    55,
+    61.1,
+    1.4,
+    30.0
+   ],
+   [
+    -79.5,
+    33.6,
+    55,
+    60.9,
+    1.4,
+    36.0
+   ]
+  ],
+  "hour": 7,
+  "protections": [],
+  "runs": 500,
+  "seed": 42
+ },
+ "track_source": {
+  "name": "NOAA HURDAT2 best track",
+  "storm": "FLORENCE 2018",
+  "window_utc": [
+   "201809140000",
+   "201809151200"
+  ],
+  "points": 8
+ },
+ "bbox_for_build_place": [
+  -77.975,
+  34.19,
+  -77.885,
+  34.26
+ ],
+ "reference_result": {
+  "residents": 50349,
+  "gust_mph_p10_p50_p90": [
+   96.2,
+   96.4,
+   96.8
+  ],
+  "displaced": 12639.9,
+  "destroyed": 56.0,
+  "expected_deaths": 0.0156,
+  "band_counts": {
+   "low": 373,
+   "moderate": 459,
+   "severe": 1008,
+   "extreme": 3,
+   "sparse": 315
+  },
+  "by_class": {
+   "MH": {
+    "residents": 143,
+    "displaced": 100.1,
+    "destroyed": 40.3
+   },
+   "RES_WOOD": {
+    "residents": 23166,
+    "displaced": 11251.3,
+    "destroyed": 1.8
+   },
+   "RES_MASONRY": {
+    "residents": 185,
+    "displaced": 12.1,
+    "destroyed": 0.1
+   },
+   "MULTI": {
+    "residents": 26855,
+    "displaced": 1276.3,
+    "destroyed": 13.7
+   }
+  }
+ },
+ "reference_shelters": [
+  {
+   "id": "nsi_56164385",
+   "cls": "BIGROOF",
+   "lon": -77.952347,
+   "lat": 34.195563,
+   "footprint_sqft": 106185,
+   "capacity": 1000,
+   "cost_usd": 6000000,
+   "people_sheltered_alone": 1000.0,
+   "need_served_alone": 513.3
+  },
+  {
+   "id": "nsi_56164371",
+   "cls": "BIGROOF",
+   "lon": -77.953951,
+   "lat": 34.195756,
+   "footprint_sqft": 164584,
+   "capacity": 1000,
+   "cost_usd": 6000000,
+   "people_sheltered_alone": 1000.0,
+   "need_served_alone": 513.3
+  },
+  {
+   "id": "nsi_56164360",
+   "cls": "BIGROOF",
+   "lon": -77.954375,
+   "lat": 34.197508,
+   "footprint_sqft": 203158,
+   "capacity": 1000,
+   "cost_usd": 6000000,
+   "people_sheltered_alone": 1000.0,
+   "need_served_alone": 511.36
+  },
+  {
+   "id": "nsi_56164357",
+   "cls": "COMMERCIAL",
+   "lon": -77.953095,
+   "lat": 34.199508,
+   "footprint_sqft": 282247,
+   "capacity": 1000,
+   "cost_usd": 6000000,
+   "people_sheltered_alone": 1000.0,
+   "need_served_alone": 509.54
+  },
+  {
+   "id": "nsi_56164375",
+   "cls": "BIGROOF",
+   "lon": -77.954195,
+   "lat": 34.199503,
+   "footprint_sqft": 110750,
+   "capacity": 1000,
+   "cost_usd": 6000000,
+   "people_sheltered_alone": 1000.0,
+   "need_served_alone": 509.32
+  }
+ ],
+ "notes": [
+  "Hurricane mode shows wind damage and displacement. Storm surge, rain flooding and falling trees are not modeled.",
+  "Recorded deaths and property damage are NOAA totals for the forecast zones listed, which are larger than the town box.",
+  "Buildings and populations are today's NSI records."
+ ],
+ "build_bbox": [
+  -77.975,
+  34.19,
+  -77.885,
+  34.26
+ ]
+}

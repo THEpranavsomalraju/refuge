@@ -1,0 +1,3460 @@
+{
+ "note": "Historical tornadoes for calibration (split=train) and the held-out backtest (split=test). weight = eligible tornadoes in stratum / sampled, use it in any sum or loss over tornadoes.",
+ "selection": {
+  "years": "2015-2025",
+  "min_ef": 1,
+  "max_length_km": 80,
+  "impact": "death, injury, or damage >= $250,000",
+  "max_per_state": 6,
+  "seed": 2026,
+  "warning_min_default": 10
+ },
+ "tornadoes": [
+  {
+   "place_id": "bt_2024_1181735",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2024,
+   "begin_time_local": "2024-05-26 03:27:00",
+   "hour": 3,
+   "month": 5,
+   "state": "ARKANSAS",
+   "states": [
+    "ARKANSAS"
+   ],
+   "county_fips": [
+    "05009",
+    "05089"
+   ],
+   "noaa_event_ids": [
+    1181735,
+    1181746
+   ],
+   "ef": 3,
+   "width_m": 1828.8,
+   "length_km": 34.76,
+   "deaths": 4,
+   "injuries": 1,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 4,
+   "path": [
+    [
+     -93.0533,
+     36.1745
+    ],
+    [
+     -92.8893,
+     36.2087
+    ],
+    [
+     -92.6865,
+     36.2713
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2023_1089589",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2023,
+   "begin_time_local": "2023-04-01 01:00:00",
+   "hour": 1,
+   "month": 4,
+   "state": "MISSISSIPPI",
+   "states": [
+    "MISSISSIPPI"
+   ],
+   "county_fips": [
+    "28115"
+   ],
+   "noaa_event_ids": [
+    1089589
+   ],
+   "ef": 2,
+   "width_m": 434.3,
+   "length_km": 27.15,
+   "deaths": 1,
+   "injuries": 5,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -89.121,
+     34.208
+    ],
+    [
+     -88.8273,
+     34.2337
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2018_743585",
+   "split": "test",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2018,
+   "begin_time_local": "2018-04-14 00:10:00",
+   "hour": 0,
+   "month": 4,
+   "state": "LOUISIANA",
+   "states": [
+    "LOUISIANA"
+   ],
+   "county_fips": [
+    "22017",
+    "22015"
+   ],
+   "noaa_event_ids": [
+    743585,
+    744130
+   ],
+   "ef": 1,
+   "width_m": 1005.8,
+   "length_km": 36.27,
+   "deaths": 1,
+   "injuries": 0,
+   "damage_usd": 7000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -93.8531,
+     32.4521
+    ],
+    [
+     -93.7375,
+     32.5116
+    ],
+    [
+     -93.5129,
+     32.607
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2023_1098430",
+   "split": "test",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2023,
+   "begin_time_local": "2023-06-21 19:50:00",
+   "hour": 19,
+   "month": 6,
+   "state": "TEXAS",
+   "states": [
+    "TEXAS"
+   ],
+   "county_fips": [
+    "48345",
+    "48345"
+   ],
+   "noaa_event_ids": [
+    1098430,
+    1098431
+   ],
+   "ef": 3,
+   "width_m": 548.6,
+   "length_km": 15.0,
+   "deaths": 4,
+   "injuries": 15,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 3,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -100.85,
+     34.12
+    ],
+    [
+     -100.8493,
+     34.1174
+    ],
+    [
+     -100.82,
+     33.99
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2020_887908",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2020,
+   "begin_time_local": "2020-04-12 15:39:00",
+   "hour": 15,
+   "month": 4,
+   "state": "MISSISSIPPI",
+   "states": [
+    "MISSISSIPPI"
+   ],
+   "county_fips": [
+    "28147"
+   ],
+   "noaa_event_ids": [
+    887908
+   ],
+   "ef": 4,
+   "width_m": 1188.7,
+   "length_km": 10.7,
+   "deaths": 2,
+   "injuries": 0,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 2,
+   "path": [
+    [
+     -90.1732,
+     31.2763
+    ],
+    [
+     -90.0822,
+     31.3331
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2024_1167525",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2024,
+   "begin_time_local": "2024-04-26 17:25:00",
+   "hour": 17,
+   "month": 4,
+   "state": "IOWA",
+   "states": [
+    "IOWA"
+   ],
+   "county_fips": [
+    "19155",
+    "19085",
+    "19165"
+   ],
+   "noaa_event_ids": [
+    1167525,
+    1167526,
+    1167528
+   ],
+   "ef": 3,
+   "width_m": 1737.4,
+   "length_km": 64.81,
+   "deaths": 1,
+   "injuries": 3,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 1,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -95.62,
+     41.32
+    ],
+    [
+     -95.504,
+     41.506
+    ],
+    [
+     -95.498,
+     41.512
+    ],
+    [
+     -95.331,
+     41.858
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2024_1224047",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": true,
+   "exclude_reason": "NOAA begin/end points give a 0.0 km path vs 14.3 km recorded, so the path location is unknown.",
+   "year": 2024,
+   "begin_time_local": "2024-12-28 12:53:00",
+   "hour": 12,
+   "month": 12,
+   "state": "TEXAS",
+   "states": [
+    "TEXAS"
+   ],
+   "county_fips": [
+    "48039"
+   ],
+   "noaa_event_ids": [
+    1224047
+   ],
+   "ef": 2,
+   "width_m": 274.3,
+   "length_km": 14.32,
+   "deaths": 1,
+   "injuries": 5,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -95.3362,
+     29.3312
+    ],
+    [
+     -95.3362,
+     29.3312
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2023_1089561",
+   "split": "test",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2023,
+   "begin_time_local": "2023-03-31 22:21:00",
+   "hour": 22,
+   "month": 3,
+   "state": "INDIANA",
+   "states": [
+    "INDIANA"
+   ],
+   "county_fips": [
+    "18153"
+   ],
+   "noaa_event_ids": [
+    1089561
+   ],
+   "ef": 3,
+   "width_m": 603.5,
+   "length_km": 21.32,
+   "deaths": 3,
+   "injuries": 8,
+   "damage_usd": 18160000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 3,
+   "path": [
+    [
+     -87.5708,
+     39.0313
+    ],
+    [
+     -87.3442,
+     39.097
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2020_866540",
+   "split": "test",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2020,
+   "begin_time_local": "2020-01-10 23:33:00",
+   "hour": 23,
+   "month": 1,
+   "state": "TEXAS",
+   "states": [
+    "TEXAS"
+   ],
+   "county_fips": [
+    "48347"
+   ],
+   "noaa_event_ids": [
+    866540
+   ],
+   "ef": 1,
+   "width_m": 146.3,
+   "length_km": 3.43,
+   "deaths": 1,
+   "injuries": 1,
+   "damage_usd": 75000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -94.7558,
+     31.5832
+    ],
+    [
+     -94.7197,
+     31.5855
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2022_1031439",
+   "split": "test",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2022,
+   "begin_time_local": "2022-05-20 15:35:00",
+   "hour": 15,
+   "month": 5,
+   "state": "MICHIGAN",
+   "states": [
+    "MICHIGAN"
+   ],
+   "county_fips": [
+    "26009",
+    "26137"
+   ],
+   "noaa_event_ids": [
+    1031439,
+    1031457
+   ],
+   "ef": 3,
+   "width_m": 182.9,
+   "length_km": 28.23,
+   "deaths": 2,
+   "injuries": 44,
+   "damage_usd": 50175000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 2,
+   "path": [
+    [
+     -84.8794,
+     44.9743
+    ],
+    [
+     -84.8497,
+     44.9883
+    ],
+    [
+     -84.5408,
+     45.0555
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2019_807386",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2019,
+   "begin_time_local": "2019-04-13 13:00:00",
+   "hour": 13,
+   "month": 4,
+   "state": "TEXAS",
+   "states": [
+    "TEXAS"
+   ],
+   "county_fips": [
+    "48225"
+   ],
+   "noaa_event_ids": [
+    807386
+   ],
+   "ef": 3,
+   "width_m": 731.5,
+   "length_km": 19.57,
+   "deaths": 1,
+   "injuries": 0,
+   "damage_usd": 1000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -95.2718,
+     31.428
+    ],
+    [
+     -95.1658,
+     31.5792
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2015_606484",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2015,
+   "begin_time_local": "2015-12-26 19:33:00",
+   "hour": 19,
+   "month": 12,
+   "state": "TEXAS",
+   "states": [
+    "TEXAS"
+   ],
+   "county_fips": [
+    "48085"
+   ],
+   "noaa_event_ids": [
+    606484
+   ],
+   "ef": 1,
+   "width_m": 91.4,
+   "length_km": 8.38,
+   "deaths": 1,
+   "injuries": 2,
+   "damage_usd": 600000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -96.3546,
+     33.2718
+    ],
+    [
+     -96.3322,
+     33.3448
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2023_1085827",
+   "split": "test",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2023,
+   "begin_time_local": "2023-03-31 19:24:00",
+   "hour": 19,
+   "month": 3,
+   "state": "ILLINOIS",
+   "states": [
+    "ILLINOIS"
+   ],
+   "county_fips": [
+    "17141",
+    "17201",
+    "17007"
+   ],
+   "noaa_event_ids": [
+    1085827,
+    1085832,
+    1085836
+   ],
+   "ef": 1,
+   "width_m": 548.6,
+   "length_km": 44.27,
+   "deaths": 1,
+   "injuries": 40,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -89.1478,
+     42.0723
+    ],
+    [
+     -89.0092,
+     42.1515
+    ],
+    [
+     -88.94,
+     42.1924
+    ],
+    [
+     -88.7382,
+     42.3296
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2025_1233334",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2025,
+   "begin_time_local": "2025-03-15 20:42:00",
+   "hour": 20,
+   "month": 3,
+   "state": "ALABAMA",
+   "states": [
+    "ALABAMA"
+   ],
+   "county_fips": [
+    "01121"
+   ],
+   "noaa_event_ids": [
+    1233334
+   ],
+   "ef": 2,
+   "width_m": 457.2,
+   "length_km": 5.84,
+   "deaths": 1,
+   "injuries": 1,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -86.2005,
+     33.3194
+    ],
+    [
+     -86.1623,
+     33.3603
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2021_997129",
+   "split": "test",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2021,
+   "begin_time_local": "2021-12-10 19:37:00",
+   "hour": 19,
+   "month": 12,
+   "state": "MISSOURI",
+   "states": [
+    "MISSOURI"
+   ],
+   "county_fips": [
+    "29069",
+    "29155"
+   ],
+   "noaa_event_ids": [
+    997129,
+    997130
+   ],
+   "ef": 4,
+   "width_m": 1645.9,
+   "length_km": 47.2,
+   "deaths": 2,
+   "injuries": 9,
+   "damage_usd": 2750000.0,
+   "deaths_outside_buildings": 1,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -90.137,
+     35.998
+    ],
+    [
+     -89.96,
+     36.084
+    ],
+    [
+     -89.694,
+     36.226
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2020_878237",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2020,
+   "begin_time_local": "2020-02-06 02:13:00",
+   "hour": 2,
+   "month": 2,
+   "state": "ALABAMA",
+   "states": [
+    "ALABAMA"
+   ],
+   "county_fips": [
+    "01091"
+   ],
+   "noaa_event_ids": [
+    878237
+   ],
+   "ef": 1,
+   "width_m": 365.8,
+   "length_km": 2.08,
+   "deaths": 1,
+   "injuries": 1,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -87.8012,
+     32.4617
+    ],
+    [
+     -87.7834,
+     32.4725
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2020_898306",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2020,
+   "begin_time_local": "2020-07-08 17:08:00",
+   "hour": 17,
+   "month": 7,
+   "state": "MINNESOTA",
+   "states": [
+    "MINNESOTA"
+   ],
+   "county_fips": [
+    "27051",
+    "27111"
+   ],
+   "noaa_event_ids": [
+    898306,
+    898307
+   ],
+   "ef": 4,
+   "width_m": 594.4,
+   "length_km": 14.26,
+   "deaths": 1,
+   "injuries": 2,
+   "damage_usd": 1600000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -95.94,
+     46.09
+    ],
+    [
+     -95.9,
+     46.11
+    ],
+    [
+     -95.7955,
+     46.17
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2018_735022",
+   "split": "test",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2018,
+   "begin_time_local": "2018-02-24 15:54:00",
+   "hour": 15,
+   "month": 2,
+   "state": "KENTUCKY",
+   "states": [
+    "KENTUCKY"
+   ],
+   "county_fips": [
+    "21141"
+   ],
+   "noaa_event_ids": [
+    735022
+   ],
+   "ef": 2,
+   "width_m": 320.0,
+   "length_km": 18.73,
+   "deaths": 1,
+   "injuries": 1,
+   "damage_usd": 800000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -87.0049,
+     36.6441
+    ],
+    [
+     -86.818,
+     36.721
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2021_996712",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": true,
+   "exclude_reason": "All 6 deaths were in the Amazon DLI4 warehouse, which has no NSI record (Structures checked OSM).",
+   "year": 2021,
+   "begin_time_local": "2021-12-10 20:27:00",
+   "hour": 20,
+   "month": 12,
+   "state": "ILLINOIS",
+   "states": [
+    "ILLINOIS"
+   ],
+   "county_fips": [
+    "17119"
+   ],
+   "noaa_event_ids": [
+    996712
+   ],
+   "ef": 3,
+   "width_m": 274.3,
+   "length_km": 6.79,
+   "deaths": 6,
+   "injuries": 1,
+   "damage_usd": 5000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 6,
+   "path": [
+    [
+     -90.058,
+     38.757
+    ],
+    [
+     -89.986,
+     38.781
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2019_817483",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2019,
+   "begin_time_local": "2019-05-27 22:02:00",
+   "hour": 22,
+   "month": 5,
+   "state": "OHIO",
+   "states": [
+    "OHIO"
+   ],
+   "county_fips": [
+    "39107"
+   ],
+   "noaa_event_ids": [
+    817483
+   ],
+   "ef": 3,
+   "width_m": 228.6,
+   "length_km": 17.45,
+   "deaths": 1,
+   "injuries": 8,
+   "damage_usd": 15000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -84.6911,
+     40.5515
+    ],
+    [
+     -84.4917,
+     40.5921
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2020_866960",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2020,
+   "begin_time_local": "2020-01-11 01:24:00",
+   "hour": 1,
+   "month": 1,
+   "state": "LOUISIANA",
+   "states": [
+    "LOUISIANA"
+   ],
+   "county_fips": [
+    "22015",
+    "22119",
+    "22027"
+   ],
+   "noaa_event_ids": [
+    866960,
+    866988,
+    867056
+   ],
+   "ef": 2,
+   "width_m": 274.3,
+   "length_km": 51.16,
+   "deaths": 3,
+   "injuries": 0,
+   "damage_usd": 1325000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 3,
+   "path": [
+    [
+     -93.5875,
+     32.4571
+    ],
+    [
+     -93.4463,
+     32.5039
+    ],
+    [
+     -93.1807,
+     32.5945
+    ],
+    [
+     -92.9337,
+     32.6218
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2025_1259922",
+   "split": "test",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2025,
+   "begin_time_local": "2025-03-15 13:02:00",
+   "hour": 13,
+   "month": 3,
+   "state": "MISSISSIPPI",
+   "states": [
+    "MISSISSIPPI"
+   ],
+   "county_fips": [
+    "28091",
+    "28065",
+    "28031"
+   ],
+   "noaa_event_ids": [
+    1259922,
+    1259923,
+    1259924
+   ],
+   "ef": 4,
+   "width_m": 1280.2,
+   "length_km": 48.7,
+   "deaths": 3,
+   "injuries": 6,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 3,
+   "path": [
+    [
+     -90.0403,
+     31.3116
+    ],
+    [
+     -89.931,
+     31.39
+    ],
+    [
+     -89.701,
+     31.579
+    ],
+    [
+     -89.6557,
+     31.5994
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2021_997133",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2021,
+   "begin_time_local": "2021-12-10 20:18:00",
+   "hour": 20,
+   "month": 12,
+   "state": "TENNESSEE",
+   "states": [
+    "TENNESSEE"
+   ],
+   "county_fips": [
+    "47095",
+    "47131"
+   ],
+   "noaa_event_ids": [
+    997133,
+    997135
+   ],
+   "ef": 4,
+   "width_m": 1645.9,
+   "length_km": 26.49,
+   "deaths": 4,
+   "injuries": 0,
+   "damage_usd": 7000000.0,
+   "deaths_outside_buildings": 1,
+   "deaths_sim_target": 3,
+   "path": [
+    [
+     -89.57,
+     36.284
+    ],
+    [
+     -89.394,
+     36.363
+    ],
+    [
+     -89.3113,
+     36.3993
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2021_997247",
+   "split": "test",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2021,
+   "begin_time_local": "2021-12-11 03:20:00",
+   "hour": 3,
+   "month": 12,
+   "state": "KENTUCKY",
+   "states": [
+    "KENTUCKY"
+   ],
+   "county_fips": [
+    "21217",
+    "21155"
+   ],
+   "noaa_event_ids": [
+    997247,
+    997250
+   ],
+   "ef": 3,
+   "width_m": 411.5,
+   "length_km": 23.4,
+   "deaths": 1,
+   "injuries": 31,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -85.427,
+     37.408
+    ],
+    [
+     -85.322,
+     37.453
+    ],
+    [
+     -85.19,
+     37.502
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2020_884163",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2020,
+   "begin_time_local": "2020-04-13 05:43:00",
+   "hour": 5,
+   "month": 4,
+   "state": "SOUTH CAROLINA",
+   "states": [
+    "SOUTH CAROLINA"
+   ],
+   "county_fips": [
+    "45011",
+    "45075",
+    "45017"
+   ],
+   "noaa_event_ids": [
+    884163,
+    884164,
+    884165
+   ],
+   "ef": 3,
+   "width_m": 704.1,
+   "length_km": 57.42,
+   "deaths": 2,
+   "injuries": 7,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 2,
+   "path": [
+    [
+     -81.3944,
+     33.3158
+    ],
+    [
+     -81.2651,
+     33.4539
+    ],
+    [
+     -80.9394,
+     33.6175
+    ],
+    [
+     -80.9115,
+     33.624
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2021_954642",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2021,
+   "begin_time_local": "2021-04-10 02:06:00",
+   "hour": 2,
+   "month": 4,
+   "state": "LOUISIANA",
+   "states": [
+    "LOUISIANA"
+   ],
+   "county_fips": [
+    "22097"
+   ],
+   "noaa_event_ids": [
+    954642
+   ],
+   "ef": 3,
+   "width_m": 182.9,
+   "length_km": 14.02,
+   "deaths": 1,
+   "injuries": 7,
+   "damage_usd": 1000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -91.9586,
+     30.666
+    ],
+    [
+     -91.8492,
+     30.7499
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2016_662323",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2016,
+   "begin_time_local": "2016-11-30 02:28:00",
+   "hour": 2,
+   "month": 11,
+   "state": "TENNESSEE",
+   "states": [
+    "TENNESSEE"
+   ],
+   "county_fips": [
+    "47139"
+   ],
+   "noaa_event_ids": [
+    662323
+   ],
+   "ef": 3,
+   "width_m": 141.7,
+   "length_km": 7.4,
+   "deaths": 2,
+   "injuries": 0,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 2,
+   "path": [
+    [
+     -84.7264,
+     35.1109
+    ],
+    [
+     -84.6711,
+     35.1598
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2022_1007112",
+   "split": "test",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2022,
+   "begin_time_local": "2022-03-05 17:33:00",
+   "hour": 17,
+   "month": 3,
+   "state": "IOWA",
+   "states": [
+    "IOWA"
+   ],
+   "county_fips": [
+    "19117"
+   ],
+   "noaa_event_ids": [
+    1007112
+   ],
+   "ef": 3,
+   "width_m": 320.0,
+   "length_km": 18.15,
+   "deaths": 1,
+   "injuries": 1,
+   "damage_usd": 1500000.0,
+   "deaths_outside_buildings": 1,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -93.3854,
+     40.9405
+    ],
+    [
+     -93.2018,
+     41.0268
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2024_1184519",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2024,
+   "begin_time_local": "2024-05-25 23:19:00",
+   "hour": 23,
+   "month": 5,
+   "state": "OKLAHOMA",
+   "states": [
+    "OKLAHOMA"
+   ],
+   "county_fips": [
+    "40131",
+    "40097"
+   ],
+   "noaa_event_ids": [
+    1184519,
+    1184520
+   ],
+   "ef": 3,
+   "width_m": 1828.8,
+   "length_km": 38.46,
+   "deaths": 2,
+   "injuries": 23,
+   "damage_usd": 45000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 2,
+   "path": [
+    [
+     -95.7651,
+     36.3072
+    ],
+    [
+     -95.436,
+     36.337
+    ],
+    [
+     -95.3462,
+     36.3193
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2015_607144",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2015,
+   "begin_time_local": "2015-12-23 18:17:00",
+   "hour": 18,
+   "month": 12,
+   "state": "TENNESSEE",
+   "states": [
+    "TENNESSEE"
+   ],
+   "county_fips": [
+    "47135",
+    "47081"
+   ],
+   "noaa_event_ids": [
+    607144,
+    607145
+   ],
+   "ef": 2,
+   "width_m": 457.2,
+   "length_km": 24.01,
+   "deaths": 2,
+   "injuries": 0,
+   "damage_usd": 1000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 2,
+   "path": [
+    [
+     -87.8145,
+     35.5499
+    ],
+    [
+     -87.6676,
+     35.6186
+    ],
+    [
+     -87.5841,
+     35.6573
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2019_830307",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2019,
+   "begin_time_local": "2019-05-25 22:28:00",
+   "hour": 22,
+   "month": 5,
+   "state": "OKLAHOMA",
+   "states": [
+    "OKLAHOMA"
+   ],
+   "county_fips": [
+    "40017"
+   ],
+   "noaa_event_ids": [
+    830307
+   ],
+   "ef": 3,
+   "width_m": 68.6,
+   "length_km": 3.54,
+   "deaths": 2,
+   "injuries": 29,
+   "damage_usd": 400000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 2,
+   "path": [
+    [
+     -97.955,
+     35.5
+    ],
+    [
+     -97.919,
+     35.51
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2020_880546",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2020,
+   "begin_time_local": "2020-03-02 23:05:00",
+   "hour": 23,
+   "month": 3,
+   "state": "TENNESSEE",
+   "states": [
+    "TENNESSEE"
+   ],
+   "county_fips": [
+    "47005"
+   ],
+   "noaa_event_ids": [
+    880546
+   ],
+   "ef": 2,
+   "width_m": 228.6,
+   "length_km": 16.11,
+   "deaths": 1,
+   "injuries": 2,
+   "damage_usd": 1000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -88.1189,
+     36.0928
+    ],
+    [
+     -87.94,
+     36.1028
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2019_857862",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2019,
+   "begin_time_local": "2019-11-26 18:03:00",
+   "hour": 18,
+   "month": 11,
+   "state": "LOUISIANA",
+   "states": [
+    "LOUISIANA"
+   ],
+   "county_fips": [
+    "22041"
+   ],
+   "noaa_event_ids": [
+    857862
+   ],
+   "ef": 2,
+   "width_m": 640.1,
+   "length_km": 11.3,
+   "deaths": 1,
+   "injuries": 1,
+   "damage_usd": 120000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -91.7783,
+     32.2351
+    ],
+    [
+     -91.7095,
+     32.3184
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2025_1278899",
+   "split": "test",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2025,
+   "begin_time_local": "2025-06-20 23:04:00",
+   "hour": 23,
+   "month": 6,
+   "state": "NORTH DAKOTA",
+   "states": [
+    "NORTH DAKOTA"
+   ],
+   "county_fips": [
+    "38073",
+    "38017"
+   ],
+   "noaa_event_ids": [
+    1278899,
+    1278903
+   ],
+   "ef": 5,
+   "width_m": 1691.6,
+   "length_km": 19.47,
+   "deaths": 3,
+   "injuries": 0,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 3,
+   "path": [
+    [
+     -97.6031,
+     46.5728
+    ],
+    [
+     -97.5341,
+     46.6294
+    ],
+    [
+     -97.5815,
+     46.7076
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2023_1144554",
+   "split": "test",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2023,
+   "begin_time_local": "2023-12-09 16:39:00",
+   "hour": 16,
+   "month": 12,
+   "state": "TENNESSEE",
+   "states": [
+    "TENNESSEE"
+   ],
+   "county_fips": [
+    "47037",
+    "47165",
+    "47169"
+   ],
+   "noaa_event_ids": [
+    1144554,
+    1144555,
+    1144556
+   ],
+   "ef": 2,
+   "width_m": 365.8,
+   "length_km": 55.96,
+   "deaths": 3,
+   "injuries": 22,
+   "damage_usd": 20200000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 3,
+   "path": [
+    [
+     -86.7852,
+     36.255
+    ],
+    [
+     -86.656,
+     36.297
+    ],
+    [
+     -86.269,
+     36.433
+    ],
+    [
+     -86.2129,
+     36.4567
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2023_1091003",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2023,
+   "begin_time_local": "2023-04-01 17:59:00",
+   "hour": 17,
+   "month": 4,
+   "state": "DELAWARE",
+   "states": [
+    "DELAWARE"
+   ],
+   "county_fips": [
+    "10005"
+   ],
+   "noaa_event_ids": [
+    1091003
+   ],
+   "ef": 3,
+   "width_m": 640.1,
+   "length_km": 23.01,
+   "deaths": 1,
+   "injuries": 0,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -75.6398,
+     38.757
+    ],
+    [
+     -75.3892,
+     38.818
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2020_889068",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2020,
+   "begin_time_local": "2020-04-13 06:10:00",
+   "hour": 6,
+   "month": 4,
+   "state": "SOUTH CAROLINA",
+   "states": [
+    "SOUTH CAROLINA"
+   ],
+   "county_fips": [
+    "45049"
+   ],
+   "noaa_event_ids": [
+    889068
+   ],
+   "ef": 4,
+   "width_m": 1188.7,
+   "length_km": 38.19,
+   "deaths": 5,
+   "injuries": 60,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 5,
+   "path": [
+    [
+     -81.2899,
+     32.7045
+    ],
+    [
+     -80.9092,
+     32.829
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2024_1175811",
+   "split": "test",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2024,
+   "begin_time_local": "2024-04-27 23:08:00",
+   "hour": 23,
+   "month": 4,
+   "state": "OKLAHOMA",
+   "states": [
+    "OKLAHOMA"
+   ],
+   "county_fips": [
+    "40085",
+    "40019"
+   ],
+   "noaa_event_ids": [
+    1175811,
+    1175816
+   ],
+   "ef": 4,
+   "width_m": 823.0,
+   "length_km": 43.13,
+   "deaths": 1,
+   "injuries": 6,
+   "damage_usd": 151000000.0,
+   "deaths_outside_buildings": 1,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -97.144,
+     33.915
+    ],
+    [
+     -97.041,
+     34.071
+    ],
+    [
+     -96.967,
+     34.266
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2024_1182278",
+   "split": "test",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2024,
+   "begin_time_local": "2024-05-25 21:39:00",
+   "hour": 21,
+   "month": 5,
+   "state": "TEXAS",
+   "states": [
+    "TEXAS"
+   ],
+   "county_fips": [
+    "48337",
+    "48097",
+    "48121",
+    "48097"
+   ],
+   "noaa_event_ids": [
+    1182278,
+    1182292,
+    1182301,
+    1182303
+   ],
+   "ef": 3,
+   "width_m": 1280.2,
+   "length_km": 76.07,
+   "deaths": 7,
+   "injuries": 80,
+   "damage_usd": 19180000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 7,
+   "path": [
+    [
+     -97.745,
+     33.526
+    ],
+    [
+     -97.487,
+     33.489
+    ],
+    [
+     -97.061,
+     33.42
+    ],
+    [
+     -96.987,
+     33.418
+    ],
+    [
+     -96.9608,
+     33.434
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2021_972354",
+   "split": "train",
+   "stratum": "fatal",
+   "weight": 4.2,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2021,
+   "begin_time_local": "2021-09-01 17:35:00",
+   "hour": 17,
+   "month": 9,
+   "state": "PENNSYLVANIA",
+   "states": [
+    "PENNSYLVANIA"
+   ],
+   "county_fips": [
+    "42091"
+   ],
+   "noaa_event_ids": [
+    972354
+   ],
+   "ef": 2,
+   "width_m": 365.8,
+   "length_km": 13.33,
+   "deaths": 1,
+   "injuries": 2,
+   "damage_usd": 5000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
+   "path": [
+    [
+     -75.238,
+     40.107
+    ],
+    [
+     -75.158,
+     40.21
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2025_1241778",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2025,
+   "begin_time_local": "2025-04-02 17:05:00",
+   "hour": 17,
+   "month": 4,
+   "state": "ILLINOIS",
+   "states": [
+    "ILLINOIS"
+   ],
+   "county_fips": [
+    "17005",
+    "17051"
+   ],
+   "noaa_event_ids": [
+    1241778,
+    1241779
+   ],
+   "ef": 2,
+   "width_m": 182.9,
+   "length_km": 36.74,
+   "deaths": 0,
+   "injuries": 1,
+   "damage_usd": 385000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -89.5416,
+     38.7869
+    ],
+    [
+     -89.2572,
+     38.9675
+    ],
+    [
+     -89.2217,
+     39.0007
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2015_569784",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2015,
+   "begin_time_local": "2015-05-25 19:18:00",
+   "hour": 19,
+   "month": 5,
+   "state": "TEXAS",
+   "states": [
+    "TEXAS"
+   ],
+   "county_fips": [
+    "48365"
+   ],
+   "noaa_event_ids": [
+    569784
+   ],
+   "ef": 1,
+   "width_m": 1143.9,
+   "length_km": 34.76,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 600000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -94.4566,
+     32.24
+    ],
+    [
+     -94.1086,
+     32.346
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2020_913544",
+   "split": "test",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2020,
+   "begin_time_local": "2020-08-04 02:54:00",
+   "hour": 2,
+   "month": 8,
+   "state": "VIRGINIA",
+   "states": [
+    "VIRGINIA"
+   ],
+   "county_fips": [
+    "51800"
+   ],
+   "noaa_event_ids": [
+    913544
+   ],
+   "ef": 1,
+   "width_m": 137.2,
+   "length_km": 33.8,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 4000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -76.498,
+     36.551
+    ],
+    [
+     -76.633,
+     36.83
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2021_979869",
+   "split": "test",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2021,
+   "begin_time_local": "2021-10-16 08:08:00",
+   "hour": 8,
+   "month": 10,
+   "state": "PENNSYLVANIA",
+   "states": [
+    "PENNSYLVANIA"
+   ],
+   "county_fips": [
+    "42047"
+   ],
+   "noaa_event_ids": [
+    979869
+   ],
+   "ef": 1,
+   "width_m": 237.7,
+   "length_km": 1.03,
+   "deaths": 0,
+   "injuries": 1,
+   "damage_usd": 20000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -79.0482,
+     41.3524
+    ],
+    [
+     -79.0384,
+     41.358
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2024_1221771",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2024,
+   "begin_time_local": "2024-11-05 08:07:00",
+   "hour": 8,
+   "month": 11,
+   "state": "LOUISIANA",
+   "states": [
+    "LOUISIANA"
+   ],
+   "county_fips": [
+    "22001"
+   ],
+   "noaa_event_ids": [
+    1221771
+   ],
+   "ef": 1,
+   "width_m": 137.2,
+   "length_km": 1.59,
+   "deaths": 0,
+   "injuries": 3,
+   "damage_usd": 100000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -92.6223,
+     30.4752
+    ],
+    [
+     -92.616,
+     30.4885
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2025_1248890",
+   "split": "test",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2025,
+   "begin_time_local": "2025-04-02 21:28:00",
+   "hour": 21,
+   "month": 4,
+   "state": "INDIANA",
+   "states": [
+    "INDIANA"
+   ],
+   "county_fips": [
+    "18057"
+   ],
+   "noaa_event_ids": [
+    1248890
+   ],
+   "ef": 1,
+   "width_m": 137.2,
+   "length_km": 10.62,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 600000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -86.1542,
+     39.9558
+    ],
+    [
+     -86.0435,
+     39.9981
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2019_815470",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2019,
+   "begin_time_local": "2019-04-13 23:22:00",
+   "hour": 23,
+   "month": 4,
+   "state": "MISSISSIPPI",
+   "states": [
+    "MISSISSIPPI"
+   ],
+   "county_fips": [
+    "28095"
+   ],
+   "noaa_event_ids": [
+    815470
+   ],
+   "ef": 2,
+   "width_m": 731.5,
+   "length_km": 21.24,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 500000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -88.3215,
+     33.8931
+    ],
+    [
+     -88.2901,
+     34.0831
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2017_687104",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2017,
+   "begin_time_local": "2017-05-11 20:33:00",
+   "hour": 20,
+   "month": 5,
+   "state": "TEXAS",
+   "states": [
+    "TEXAS"
+   ],
+   "county_fips": [
+    "48347",
+    "48401",
+    "48419"
+   ],
+   "noaa_event_ids": [
+    687104,
+    687105,
+    687106
+   ],
+   "ef": 2,
+   "width_m": 731.5,
+   "length_km": 7.35,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 1025000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -94.4989,
+     31.815
+    ],
+    [
+     -94.4768,
+     31.8442
+    ],
+    [
+     -94.4618,
+     31.86
+    ],
+    [
+     -94.4547,
+     31.8693
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2022_1013976",
+   "split": "test",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2022,
+   "begin_time_local": "2022-03-30 18:18:00",
+   "hour": 18,
+   "month": 3,
+   "state": "TENNESSEE",
+   "states": [
+    "TENNESSEE"
+   ],
+   "county_fips": [
+    "47113"
+   ],
+   "noaa_event_ids": [
+    1013976
+   ],
+   "ef": 1,
+   "width_m": 160.0,
+   "length_km": 13.66,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 500000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -88.948,
+     35.57
+    ],
+    [
+     -88.823,
+     35.639
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2015_603839",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2015,
+   "begin_time_local": "2015-11-18 16:59:00",
+   "hour": 16,
+   "month": 11,
+   "state": "GEORGIA",
+   "states": [
+    "GEORGIA"
+   ],
+   "county_fips": [
+    "13121"
+   ],
+   "noaa_event_ids": [
+    603839
+   ],
+   "ef": 1,
+   "width_m": 182.9,
+   "length_km": 4.25,
+   "deaths": 0,
+   "injuries": 1,
+   "damage_usd": 150000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -84.6295,
+     33.5584
+    ],
+    [
+     -84.5907,
+     33.5789
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2015_578502",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2015,
+   "begin_time_local": "2015-06-19 16:51:00",
+   "hour": 16,
+   "month": 6,
+   "state": "ILLINOIS",
+   "states": [
+    "ILLINOIS"
+   ],
+   "county_fips": [
+    "17055"
+   ],
+   "noaa_event_ids": [
+    578502
+   ],
+   "ef": 1,
+   "width_m": 137.2,
+   "length_km": 1.48,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 500000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -88.9586,
+     37.8798
+    ],
+    [
+     -88.9714,
+     37.8885
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2025_1265740",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2025,
+   "begin_time_local": "2025-05-15 17:21:00",
+   "hour": 17,
+   "month": 5,
+   "state": "WISCONSIN",
+   "states": [
+    "WISCONSIN"
+   ],
+   "county_fips": [
+    "55019"
+   ],
+   "noaa_event_ids": [
+    1265740
+   ],
+   "ef": 2,
+   "width_m": 210.3,
+   "length_km": 6.24,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 725000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -90.356,
+     44.85
+    ],
+    [
+     -90.315,
+     44.898
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2017_673031",
+   "split": "test",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2017,
+   "begin_time_local": "2017-01-22 14:38:00",
+   "hour": 14,
+   "month": 1,
+   "state": "GEORGIA",
+   "states": [
+    "GEORGIA"
+   ],
+   "county_fips": [
+    "13061",
+    "13037",
+    "13243"
+   ],
+   "noaa_event_ids": [
+    673031,
+    673032,
+    673043
+   ],
+   "ef": 2,
+   "width_m": 365.8,
+   "length_km": 19.36,
+   "deaths": 0,
+   "injuries": 1,
+   "damage_usd": 650000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -84.8654,
+     31.5704
+    ],
+    [
+     -84.8254,
+     31.5927
+    ],
+    [
+     -84.7874,
+     31.6195
+    ],
+    [
+     -84.7076,
+     31.6805
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2021_987792",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2021,
+   "begin_time_local": "2021-10-21 19:06:00",
+   "hour": 19,
+   "month": 10,
+   "state": "OHIO",
+   "states": [
+    "OHIO"
+   ],
+   "county_fips": [
+    "39013"
+   ],
+   "noaa_event_ids": [
+    987792
+   ],
+   "ef": 1,
+   "width_m": 45.7,
+   "length_km": 12.65,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 525000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -81.0045,
+     40.029
+    ],
+    [
+     -80.8573,
+     40.0445
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2023_1148139",
+   "split": "test",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2023,
+   "begin_time_local": "2023-11-20 19:20:00",
+   "hour": 19,
+   "month": 11,
+   "state": "LOUISIANA",
+   "states": [
+    "LOUISIANA"
+   ],
+   "county_fips": [
+    "22009"
+   ],
+   "noaa_event_ids": [
+    1148139
+   ],
+   "ef": 1,
+   "width_m": 274.3,
+   "length_km": 24.0,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 250000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -92.0419,
+     30.9897
+    ],
+    [
+     -91.7971,
+     31.04
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2022_1057165",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2022,
+   "begin_time_local": "2022-09-27 19:17:00",
+   "hour": 19,
+   "month": 9,
+   "state": "FLORIDA",
+   "states": [
+    "FLORIDA"
+   ],
+   "county_fips": [
+    "12011"
+   ],
+   "noaa_event_ids": [
+    1057165
+   ],
+   "ef": 1,
+   "width_m": 137.2,
+   "length_km": 9.22,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 2000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -80.2386,
+     25.9952
+    ],
+    [
+     -80.2856,
+     26.0665
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2021_993605",
+   "split": "test",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2021,
+   "begin_time_local": "2021-12-15 16:49:00",
+   "hour": 16,
+   "month": 12,
+   "state": "IOWA",
+   "states": [
+    "IOWA"
+   ],
+   "county_fips": [
+    "19029",
+    "19009"
+   ],
+   "noaa_event_ids": [
+    993605,
+    993607
+   ],
+   "ef": 2,
+   "width_m": 91.4,
+   "length_km": 43.63,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 350000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -95.107,
+     41.333
+    ],
+    [
+     -94.9741,
+     41.5046
+    ],
+    [
+     -94.855,
+     41.6768
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2023_1101741",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2023,
+   "begin_time_local": "2023-01-02 18:54:00",
+   "hour": 18,
+   "month": 1,
+   "state": "ARKANSAS",
+   "states": [
+    "ARKANSAS"
+   ],
+   "county_fips": [
+    "05003",
+    "05017"
+   ],
+   "noaa_event_ids": [
+    1101741,
+    1102152
+   ],
+   "ef": 2,
+   "width_m": 1188.7,
+   "length_km": 67.91,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 700000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -91.7697,
+     33.0416
+    ],
+    [
+     -91.458,
+     33.352
+    ],
+    [
+     -91.3274,
+     33.5261
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2022_1065986",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2022,
+   "begin_time_local": "2022-12-13 06:59:00",
+   "hour": 6,
+   "month": 12,
+   "state": "TEXAS",
+   "states": [
+    "TEXAS"
+   ],
+   "county_fips": [
+    "48497"
+   ],
+   "noaa_event_ids": [
+    1065986
+   ],
+   "ef": 2,
+   "width_m": 338.3,
+   "length_km": 15.63,
+   "deaths": 0,
+   "injuries": 2,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -97.6563,
+     33.1195
+    ],
+    [
+     -97.5338,
+     33.2154
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2016_623768",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2016,
+   "begin_time_local": "2016-03-08 06:55:00",
+   "hour": 6,
+   "month": 3,
+   "state": "TEXAS",
+   "states": [
+    "TEXAS"
+   ],
+   "county_fips": [
+    "48143"
+   ],
+   "noaa_event_ids": [
+    623768
+   ],
+   "ef": 1,
+   "width_m": 91.4,
+   "length_km": 3.52,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 500000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -98.2172,
+     32.2055
+    ],
+    [
+     -98.2108,
+     32.2368
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2023_1089134",
+   "split": "test",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2023,
+   "begin_time_local": "2023-03-31 17:38:00",
+   "hour": 17,
+   "month": 3,
+   "state": "TENNESSEE",
+   "states": [
+    "TENNESSEE"
+   ],
+   "county_fips": [
+    "47167"
+   ],
+   "noaa_event_ids": [
+    1089134
+   ],
+   "ef": 2,
+   "width_m": 1463.0,
+   "length_km": 25.06,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 250000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -90.0034,
+     35.4394
+    ],
+    [
+     -89.7552,
+     35.5392
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2021_988873",
+   "split": "test",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2021,
+   "begin_time_local": "2021-10-24 20:23:00",
+   "hour": 20,
+   "month": 10,
+   "state": "MISSOURI",
+   "states": [
+    "MISSOURI"
+   ],
+   "county_fips": [
+    "29187",
+    "29186"
+   ],
+   "noaa_event_ids": [
+    988873,
+    988880
+   ],
+   "ef": 3,
+   "width_m": 411.5,
+   "length_km": 26.94,
+   "deaths": 0,
+   "injuries": 1,
+   "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -90.4095,
+     37.7049
+    ],
+    [
+     -90.299,
+     37.753
+    ],
+    [
+     -90.13,
+     37.803
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2024_1182948",
+   "split": "test",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2024,
+   "begin_time_local": "2024-05-08 12:01:00",
+   "hour": 12,
+   "month": 5,
+   "state": "ILLINOIS",
+   "states": [
+    "ILLINOIS"
+   ],
+   "county_fips": [
+    "17077"
+   ],
+   "noaa_event_ids": [
+    1182948
+   ],
+   "ef": 1,
+   "width_m": 91.4,
+   "length_km": 2.03,
+   "deaths": 0,
+   "injuries": 1,
+   "damage_usd": 75000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -89.6716,
+     37.8067
+    ],
+    [
+     -89.6705,
+     37.8249
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2019_820413",
+   "split": "test",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2019,
+   "begin_time_local": "2019-04-19 18:08:00",
+   "hour": 18,
+   "month": 4,
+   "state": "NORTH CAROLINA",
+   "states": [
+    "NORTH CAROLINA"
+   ],
+   "county_fips": [
+    "37127",
+    "37083"
+   ],
+   "noaa_event_ids": [
+    820413,
+    820419
+   ],
+   "ef": 1,
+   "width_m": 320.0,
+   "length_km": 18.89,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 700000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -77.8058,
+     36.003
+    ],
+    [
+     -77.7377,
+     36.1534
+    ],
+    [
+     -77.7334,
+     36.1631
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2022_1040188",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2022,
+   "begin_time_local": "2022-06-15 00:16:00",
+   "hour": 0,
+   "month": 6,
+   "state": "NEBRASKA",
+   "states": [
+    "NEBRASKA"
+   ],
+   "county_fips": [
+    "31185"
+   ],
+   "noaa_event_ids": [
+    1040188
+   ],
+   "ef": 2,
+   "width_m": 365.8,
+   "length_km": 11.46,
+   "deaths": 0,
+   "injuries": 2,
+   "damage_usd": 1200000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -97.7613,
+     40.7081
+    ],
+    [
+     -97.6323,
+     40.7405
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2018_748581",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2018,
+   "begin_time_local": "2018-04-15 17:25:00",
+   "hour": 17,
+   "month": 4,
+   "state": "NORTH CAROLINA",
+   "states": [
+    "NORTH CAROLINA"
+   ],
+   "county_fips": [
+    "37157"
+   ],
+   "noaa_event_ids": [
+    748581
+   ],
+   "ef": 1,
+   "width_m": 205.7,
+   "length_km": 28.32,
+   "deaths": 0,
+   "injuries": 5,
+   "damage_usd": 2200000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -79.643,
+     36.245
+    ],
+    [
+     -79.534,
+     36.48
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2018_745825",
+   "split": "test",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2018,
+   "begin_time_local": "2018-04-14 10:43:00",
+   "hour": 10,
+   "month": 4,
+   "state": "MISSISSIPPI",
+   "states": [
+    "MISSISSIPPI"
+   ],
+   "county_fips": [
+    "28075"
+   ],
+   "noaa_event_ids": [
+    745825
+   ],
+   "ef": 2,
+   "width_m": 713.2,
+   "length_km": 13.66,
+   "deaths": 0,
+   "injuries": 2,
+   "damage_usd": 500000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -88.7321,
+     32.3558
+    ],
+    [
+     -88.6209,
+     32.435
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2024_1220026",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2024,
+   "begin_time_local": "2024-10-09 14:24:00",
+   "hour": 14,
+   "month": 10,
+   "state": "FLORIDA",
+   "states": [
+    "FLORIDA"
+   ],
+   "county_fips": [
+    "12043"
+   ],
+   "noaa_event_ids": [
+    1220026
+   ],
+   "ef": 3,
+   "width_m": 228.6,
+   "length_km": 24.88,
+   "deaths": 0,
+   "injuries": 3,
+   "damage_usd": 20000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -81.0381,
+     26.8878
+    ],
+    [
+     -81.0814,
+     27.1086
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2025_1242130",
+   "split": "test",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2025,
+   "begin_time_local": "2025-03-15 02:53:00",
+   "hour": 2,
+   "month": 3,
+   "state": "INDIANA",
+   "states": [
+    "INDIANA"
+   ],
+   "county_fips": [
+    "18051",
+    "18125"
+   ],
+   "noaa_event_ids": [
+    1242130,
+    1242167
+   ],
+   "ef": 2,
+   "width_m": 365.8,
+   "length_km": 53.2,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 3500000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -87.5483,
+     38.2103
+    ],
+    [
+     -87.3157,
+     38.3602
+    ],
+    [
+     -87.1032,
+     38.5358
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2015_564766",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2015,
+   "begin_time_local": "2015-04-03 00:40:00",
+   "hour": 0,
+   "month": 4,
+   "state": "ARKANSAS",
+   "states": [
+    "ARKANSAS"
+   ],
+   "county_fips": [
+    "05009"
+   ],
+   "noaa_event_ids": [
+    564766
+   ],
+   "ef": 1,
+   "width_m": 274.3,
+   "length_km": 11.1,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 500000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -93.2498,
+     36.347
+    ],
+    [
+     -93.1279,
+     36.3342
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2022_1077241",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2022,
+   "begin_time_local": "2022-12-13 23:12:00",
+   "hour": 23,
+   "month": 12,
+   "state": "MISSISSIPPI",
+   "states": [
+    "MISSISSIPPI"
+   ],
+   "county_fips": [
+    "28125"
+   ],
+   "noaa_event_ids": [
+    1077241
+   ],
+   "ef": 2,
+   "width_m": 228.6,
+   "length_km": 1.71,
+   "deaths": 0,
+   "injuries": 3,
+   "damage_usd": 1000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -90.84,
+     32.97
+    ],
+    [
+     -90.82,
+     32.98
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2025_1276534",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2025,
+   "begin_time_local": "2025-05-20 18:11:00",
+   "hour": 18,
+   "month": 5,
+   "state": "ALABAMA",
+   "states": [
+    "ALABAMA"
+   ],
+   "county_fips": [
+    "01083"
+   ],
+   "noaa_event_ids": [
+    1276534
+   ],
+   "ef": 1,
+   "width_m": 146.3,
+   "length_km": 4.44,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 927000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -87.0065,
+     34.7749
+    ],
+    [
+     -86.9604,
+     34.7824
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2023_1134006",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2023,
+   "begin_time_local": "2023-08-25 02:34:00",
+   "hour": 2,
+   "month": 8,
+   "state": "PENNSYLVANIA",
+   "states": [
+    "PENNSYLVANIA"
+   ],
+   "county_fips": [
+    "42051"
+   ],
+   "noaa_event_ids": [
+    1134006
+   ],
+   "ef": 2,
+   "width_m": 274.3,
+   "length_km": 3.15,
+   "deaths": 0,
+   "injuries": 6,
+   "damage_usd": 850000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -79.4664,
+     39.9574
+    ],
+    [
+     -79.4332,
+     39.945
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2023_1094932",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2023,
+   "begin_time_local": "2023-04-29 17:10:00",
+   "hour": 17,
+   "month": 4,
+   "state": "FLORIDA",
+   "states": [
+    "FLORIDA"
+   ],
+   "county_fips": [
+    "12099"
+   ],
+   "noaa_event_ids": [
+    1094932
+   ],
+   "ef": 2,
+   "width_m": 292.6,
+   "length_km": 4.2,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 250000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -80.0897,
+     26.8251
+    ],
+    [
+     -80.0593,
+     26.8495
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2024_1168058",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2024,
+   "begin_time_local": "2024-04-02 16:31:00",
+   "hour": 16,
+   "month": 4,
+   "state": "WEST VIRGINIA",
+   "states": [
+    "WEST VIRGINIA"
+   ],
+   "county_fips": [
+    "54019"
+   ],
+   "noaa_event_ids": [
+    1168058
+   ],
+   "ef": 2,
+   "width_m": 297.2,
+   "length_km": 8.55,
+   "deaths": 0,
+   "injuries": 1,
+   "damage_usd": 100000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -81.004,
+     38.0845
+    ],
+    [
+     -80.9067,
+     38.0869
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2015_591534",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2015,
+   "begin_time_local": "2015-06-22 22:07:00",
+   "hour": 22,
+   "month": 6,
+   "state": "MICHIGAN",
+   "states": [
+    "MICHIGAN"
+   ],
+   "county_fips": [
+    "26157",
+    "26151"
+   ],
+   "noaa_event_ids": [
+    591534,
+    587118
+   ],
+   "ef": 1,
+   "width_m": 228.6,
+   "length_km": 36.92,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 501000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -83.1308,
+     43.5031
+    ],
+    [
+     -83.1097,
+     43.5025
+    ],
+    [
+     -82.6733,
+     43.4988
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2016_615098",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2016,
+   "begin_time_local": "2016-02-02 15:19:00",
+   "hour": 15,
+   "month": 2,
+   "state": "MISSISSIPPI",
+   "states": [
+    "MISSISSIPPI"
+   ],
+   "county_fips": [
+    "28075",
+    "28069"
+   ],
+   "noaa_event_ids": [
+    615098,
+    615099
+   ],
+   "ef": 2,
+   "width_m": 804.7,
+   "length_km": 34.17,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 1485000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -88.8749,
+     32.4685
+    ],
+    [
+     -88.761,
+     32.5775
+    ],
+    [
+     -88.6457,
+     32.7072
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2023_1077195",
+   "split": "test",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2023,
+   "begin_time_local": "2023-01-24 17:05:00",
+   "hour": 17,
+   "month": 1,
+   "state": "LOUISIANA",
+   "states": [
+    "LOUISIANA"
+   ],
+   "county_fips": [
+    "22019",
+    "22011"
+   ],
+   "noaa_event_ids": [
+    1077195,
+    1077204
+   ],
+   "ef": 2,
+   "width_m": 274.3,
+   "length_km": 20.0,
+   "deaths": 0,
+   "injuries": 3,
+   "damage_usd": 505000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -93.3634,
+     30.3578
+    ],
+    [
+     -93.3181,
+     30.4028
+    ],
+    [
+     -93.1998,
+     30.4665
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2025_1241376",
+   "split": "train",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2025,
+   "begin_time_local": "2025-03-14 21:18:00",
+   "hour": 21,
+   "month": 3,
+   "state": "MISSOURI",
+   "states": [
+    "MISSOURI"
+   ],
+   "county_fips": [
+    "29099",
+    "29189"
+   ],
+   "noaa_event_ids": [
+    1241376,
+    1241382
+   ],
+   "ef": 2,
+   "width_m": 777.2,
+   "length_km": 40.76,
+   "deaths": 0,
+   "injuries": 0,
+   "damage_usd": 905000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -90.6488,
+     38.2701
+    ],
+    [
+     -90.3472,
+     38.4575
+    ],
+    [
+     -90.2814,
+     38.4951
+    ]
+   ]
+  },
+  {
+   "place_id": "bt_2025_1242834",
+   "split": "test",
+   "stratum": "nonfatal",
+   "weight": 37.375,
+   "excluded": false,
+   "exclude_reason": null,
+   "year": 2025,
+   "begin_time_local": "2025-04-20 13:31:00",
+   "hour": 13,
+   "month": 4,
+   "state": "MISSOURI",
+   "states": [
+    "MISSOURI"
+   ],
+   "county_fips": [
+    "29027"
+   ],
+   "noaa_event_ids": [
+    1242834
+   ],
+   "ef": 2,
+   "width_m": 91.4,
+   "length_km": 4.2,
+   "deaths": 0,
+   "injuries": 1,
+   "damage_usd": 125000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
+   "path": [
+    [
+     -92.1157,
+     38.7374
+    ],
+    [
+     -92.1033,
+     38.7735
+    ]
+   ]
+  }
+ ]
+}

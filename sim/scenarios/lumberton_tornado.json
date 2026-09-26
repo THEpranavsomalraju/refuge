@@ -1,0 +1,13 @@
+{
+  "place_id": "lumberton",
+  "hazard": "tornado",
+  "ef": 3,
+  "path": [[-79.065, 34.580], [-79.036, 34.594], [-78.977, 34.638], [-78.962, 34.652]],
+  "width_m": 640.1,
+  "flood_height_m": null,
+  "hour": 2,
+  "warning_min": 10,
+  "protections": [],
+  "runs": 500,
+  "seed": 42
+}
