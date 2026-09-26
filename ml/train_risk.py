@@ -237,6 +237,10 @@ def county_risk(df, rounds):
             ref_flood_night=pl.Series(m.predict(to_numpy(reference(held, 0, 2), RISK_FEATURES))),
         ))
 
+    # saved for the backtest baseline: each event predicted by a model that never saw its state
+    WORK.mkdir(parents=True, exist_ok=True)
+    df.select("event_id").with_columns(pred_oof=pl.Series(oof)).write_parquet(WORK / "risk_oof.parquet")
+
     hist = df.with_columns(pred=pl.Series(oof)).group_by("county_fips").agg(
         tornado_events=(pl.col("is_tornado") == 1).sum(),
         flood_events=(pl.col("is_tornado") == 0).sum(),
