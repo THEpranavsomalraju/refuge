@@ -1,0 +1,513 @@
+{
+ "note": "Calibrated sim_params.json run through Simulation's engine (simulateDetailed) on the featured towns. band_counts cover every cell; cells_touched = cells with expected deaths > 0 and >= min_cell_people. shelter_reference_sites are greedy non-overlapping spots with the most expected deaths within 400 m: reference data, not Simulation's shelter rules.",
+ "params_bands": {
+  "yellow": 0.00001,
+  "red": 0.001,
+  "deep_red": 0.01
+ },
+ "walk_radius_m": 400,
+ "towns": {
+  "lumberton": {
+   "buildings": 14551,
+   "demo": {
+    "ef": 3,
+    "hour": 2,
+    "width_m": 640.1,
+    "expected_deaths": 18.857,
+    "p05": 12,
+    "p95": 27,
+    "people_exposed": 2392,
+    "band_counts": {
+     "green": 1809,
+     "yellow": 77,
+     "red": 11,
+     "deep_red": 17,
+     "sparse": 1562,
+     "empty": 10365
+    },
+    "cells_touched": 125,
+    "touched_uncertain_share": 0.16,
+    "by_class": {
+     "MH": 18.709,
+     "RES_WOOD": 0.098,
+     "RES_MASONRY": 0.012,
+     "MULTI": 0.017,
+     "COMMERCIAL": 0.011,
+     "BIGROOF": 0.01
+    }
+   },
+   "top_risk_cells": [
+    {
+     "h3": "8a2ad2842c97fff",
+     "center": [
+      -78.983602,
+      34.633017
+     ],
+     "people": 5,
+     "expected_deaths": 0.29,
+     "risk": 0.05792,
+     "band": "deep_red",
+     "drivers": [
+      "MH",
+      "no_basement",
+      "night"
+     ]
+    },
+    {
+     "h3": "8a2ad28e9967fff",
+     "center": [
+      -79.037966,
+      34.593003
+     ],
+     "people": 30,
+     "expected_deaths": 1.59,
+     "risk": 0.053,
+     "band": "deep_red",
+     "drivers": [
+      "MH",
+      "no_basement",
+      "night"
+     ]
+    },
+    {
+     "h3": "8a2ad28ed247fff",
+     "center": [
+      -79.033662,
+      34.595049
+     ],
+     "people": 8,
+     "expected_deaths": 0.421,
+     "risk": 0.05265,
+     "band": "deep_red",
+     "drivers": [
+      "MH",
+      "no_basement",
+      "night"
+     ]
+    },
+    {
+     "h3": "8a2ad28ed2cffff",
+     "center": [
+      -79.036994,
+      34.593767
+     ],
+     "people": 51,
+     "expected_deaths": 2.619,
+     "risk": 0.05136,
+     "band": "deep_red",
+     "drivers": [
+      "MH",
+      "no_basement",
+      "night"
+     ]
+    },
+    {
+     "h3": "8a2ad2855a6ffff",
+     "center": [
+      -78.977756,
+      34.637603
+     ],
+     "people": 28,
+     "expected_deaths": 1.432,
+     "risk": 0.05115,
+     "band": "deep_red",
+     "drivers": [
+      "MH",
+      "no_basement",
+      "night"
+     ]
+    },
+    {
+     "h3": "8a2ad28466b7fff",
+     "center": [
+      -78.975807,
+      34.639132
+     ],
+     "people": 19,
+     "expected_deaths": 0.94,
+     "risk": 0.04947,
+     "band": "deep_red",
+     "drivers": [
+      "MH",
+      "no_basement",
+      "night"
+     ]
+    },
+    {
+     "h3": "8a2ad2846697fff",
+     "center": [
+      -78.976782,
+      34.638367
+     ],
+     "people": 47,
+     "expected_deaths": 2.138,
+     "risk": 0.04548,
+     "band": "deep_red",
+     "drivers": [
+      "MH",
+      "no_basement",
+      "night"
+     ]
+    },
+    {
+     "h3": "8a2ad28ed25ffff",
+     "center": [
+      -79.034635,
+      34.594285
+     ],
+     "people": 33,
+     "expected_deaths": 1.377,
+     "risk": 0.04172,
+     "band": "deep_red",
+     "drivers": [
+      "MH",
+      "no_basement",
+      "night"
+     ]
+    },
+    {
+     "h3": "8a2ad28ed257fff",
+     "center": [
+      -79.035048,
+      34.595296
+     ],
+     "people": 41,
+     "expected_deaths": 1.551,
+     "risk": 0.03783,
+     "band": "deep_red",
+     "drivers": [
+      "MH",
+      "no_basement",
+      "night"
+     ]
+    },
+    {
+     "h3": "8a2ad28ed2effff",
+     "center": [
+      -79.036021,
+      34.594532
+     ],
+     "people": 65,
+     "expected_deaths": 2.417,
+     "risk": 0.03719,
+     "band": "deep_red",
+     "drivers": [
+      "MH",
+      "no_basement",
+      "night"
+     ]
+    }
+   ],
+   "shelter_reference_sites": [
+    {
+     "h3": "8a2ad28ed2cffff",
+     "center": [
+      -79.036994,
+      34.593767
+     ],
+     "expected_deaths_within_walk": 12.334,
+     "people_within_walk": 479,
+     "cells_within_walk": 20
+    },
+    {
+     "h3": "8a2ad2855a6ffff",
+     "center": [
+      -78.977756,
+      34.637603
+     ],
+     "expected_deaths_within_walk": 5.807,
+     "people_within_walk": 319,
+     "cells_within_walk": 19
+    },
+    {
+     "h3": "8a2ad2842cb7fff",
+     "center": [
+      -78.982628,
+      34.633781
+     ],
+     "expected_deaths_within_walk": 0.324,
+     "people_within_walk": 114,
+     "cells_within_walk": 13
+    },
+    {
+     "h3": "8a2ad285e797fff",
+     "center": [
+      -79.022961,
+      34.603456
+     ],
+     "expected_deaths_within_walk": 0.123,
+     "people_within_walk": 301,
+     "cells_within_walk": 19
+    },
+    {
+     "h3": "8a2ad28468b7fff",
+     "center": [
+      -78.962161,
+      34.649833
+     ],
+     "expected_deaths_within_walk": 0.107,
+     "people_within_walk": 12,
+     "cells_within_walk": 4
+    }
+   ],
+   "sweep": [
+    {
+     "ef": 1,
+     "hour": 2,
+     "width_m": 137.2,
+     "expected_deaths": 0.011,
+     "p05": 0,
+     "p95": 0,
+     "people_exposed": 344,
+     "band_counts": {
+      "green": 1898,
+      "yellow": 16,
+      "red": 0,
+      "deep_red": 0,
+      "sparse": 1562,
+      "empty": 10365
+     },
+     "cells_touched": 42,
+     "touched_uncertain_share": 0,
+     "by_class": {
+      "MH": 0.007
+     }
+    },
+    {
+     "ef": 1,
+     "hour": 15,
+     "width_m": 137.2,
+     "expected_deaths": 0.006,
+     "p05": 0,
+     "p95": 0,
+     "people_exposed": 283,
+     "band_counts": {
+      "green": 1615,
+      "yellow": 11,
+      "red": 0,
+      "deep_red": 0,
+      "sparse": 2005,
+      "empty": 10210
+     },
+     "cells_touched": 41,
+     "touched_uncertain_share": 0,
+     "by_class": {}
+    },
+    {
+     "ef": 2,
+     "hour": 2,
+     "width_m": 274.3,
+     "expected_deaths": 0.829,
+     "p05": 0,
+     "p95": 2,
+     "people_exposed": 901,
+     "band_counts": {
+      "green": 1862,
+      "yellow": 40,
+      "red": 12,
+      "deep_red": 0,
+      "sparse": 1562,
+      "empty": 10365
+     },
+     "cells_touched": 66,
+     "touched_uncertain_share": 0.106,
+     "by_class": {
+      "MH": 0.793,
+      "RES_WOOD": 0.033
+     }
+    },
+    {
+     "ef": 2,
+     "hour": 15,
+     "width_m": 274.3,
+     "expected_deaths": 0.389,
+     "p05": 0,
+     "p95": 2,
+     "people_exposed": 683,
+     "band_counts": {
+      "green": 1586,
+      "yellow": 31,
+      "red": 9,
+      "deep_red": 0,
+      "sparse": 2005,
+      "empty": 10210
+     },
+     "cells_touched": 68,
+     "touched_uncertain_share": 0.044,
+     "by_class": {
+      "MH": 0.371,
+      "RES_WOOD": 0.014
+     }
+    },
+    {
+     "ef": 3,
+     "hour": 2,
+     "width_m": 640.1,
+     "expected_deaths": 18.857,
+     "p05": 12,
+     "p95": 27,
+     "people_exposed": 2392,
+     "band_counts": {
+      "green": 1809,
+      "yellow": 77,
+      "red": 11,
+      "deep_red": 17,
+      "sparse": 1562,
+      "empty": 10365
+     },
+     "cells_touched": 125,
+     "touched_uncertain_share": 0.16,
+     "by_class": {
+      "MH": 18.709,
+      "RES_WOOD": 0.098,
+      "RES_MASONRY": 0.012,
+      "MULTI": 0.017,
+      "COMMERCIAL": 0.011,
+      "BIGROOF": 0.01
+     }
+    },
+    {
+     "ef": 3,
+     "hour": 15,
+     "width_m": 640.1,
+     "expected_deaths": 9.074,
+     "p05": 4,
+     "p95": 14,
+     "people_exposed": 2617,
+     "band_counts": {
+      "green": 1527,
+      "yellow": 70,
+      "red": 17,
+      "deep_red": 12,
+      "sparse": 2005,
+      "empty": 10210
+     },
+     "cells_touched": 143,
+     "touched_uncertain_share": 0.119,
+     "by_class": {
+      "MH": 8.611,
+      "RES_WOOD": 0.039,
+      "MULTI": 0.008,
+      "SCHOOL": 0.006,
+      "COMMERCIAL": 0.26,
+      "BIGROOF": 0.143
+     }
+    },
+    {
+     "ef": 4,
+     "hour": 2,
+     "width_m": 965.6,
+     "expected_deaths": 44.006,
+     "p05": 34,
+     "p95": 56,
+     "people_exposed": 4399,
+     "band_counts": {
+      "green": 1740,
+      "yellow": 97,
+      "red": 37,
+      "deep_red": 40,
+      "sparse": 1562,
+      "empty": 10365
+     },
+     "cells_touched": 192,
+     "touched_uncertain_share": 0.313,
+     "by_class": {
+      "MH": 39.682,
+      "RES_WOOD": 1.867,
+      "RES_MASONRY": 0.766,
+      "MULTI": 1.11,
+      "SCHOOL": 0.005,
+      "COMMERCIAL": 0.47,
+      "BIGROOF": 0.106
+     }
+    },
+    {
+     "ef": 4,
+     "hour": 15,
+     "width_m": 965.6,
+     "expected_deaths": 29.568,
+     "p05": 21,
+     "p95": 38,
+     "people_exposed": 4891,
+     "band_counts": {
+      "green": 1460,
+      "yellow": 81,
+      "red": 37,
+      "deep_red": 48,
+      "sparse": 2005,
+      "empty": 10210
+     },
+     "cells_touched": 211,
+     "touched_uncertain_share": 0.275,
+     "by_class": {
+      "MH": 17.345,
+      "RES_WOOD": 0.759,
+      "RES_MASONRY": 0.296,
+      "MULTI": 0.366,
+      "SCHOOL": 1.458,
+      "COMMERCIAL": 7.718,
+      "BIGROOF": 1.59,
+      "OTHER": 0.035
+     }
+    }
+   ]
+  },
+  "chapel_hill": {
+   "buildings": 21065,
+   "test_ef3_night": {
+    "ef": 3,
+    "hour": 2,
+    "width_m": 640.1,
+    "expected_deaths": 0.411,
+    "p05": 0,
+    "p95": 2,
+    "people_exposed": 8607,
+    "band_counts": {
+     "green": 2833,
+     "yellow": 154,
+     "red": 1,
+     "deep_red": 0,
+     "sparse": 1197,
+     "empty": 2717
+    },
+    "cells_touched": 237,
+    "touched_uncertain_share": 0,
+    "by_class": {
+     "RES_WOOD": 0.086,
+     "RES_MASONRY": 0.007,
+     "MULTI": 0.133,
+     "SCHOOL": 0.108,
+     "COMMERCIAL": 0.077
+    }
+   }
+  },
+  "morganton": {
+   "buildings": 13595,
+   "test_ef3_night": {
+    "ef": 3,
+    "hour": 2,
+    "width_m": 640.1,
+    "expected_deaths": 1.026,
+    "p05": 0,
+    "p95": 3,
+    "people_exposed": 1332,
+    "band_counts": {
+     "green": 1863,
+     "yellow": 77,
+     "red": 5,
+     "deep_red": 3,
+     "sparse": 1880,
+     "empty": 6283
+    },
+    "cells_touched": 107,
+    "touched_uncertain_share": 0.056,
+    "by_class": {
+     "MH": 0.945,
+     "RES_WOOD": 0.061,
+     "MULTI": 0.012,
+     "WORSHIP": 0.005
+    }
+   }
+  }
+ }
+}
