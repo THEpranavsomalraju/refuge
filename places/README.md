@@ -4,7 +4,7 @@ Owner: Structures and 3D (@soham-patki). Read `REFUGE_overview.md` first.
 
 This folder turns real building, road, stream, and terrain data into one folder of JSON files per featured place. Those files, plus the Python functions in `fetch_nsi.py`, are the only things other parts of Refuge use from here. The overview says only this role edits `places/`.
 
-> **Status:** `fetch_nsi.py` and `build_place.py` are done. The three featured places are built with buildings, footprints, and full `cells.json`. Streams, `hand_m`, roads, crossings, and 3DEP elevation come in Phase 2. Anything marked **TBD** is undecided. Anything marked **proposed** still needs sign-off from the teammate who reads it.
+> **Status:** `fetch_nsi.py`, `build_place.py`, and `terrain.py` are done. The three featured places are built with buildings, footprints, full `cells.json`, 3DEP elevation, streams, `hand_m`, and baked terrain. Roads and low-water crossings are next. Anything marked **TBD** is undecided. Anything marked **proposed** still needs sign-off from the teammate who reads it.
 
 ## Featured places
 
@@ -107,9 +107,26 @@ python -m places.build_place "Some Big City, State, USA" --place-id big_city --m
    3. Otherwise (empty `bid`), a square with the `ftprntsqft` area.
    - An outline that becomes invalid after simplifying is replaced by its convex hull.
    - OSM coverage: Morganton 41%, Lumberton 33%, Chapel Hill 92%. Almost all the rest get the NSI box; squares are 1–3%.
-5. **Writes** `buildings.json`, `cells.json` (every H3 cell in the rectangle, empty ones included), `place.json`, and `crossings.json` (`[]` until Phase 2).
+5. **Terrain** (`terrain.py`), all from one elevation source so everything agrees:
+   - **Elevation:** USGS 3DEP 10 m DEM for the rectangle plus a 2 km margin. `ground_elev_m` of every building and cell is the DEM at its point. This replaces NSI's value (they agree within 0.6 m for 90% of buildings in Morganton).
+   - **Streams:** NHDPlus medium resolution (named creeks and rivers), fetched for the rectangle plus 2 km so a creek just outside still counts.
+   - **`hand_m`:** the simple nearest-stream version from the role file. It is building ground elevation minus the DEM elevation of the nearest stream point (streams sampled every 10 m), clipped at 0.
+   - **`terrain.bin`:** elevation grid for the 3D scene, baked from the same DEM, so no internet is needed during the demo. Described in `place.json` → `terrain_source`.
+   - **Stream lines** for drawing go in `place.json` → `streams`.
+6. **Writes** `buildings.json`, `cells.json` (every H3 cell in the rectangle, empty ones included), `place.json`, `terrain.bin`, and `crossings.json` (`[]` until roads and crossings are in).
 
-A rebuild with a warm cache takes 5–10 s. A new city's first build takes 30–90 s while NSI and OSM download. OSM responses are cached in `data/cache/osmnx/`.
+A rebuild with a warm cache takes 15–20 s. A new city's first build takes longer while NSI, OSM, 3DEP and NHD download. Caches live in `data/cache/` (`nsi/`, `osmnx/`, `hyriver/`).
+
+### Known limitation: `hand_m` in flat towns
+Nearest-stream HAND measures each building against whichever stream is closest, not the one water actually drains to. In flat, swampy towns this makes small branches count as much as the main river.
+
+| Town | `hand_m` median | Buildings ≤ 2 m | Nearest stream (median) |
+|---|---|---|---|
+| Morganton | 22.8 m | 380 of 13,595 | 393 m |
+| Lumberton | 1.6 m | 8,507 of 14,551 | 546 m |
+| Chapel Hill | 13.8 m | 1,459 of 21,065 | 390 m |
+
+So a small flood height floods much of Lumberton. Lumberton sits about 9 m above the Lumber River itself, but many swamp branches run through town at ground level. This was kept on purpose (simple version first). Lumberton is the tornado town, and Morganton, the flood town, behaves as expected: Hunting Creek is in the streams, and the 136 buildings within 100 m of it have a median `hand_m` of 3.4 m. True drainage-following HAND is a possible stretch goal.
 
 ---
 
@@ -121,6 +138,7 @@ places/<place_id>/
   crossings.json   frozen format (overview §2) + proposed "h3" key   Phase 2
   cells.json       proposed format (below)
   place.json       proposed keys (below)
+  terrain.bin      elevation grid for the 3D scene (see place.json → terrain_source)
 ```
 
 ### Placeholder rule
@@ -128,9 +146,9 @@ Every key in a format is always written. A field that isn't computed yet is `nul
 
 | Field | File | Filled in | Until then |
 |---|---|---|---|
-| `hand_m` | buildings.json | Phase 2 (streams + 3DEP) | `null` → no flood data (not 0) |
+| `hand_m` | buildings.json | `terrain.py` (featured places) | `null` in backtest folders → no flood data (not 0) |
 | `footprint` | buildings.json | `build_place.py` (featured places) | `null` in backtest folders |
-| `ground_elev_m` | cells.json | featured pipeline (3DEP) | `null` in backtest folders |
+| `ground_elev_m` | cells.json | `terrain.py` (featured places, 3DEP) | `null` in backtest folders |
 | `cars_per_hour` | crossings.json | Phase 2 | `null` |
 
 ### `buildings.json` (frozen, overview §1)
@@ -160,7 +178,10 @@ Low-water crossings: points where a road line crosses a stream line and the road
 - Chapel Hill uses `"urban"` and `"weekday_urban"`
 
 ### `place.json` (**proposed** keys)
-`place_id`, `name` (the geocoding query; `null` in backtest folders), `county_fips` (the most common county, taken from the buildings' `cbfips[:5]`), `bbox` `[min_lon, min_lat, max_lon, max_lat]`, `center` `[lon, lat]`, `camera` (`null` until Phase 2), `terrain_source` (`null` until Phase 2), `streams`, `roads` (empty until Phase 2, and always empty in backtest folders).
+`place_id`, `name` (the geocoding query; `null` in backtest folders), `county_fips` (the most common county, taken from the buildings' `cbfips[:5]`), `bbox` `[min_lon, min_lat, max_lon, max_lat]`, `center` `[lon, lat]`, `camera` (`null` until Phase 2), `terrain_source`, `streams`, `roads` (empty until roads are in).
+
+- `terrain_source` (featured places): `{"file": "terrain.bin", "format": "float32-le, row-major, first row north, first column west", "width", "height", "bbox", "min_m", "max_m", "source"}`. The grid spans `bbox` edge to edge, with at most 512 samples on the longer side (about 0.7–1 MB). It is `null` in backtest folders.
+- `streams` (featured places): stream lines clipped to the rectangle, each `[[lon, lat], ...]`. Empty in backtest folders.
 
 ---
 
@@ -175,7 +196,7 @@ places/.venv/Scripts/python -m pip install -r places/requirements.txt   # Window
 | File | Contents | Who installs it |
 |---|---|---|
 | `requirements-core.txt` | requests, geopandas, shapely, pyproj, numpy, h3 | ML lead (enough for `fetch_nsi.py`) |
-| `requirements.txt` | core + py3dep, pynhd, osmnx, openlocationcode | full place pipeline |
+| `requirements.txt` | core + py3dep, pynhd, osmnx, openlocationcode, scipy | full place pipeline |
 
 Raw downloads and caches go in `data/` at the repo root (gitignored), never in `places/`.
 
@@ -184,7 +205,8 @@ Raw downloads and caches go in `data/` at the repo root (gitignored), never in `
 | File | Phase | Status |
 |---|---|---|
 | `fetch_nsi.py` | 1 | done |
-| `build_place.py` | 1–2 | buildings, footprints, cells done; streams, `hand_m`, roads, crossings, 3DEP in Phase 2 |
+| `build_place.py` | 1–2 | buildings, footprints, cells, terrain done; roads and crossings to do |
+| `terrain.py` | 2 | done: 3DEP elevation, NHD streams, `hand_m`, `terrain.bin` |
 | `validate.py` | 3 | to do |
 
 ---

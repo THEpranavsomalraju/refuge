@@ -11,8 +11,10 @@ Steps:
   4. Footprints: the OSM building outline each NSI point falls inside, simplified. Buildings
      without one get NSI's own building box (decoded from `bid`) scaled to NSI's footprint
      area (ftprntsqft); if `bid` is empty, a square of that area.
-  5. Writes places/<place_id>/ buildings.json, cells.json (every H3 cell in the rectangle,
-     empty ones included), place.json, crossings.json ([] until Phase 2).
+  5. Terrain (terrain.py): 3DEP ground elevation for buildings and cells, NHD streams,
+     hand_m, a baked terrain.bin for the 3D scene, and stream lines for place.json.
+  6. Writes places/<place_id>/ buildings.json, cells.json (every H3 cell in the rectangle,
+     empty ones included), place.json, terrain.bin, crossings.json ([] until roads are in).
 """
 
 from __future__ import annotations
@@ -42,6 +44,7 @@ from places.fetch_nsi import (
     to_building_records,
     write_json,
 )
+from places.terrain import add_terrain
 
 log = logging.getLogger(__name__)
 
@@ -75,9 +78,14 @@ def build_place(query: str, place_id: str, max_buildings: int | None = None,
 
     folder = Path(out_dir) / place_id
     folder.mkdir(parents=True, exist_ok=True)
+
+    # 3DEP ground elevation, hand_m, terrain.bin, and stream lines.
+    place = place_record(rect, place_id, records, name=query)
+    place.update(add_terrain(records, cells, rect, folder))
+
     write_json(folder / "buildings.json", records)
     write_json(folder / "cells.json", cells)
-    write_json(folder / "place.json", place_record(rect, place_id, records, name=query))
+    write_json(folder / "place.json", place)
     write_json(folder / "crossings.json", [])
 
     log.info("footprints: %s", stats)
@@ -281,6 +289,7 @@ if __name__ == "__main__":
     place = json.loads((folder / "place.json").read_text())
     print(json.dumps(summarize(recs), indent=1))
     print("cells", len(cells), "| empty", sum(1 for c in cells if c["pop_night"] == 0 and c["pop_day"] == 0))
-    print("place", json.dumps(place))
+    print("place", json.dumps({k: v for k, v in place.items() if k != "streams"}))
+    print("streams", len(place["streams"]), "lines")
     print("sizes KB", {f.name: round(f.stat().st_size / 1024) for f in sorted(folder.glob("*.json"))})
     print(f"{time.time() - t0:.1f}s")
