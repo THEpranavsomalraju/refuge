@@ -1,0 +1,41 @@
+import { cpSync, createReadStream, existsSync, statSync } from 'node:fs';
+import { dirname, join, normalize, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import react from '@vitejs/plugin-react';
+import { defineConfig, type Plugin } from 'vite';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+
+// Place folders live in the repo's places/ directory (owned by Structures). They are
+// served at /places/... in dev and copied into dist/places at build time, so the app
+// needs no network access for town data during the demo.
+const PLACES_DIR = resolve(HERE, '..', 'places');
+const PLACE_FILES = ['buildings.json', 'cells.json', 'crossings.json', 'place.json', 'terrain.bin'];
+
+function placesPlugin(): Plugin {
+  return {
+    name: 'refuge-places',
+    configureServer(server) {
+      server.middlewares.use('/places', (req, res, next) => {
+        const rel = normalize(decodeURIComponent((req.url ?? '').split('?')[0]));
+        const file = join(PLACES_DIR, rel);
+        if (!file.startsWith(PLACES_DIR) || !existsSync(file) || !statSync(file).isFile()) return next();
+        res.setHeader('Content-Type', file.endsWith('.json') ? 'application/json' : 'application/octet-stream');
+        createReadStream(file).pipe(res);
+      });
+    },
+    closeBundle() {
+      const out = resolve(HERE, 'dist', 'places');
+      for (const id of ['morganton', 'lumberton', 'chapel_hill']) {
+        for (const f of PLACE_FILES) {
+          const src = join(PLACES_DIR, id, f);
+          if (existsSync(src)) cpSync(src, join(out, id, f));
+        }
+      }
+    },
+  };
+}
+
+export default defineConfig({
+  plugins: [react(), placesPlugin()],
+});

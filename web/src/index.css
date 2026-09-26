@@ -1,0 +1,9 @@
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+body {
+  background: #0c1214;
+  color: #e3eae7;
+  font-family: "Public Sans", "Segoe UI", system-ui, sans-serif;
+}
