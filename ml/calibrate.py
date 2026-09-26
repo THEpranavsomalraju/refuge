@@ -75,12 +75,14 @@ def corridor(path, width_m):
     return transform(lambda x, y: (np.asarray(x) / kx, np.asarray(y) / ky), buf)
 
 
-def prepare():
-    sys.path.insert(0, str(ROOT))
+def prepare(only=None):
+    # Structures' code; REFUGE_PLACES_ROOT points at a checkout of their branch until it is merged
+    sys.path.insert(0, os.environ.get("REFUGE_PLACES_ROOT", str(ROOT)))
     from places.fetch_nsi import write_place_lite
 
     PLACES.mkdir(parents=True, exist_ok=True)
-    for i, s in enumerate(load_storms(), 1):
+    storms = [s for s in load_storms() if only is None or s["place_id"] == only]
+    for i, s in enumerate(storms, 1):
         out = PLACES / s["place_id"]
         if (out / "buildings.json").exists():
             continue
@@ -303,6 +305,6 @@ def backtest():
 
 if __name__ == "__main__":
     steps = {"prepare": prepare, "fit": fit, "backtest": backtest}
-    if len(sys.argv) != 2 or sys.argv[1] not in steps:
-        sys.exit(f"usage: python ml/calibrate.py {'|'.join(steps)}")
-    steps[sys.argv[1]]()
+    if len(sys.argv) < 2 or sys.argv[1] not in steps:
+        sys.exit(f"usage: python ml/calibrate.py {'|'.join(steps)} [place_id for prepare]")
+    steps[sys.argv[1]](*sys.argv[2:])
