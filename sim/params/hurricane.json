@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "source": "Constants from ml/exports/hurricane_reference.json, hurricane_mortality.json and hurricane_damage_reference.json (ML lead); sim/tests/hurricane.test.mjs checks they still match.",
+  "wind": {
+    "land_factor": 0.8,
+    "gust_factor": 1.3,
+    "kt_to_mph": 1.15078,
+    "step_h": 0.16666666666666666,
+    "earth_radius_km": 6371.0088,
+    "nm_to_km": 1.852
+  },
+  "fragility_beta": 0.15,
+  "residential_classes": [
+    "MH",
+    "RES_WOOD",
+    "RES_MASONRY",
+    "MULTI"
+  ],
+  "mortality": {
+    "a": -18.472844842294702,
+    "b_per_mph": 0.041354013591607064,
+    "class_factor": {
+      "MH": 3.0350623784812334,
+      "other": 0.5946827674815869
+    }
+  },
+  "cells": {
+    "min_share": 0.01,
+    "min_residents": 5,
+    "bands": {
+      "moderate": 0.1,
+      "severe": 0.4,
+      "extreme": 0.7
+    }
+  },
+  "category_defaults": {
+    "1": {
+      "vmax_kt": 73,
+      "rmw_km": 37,
+      "B": 1.65
+    },
+    "2": {
+      "vmax_kt": 89,
+      "rmw_km": 37,
+      "B": 1.6
+    },
+    "3": {
+      "vmax_kt": 104,
+      "rmw_km": 37,
+      "B": 1.5
+    },
+    "4": {
+      "vmax_kt": 124,
+      "rmw_km": 27.8,
+      "B": 1.7
+    },
+    "5": {
+      "vmax_kt": 148,
+      "rmw_km": 9.3,
+      "B": 1.48
+    }
+  },
+  "forward_speed_kmh": 20
+}
