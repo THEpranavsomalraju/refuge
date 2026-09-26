@@ -177,7 +177,7 @@ Proposed four severity thresholds in mph:
 | SCHOOL | 65, 125, 153, 176 | ES: 1,7,9,10 |
 | WORSHIP | 65, 124, 144, 157 | SPB proxy: 1,7,8,9 |
 | COMMERCIAL | 65, 124, 144, 157 | SPB proxy: 1,7,8,9 |
-| BIGROOF | 68, 122, 137, 173 | LIRB: 1,4,6,7 |
+| BIGROOF | 68, 117, 137, 158 | median of LIRB 1,4,6,7; WHB 1,5,6,7; MBS 1,4,7,8 |
 | OTHER | 65, 97, 170, 200 | FR12 proxy: 1,4,9,10 |
 
 The four-level reduction and the proxy assignments are proposed modeling

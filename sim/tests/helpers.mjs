@@ -20,7 +20,7 @@ export function params() {
         MH: [61, 89, 105, 127], RES_WOOD: [65, 97, 170, 200],
         RES_MASONRY: [65, 121, 156, 180], MULTI: [76, 124, 158, 180],
         SCHOOL: [65, 125, 153, 176], WORSHIP: [65, 124, 144, 157],
-        COMMERCIAL: [65, 124, 144, 157], BIGROOF: [68, 122, 137, 173],
+        COMMERCIAL: [65, 124, 144, 157], BIGROOF: [68, 117, 137, 158],
         OTHER: [65, 97, 170, 200],
       },
     },

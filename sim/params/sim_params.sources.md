@@ -27,7 +27,7 @@ levels, and using proxies for broad inventory classes, are model choices.
 | SCHOOL | 65,125,153,176 | [ES](https://www.weather.gov/images/oun/efscale/ES.jpg); 1,7,9,10 | Elementary-school proxy |
 | WORSHIP | 65,124,144,157 | [SPB](https://www.weather.gov/images/oun/efscale/SPB.jpg); 1,7,8,9 | Small-professional-building proxy; worship-specific behavior is unresolved |
 | COMMERCIAL | 65,124,144,157 | [SPB](https://www.weather.gov/images/oun/efscale/SPB.jpg); 1,7,8,9 | Small-professional-building proxy |
-| BIGROOF | 68,122,137,173 | [LIRB](https://www.weather.gov/images/oun/efscale/LIRB.jpg); 1,4,6,7 | Large-retail proxy |
+| BIGROOF | 68,117,137,158 | Per-level median of [LIRB](https://www.weather.gov/images/oun/efscale/LIRB.jpg) 1,4,6,7 (68,122,137,173); [WHB](https://www.weather.gov/images/oun/efscale/WHB.jpg) 1,5,6,7 (68,114,124,158); [MBS](https://www.weather.gov/images/oun/efscale/MBS.jpg) 1,4,7,8 (67,117,143,155) | BIGROOF = COM/IND/GOV with footprint ≥ 20,000 sqft and ≤ 2 stories (retail, warehouses, factories, arenas); approved 2026-09-26 |
 | OTHER | 65,97,170,200 | [FR12](https://www.weather.gov/images/oun/efscale/FR12.jpg); 1,4,9,10 | Explicit fallback proxy, not inferred construction |
 
 Sources inspected 2026-09-26. Levels 1–4 are internal ordered severity steps;

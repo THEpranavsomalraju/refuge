@@ -171,3 +171,15 @@ crossings, and empty `streams`/`roads`. Expected and simulate modes both
 exited 0 with ordered output. With uncalibrated defaults the recorded scenario
 gives 0.0053 expected deaths and 271 people exposed; the 6 real deaths were in
 the Amazon DLI4 warehouse, which has no NSI record (ML excludes this storm).
+
+Also verified on real folders: `bt_2024_1181735` (Arkansas EF3, 3-point path,
+03:00, 1,528 buildings, `footprint`/`hand_m`/cell `ground_elev_m` all null,
+`crossings.json` `[]`) runs in both modes, giving 0.34 expected deaths with
+uncalibrated defaults against 4 recorded. Worst-case load: 50 scenarios, each on its own copy of
+Soham's Joplin box (25,277 buildings each, 1.26M total), took 1.61 s in
+expected mode and 3.16 s in simulate mode, wall time including startup
+(Node v22.6.0, Apple M4 Pro).
+
+The tornado engine does not read `footprint`, `hand_m`, `ground_elev_m`, or
+`firmzone`, so nulls there are fine. When flood logic lands, `firmzone ==
+"AREA NOT INCLUDED"` must be treated as no zone.
