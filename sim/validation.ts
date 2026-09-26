@@ -172,7 +172,10 @@ export function parseProtectionConfig(value: unknown): ProtectionConfig {
   const c = record(value, 'protections');
   keys(c, ['schema_version', 'default_budget_usd', 'shelter', 'optimizer'], 'protections');
   if (c.schema_version !== 2) fail('protections.schema_version', 'expected 2');
-  number(c.default_budget_usd, 'protections.default_budget_usd');
+  const budget = record(c.default_budget_usd, 'protections.default_budget_usd');
+  keys(budget, ['tornado', 'hurricane'], 'protections.default_budget_usd');
+  number(budget.tornado, 'protections.default_budget_usd.tornado');
+  number(budget.hurricane, 'protections.default_budget_usd.hurricane');
   const s = record(c.shelter, 'protections.shelter');
   keys(s, ['eligible_classes', 'hardened_share', 'tornado', 'hurricane'], 'protections.shelter');
   const classes = (v: unknown, at: string) => {

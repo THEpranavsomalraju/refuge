@@ -17,7 +17,7 @@ type Body<K> = K extends WorkerRequest ? Omit<K, 'id'> : never;
 /** Calibrated params (ML lead) and protection settings, for the UI's own display needs. */
 export const riskBands = { ...paramsJson.risk_bands, min_cell_people: paramsJson.min_cell_people };
 export const shelterRules = protectionsJson.shelter;
-export const defaultBudget = protectionsJson.default_budget_usd;
+export const defaultBudget = protectionsJson.default_budget_usd.tornado;
 
 const worker = new Worker(new URL('./sim.worker.ts', import.meta.url), { type: 'module' });
 let seq = 0;

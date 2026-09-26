@@ -51,7 +51,8 @@ export interface ShelterHurricaneConfig {
 /** sim/params/protections.json */
 export interface ProtectionConfig {
   schema_version: 2;
-  default_budget_usd: number;
+  /** Plan-screen default per hazard (the player can change it). */
+  default_budget_usd: { tornado: number; hurricane: number };
   shelter: {
     eligible_classes: BuildingClass[];
     hardened_share: number;
