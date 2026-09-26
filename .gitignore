@@ -1,0 +1,22 @@
+# data (never commit)
+data/
+ml/work/
+
+# secrets
+.env
+*.env
+
+# python
+__pycache__/
+.venv/
+
+# node / web
+node_modules/
+dist/
+
+# os
+.DS_Store
+
+# parquet only allowed in ml/exports
+*.parquet
+!ml/exports/*.parquet

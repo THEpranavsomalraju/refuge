@@ -1,0 +1,17 @@
+# ML
+/ml/                        @THEpranavsomalraju
+
+# Structures and 3D
+/places/                    @thepatkinator
+/web/src/scene/             @thepatkinator
+/web/src/landing/           @thepatkinator
+
+# Simulation
+/sim/                       @mahilmanoharan
+/web/src/game/              @mahilmanoharan
+
+# calibrated params (ML lead), must come after /sim/
+/sim/params/sim_params.json @THEpranavsomalraju
+
+# Story (no GitHub account yet)
+/story/                     @THEpranavsomalraju
