@@ -6,13 +6,19 @@
 
 Free knobs (log scale, inside the bounds agreed with Simulation):
   lethality_multiplier MH, RES, PUBLIC; modifiers night, basement.
+(Tried: a scale on lethality_by_damage levels 1-2. The train storms rejected it: it adds deaths to
+non-fatal storms far faster than it explains fatal ones, so it stayed at 1 and was removed.)
 Fixed: VEHICLE (no crossings in tornado places), over65, warning_per_min (every storm uses the
 same placeholder warning time, so it cannot be fit).
 
+Target: deaths_sim_target = recorded deaths minus deaths NOAA places outside buildings (vehicles,
+outdoors), since the tornado sim only models people in buildings.
+
 Objective on the train storms (each weighted by its sampling weight):
-  mean weighted Poisson deviance(recorded deaths, sim expected deaths)
+  mean weighted Poisson deviance(target, sim expected deaths + FLOOR)
   + LAMBDA_MIX * KL(location model mix || sim mix) over MH / RES / PUBLIC
-  + LAMBDA_PRIOR * sum(log(multiplier)^2)      keeps multipliers near 1 unless the data says otherwise
+  + LAMBDA_PRIOR * sum(log(knob / default)^2)  keeps every knob at Simulation's engineering default
+                                                 unless the storms clearly say otherwise
 """
 import hashlib
 import json
@@ -44,9 +50,12 @@ KNOBS = {
     "night": (("modifiers", "night"), 1, 4),
     "basement": (("modifiers", "basement"), 0.05, 1),
 }
-MULTIPLIERS = ["MH", "RES", "PUBLIC"]
 LAMBDA_MIX = 0.5
 LAMBDA_PRIOR = 0.01
+# Added to expected deaths inside the loss only: deaths the sim cannot see (paths that are straight lines
+# between NOAA points, buildings missing from NSI). Without it, a storm the sim misses entirely
+# (expected 0.0001 vs 1 recorded) dominates the fit and drags every knob to its bound.
+FLOOR = 0.1
 BUFFER_M = 1000  # corridor = path buffered by width/2 + this
 
 # sim building classes -> NOAA death location classes
@@ -157,6 +166,8 @@ def location_target(storms):
         if s["deaths"] == 0:
             continue
         c = feats.get(s["county_fips"][0]) or med
+        if s["deaths_sim_target"] == 0:
+            continue
         row = {"is_tornado": 1, "ef_rating": s["ef"], "ef_missing": 0,
                "log_length": np.log1p(s["length_km"] / 1.609344), "log_width": np.log1p(s["width_m"] / 0.9144),
                "hour_sin": np.sin(s["hour"] * 2 * np.pi / 24), "hour_cos": np.cos(s["hour"] * 2 * np.pi / 24),
@@ -167,14 +178,15 @@ def location_target(storms):
         p = lm["model"].predict_proba(np.array([[row[f] for f in lm["features"]]]))[0]
         probs = dict(zip([lm["classes"][i] for i in lm["model"][-1].classes_], p))
         q = np.array([probs.get(k, 0.0) for k in MIX_CLASSES])
-        total += s["weight"] * s["deaths"] * q / q.sum()
+        total += s["weight"] * s["deaths_sim_target"] * q / q.sum()
     return total / total.sum()
 
 
 class Objective:
-    def __init__(self, storms):
+    def __init__(self, storms, defaults):
         self.storms = storms
-        self.y = np.array([s["deaths"] for s in storms], float)
+        self.defaults = defaults
+        self.y = np.array([s["deaths_sim_target"] for s in storms], float)
         self.w = np.array([s["weight"] for s in storms], float)
         self.target = location_target(storms)
         self.cache, self.log = {}, []
@@ -182,14 +194,14 @@ class Objective:
     def parts(self, knobs):
         res = run_sim(params_with(knobs), self.storms)
         mu = np.array([res[s["place_id"]]["expected_deaths"] for s in self.storms], float)
-        dev = float(np.sum(self.w * poisson_dev(self.y, mu)) / self.w.sum())
+        dev = float(np.sum(self.w * poisson_dev(self.y, mu + FLOOR)) / self.w.sum())
         mix = np.zeros(len(MIX_CLASSES))
         for s in self.storms:
             m = noaa_mix(res[s["place_id"]]["by_class"])
             mix += s["weight"] * np.array([m[c] for c in MIX_CLASSES])
         sim_mix = (mix + 1e-9) / (mix + 1e-9).sum()
         kl = float(np.sum(self.target * np.log(self.target / sim_mix)))
-        prior = float(sum(np.log(knobs[k]) ** 2 for k in MULTIPLIERS))
+        prior = float(sum(np.log(knobs[k] / self.defaults[k]) ** 2 for k in KNOBS))
         return {"deviance": dev, "kl_mix": kl, "prior": prior,
                 "total": dev + LAMBDA_MIX * kl + LAMBDA_PRIOR * prior,
                 "sim_mix": dict(zip(MIX_CLASSES, sim_mix.round(4).tolist())), "mu": mu}
@@ -215,8 +227,8 @@ def default_knobs():
 
 def fit():
     storms = load_storms("train")
-    obj = Objective(storms)
     start = default_knobs()
+    obj = Objective(storms, start)
     print(f"train storms: {len(storms)}, recorded deaths {int(obj.y.sum())}, target mix "
           + ", ".join(f"{c} {v:.0%}" for c, v in zip(MIX_CLASSES, obj.target)))
     before = obj.parts(start)
@@ -226,7 +238,7 @@ def fit():
     bounds = [(np.log(lo), np.log(hi)) for _, lo, hi in KNOBS.values()]
     x0 = np.clip(np.log(list(start.values())), [b[0] for b in bounds], [b[1] for b in bounds])
     t0 = time.time()
-    r = optimize.minimize(obj, x0, method="Powell", bounds=bounds, options={"maxfev": 400, "xtol": 1e-3, "ftol": 1e-4})
+    r = optimize.minimize(obj, x0, method="Powell", bounds=bounds, options={"maxfev": 1500, "xtol": 1e-3, "ftol": 1e-5})
     knobs = {k: float(np.exp(v)) for k, v in zip(KNOBS, r.x)}
     after = obj.parts(knobs)
     print(f"fit done in {time.time() - t0:.0f}s, {len(obj.log)} sim calls, converged={r.success}")
@@ -239,10 +251,10 @@ def fit():
 
     WORK.mkdir(parents=True, exist_ok=True)
     CALIBRATED.write_text(json.dumps(params_with(knobs), indent=1))
-    write_json(WORK / "calibration_fit.json", {
+    write_json(EXPORTS / "calibration.json", {
         "knobs_default": start, "knobs_calibrated": knobs,
         "bounds": {k: [lo, hi] for k, (_, lo, hi) in KNOBS.items()},
-        "lambda_mix": LAMBDA_MIX, "lambda_prior": LAMBDA_PRIOR, "target_mix": dict(zip(MIX_CLASSES, obj.target.tolist())),
+        "lambda_mix": LAMBDA_MIX, "lambda_prior": LAMBDA_PRIOR, "floor": FLOOR, "target_mix": dict(zip(MIX_CLASSES, obj.target.tolist())),
         "train": {"storms": len(storms), "recorded_deaths": int(obj.y.sum()),
                   "default": {k: before[k] for k in ["deviance", "kl_mix", "total", "sim_mix"]},
                   "calibrated": {k: after[k] for k in ["deviance", "kl_mix", "total", "sim_mix"]}},
@@ -266,7 +278,8 @@ def summarize(y, mu, lo, hi, w):
 
 def backtest():
     storms = load_storms("test")
-    y = np.array([s["deaths"] for s in storms], float)
+    targets = {"building_deaths": np.array([s["deaths_sim_target"] for s in storms], float),
+               "all_recorded_deaths": np.array([s["deaths"] for s in storms], float)}
     w = np.array([s["weight"] for s in storms], float)
     methods = {}
 
@@ -284,19 +297,23 @@ def backtest():
         mu = sum(oof.get(e, 0.0) for e in s["noaa_event_ids"])
         methods["national_model"][s["place_id"]] = (mu, stats.poisson.ppf(0.05, mu), stats.poisson.ppf(0.95, mu))
 
-    out = {"note": ("Held-out historical tornadoes (never used in calibration). Recorded = NOAA direct deaths. "
-                    "p05-p95 from 500 sim runs; for the national model, a Poisson range around its prediction."),
+    out = {"note": ("Held-out historical tornadoes (never used in calibration). building_deaths = NOAA direct deaths "
+                    "minus those recorded in vehicles or outdoors (what the tornado sim models); all_recorded_deaths = "
+                    "every NOAA direct death. p05-p95 from 500 sim runs; for the national model, a Poisson range."),
            "storms": [], "summary": {}}
-    for name, m in methods.items():
-        mu = np.array([m[s["place_id"]][0] for s in storms])
-        lo = np.array([m[s["place_id"]][1] for s in storms])
-        hi = np.array([m[s["place_id"]][2] for s in storms])
-        out["summary"][name] = summarize(y, mu, lo, hi, w)
-        print(f"  {name:15s} " + "  ".join(f"{k} {v}" for k, v in out["summary"][name].items()))
+    for tname, y in targets.items():
+        out["summary"][tname] = {}
+        print(f"vs {tname}:")
+        for name, m in methods.items():
+            mu = np.array([m[s["place_id"]][0] for s in storms])
+            lo = np.array([m[s["place_id"]][1] for s in storms])
+            hi = np.array([m[s["place_id"]][2] for s in storms])
+            out["summary"][tname][name] = summarize(y, mu, lo, hi, w)
+            print(f"  {name:15s} " + "  ".join(f"{k} {v}" for k, v in out["summary"][tname][name].items()))
     for s in storms:
         out["storms"].append({
             "place_id": s["place_id"], "year": s["year"], "state": s["state"], "ef": s["ef"], "hour": s["hour"],
-            "recorded": s["deaths"],
+            "recorded": s["deaths"], "recorded_in_buildings": s["deaths_sim_target"],
             **{name: {"expected": round(float(m[s["place_id"]][0]), 3), "p05": float(m[s["place_id"]][1]),
                       "p95": float(m[s["place_id"]][2])} for name, m in methods.items()},
         })

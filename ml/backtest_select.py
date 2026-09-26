@@ -158,6 +158,13 @@ def main():
     chosen = sample(eligible, np.random.default_rng(SEED))
     chosen = chosen.with_columns(place_id=pl.format("bt_{}_{}", pl.col("year"), pl.col("tornado_id")))
 
+    # deaths NOAA places outside buildings (vehicle, outdoors, water, other known). The tornado sim only
+    # models people in buildings, so calibration compares against deaths_sim_target = deaths - these.
+    fat = pl.read_parquet(PROCESSED / "fatalities.parquet").filter(
+        (pl.col("fatality_type") == "D") & ~pl.col("location_unknown")
+        & pl.col("location_class").is_in(["VEHICLE", "OUTDOOR", "WATER", "OTHER"]))
+    outside = dict(fat.group_by("event_id").len().iter_rows())
+
     rows = []
     OUT_SCEN.mkdir(parents=True, exist_ok=True)
     for r in chosen.iter_rows(named=True):
@@ -176,6 +183,8 @@ def main():
             "state": r["state"], "states": r["states"], "county_fips": r["county_fips"], "noaa_event_ids": r["event_ids"],
             "ef": r["ef"], "width_m": round(r["width_m"], 1), "length_km": round(r["length_km"], 2),
             "deaths": r["deaths"], "injuries": r["injuries"], "damage_usd": r["damage_usd"],
+            "deaths_outside_buildings": sum(outside.get(e, 0) for e in r["event_ids"]),
+            "deaths_sim_target": max(r["deaths"] - sum(outside.get(e, 0) for e in r["event_ids"]), 0),
             "path": path,
         })
         scenario = {

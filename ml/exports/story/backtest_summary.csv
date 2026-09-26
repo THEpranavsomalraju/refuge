@@ -1,0 +1,4 @@
+method,recorded_deaths,predicted_deaths,total_error,mean_abs_error_per_storm,spearman,coverage_p05_p95,weighted_poisson_deviance
+Refuge simulator (calibrated),28,10.0,-18.0,0.772,0.491,0.667,0.9209
+Simulator before calibration,28,10.72,-17.28,0.758,0.496,0.667,0.9723
+National statistical model,28,20.6,-7.4,0.936,0.507,0.8,0.6256

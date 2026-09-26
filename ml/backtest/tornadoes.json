@@ -39,6 +39,8 @@
    "deaths": 4,
    "injuries": 1,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 4,
    "path": [
     [
      -93.0533,
@@ -81,6 +83,8 @@
    "deaths": 1,
    "injuries": 5,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -89.121,
@@ -121,6 +125,8 @@
    "deaths": 1,
    "injuries": 0,
    "damage_usd": 7000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -93.8531,
@@ -165,6 +171,8 @@
    "deaths": 4,
    "injuries": 15,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 3,
+   "deaths_sim_target": 1,
    "path": [
     [
      -100.85,
@@ -207,6 +215,8 @@
    "deaths": 2,
    "injuries": 0,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 2,
    "path": [
     [
      -90.1732,
@@ -249,6 +259,8 @@
    "deaths": 1,
    "injuries": 3,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 1,
+   "deaths_sim_target": 0,
    "path": [
     [
      -95.62,
@@ -295,6 +307,8 @@
    "deaths": 1,
    "injuries": 5,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -95.3362,
@@ -333,6 +347,8 @@
    "deaths": 3,
    "injuries": 8,
    "damage_usd": 18160000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 3,
    "path": [
     [
      -87.5708,
@@ -371,6 +387,8 @@
    "deaths": 1,
    "injuries": 1,
    "damage_usd": 75000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -94.7558,
@@ -411,6 +429,8 @@
    "deaths": 2,
    "injuries": 44,
    "damage_usd": 50175000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 2,
    "path": [
     [
      -84.8794,
@@ -453,6 +473,8 @@
    "deaths": 1,
    "injuries": 0,
    "damage_usd": 1000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -95.2718,
@@ -491,6 +513,8 @@
    "deaths": 1,
    "injuries": 2,
    "damage_usd": 600000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -96.3546,
@@ -533,6 +557,8 @@
    "deaths": 1,
    "injuries": 40,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -89.1478,
@@ -579,6 +605,8 @@
    "deaths": 1,
    "injuries": 1,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -86.2005,
@@ -619,6 +647,8 @@
    "deaths": 2,
    "injuries": 9,
    "damage_usd": 2750000.0,
+   "deaths_outside_buildings": 1,
+   "deaths_sim_target": 1,
    "path": [
     [
      -90.137,
@@ -661,6 +691,8 @@
    "deaths": 1,
    "injuries": 1,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -87.8012,
@@ -701,6 +733,8 @@
    "deaths": 1,
    "injuries": 2,
    "damage_usd": 1600000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -95.94,
@@ -743,6 +777,8 @@
    "deaths": 1,
    "injuries": 1,
    "damage_usd": 800000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -87.0049,
@@ -781,6 +817,8 @@
    "deaths": 6,
    "injuries": 1,
    "damage_usd": 5000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 6,
    "path": [
     [
      -90.058,
@@ -819,6 +857,8 @@
    "deaths": 1,
    "injuries": 8,
    "damage_usd": 15000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -84.6911,
@@ -861,6 +901,8 @@
    "deaths": 3,
    "injuries": 0,
    "damage_usd": 1325000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 3,
    "path": [
     [
      -93.5875,
@@ -911,6 +953,8 @@
    "deaths": 3,
    "injuries": 6,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 3,
    "path": [
     [
      -90.0403,
@@ -959,6 +1003,8 @@
    "deaths": 4,
    "injuries": 0,
    "damage_usd": 7000000.0,
+   "deaths_outside_buildings": 1,
+   "deaths_sim_target": 3,
    "path": [
     [
      -89.57,
@@ -1003,6 +1049,8 @@
    "deaths": 1,
    "injuries": 31,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -85.427,
@@ -1049,6 +1097,8 @@
    "deaths": 2,
    "injuries": 7,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 2,
    "path": [
     [
      -81.3944,
@@ -1095,6 +1145,8 @@
    "deaths": 1,
    "injuries": 7,
    "damage_usd": 1000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -91.9586,
@@ -1133,6 +1185,8 @@
    "deaths": 2,
    "injuries": 0,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 2,
    "path": [
     [
      -84.7264,
@@ -1171,6 +1225,8 @@
    "deaths": 1,
    "injuries": 1,
    "damage_usd": 1500000.0,
+   "deaths_outside_buildings": 1,
+   "deaths_sim_target": 0,
    "path": [
     [
      -93.3854,
@@ -1211,6 +1267,8 @@
    "deaths": 2,
    "injuries": 23,
    "damage_usd": 45000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 2,
    "path": [
     [
      -95.7651,
@@ -1255,6 +1313,8 @@
    "deaths": 2,
    "injuries": 0,
    "damage_usd": 1000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 2,
    "path": [
     [
      -87.8145,
@@ -1297,6 +1357,8 @@
    "deaths": 2,
    "injuries": 29,
    "damage_usd": 400000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 2,
    "path": [
     [
      -97.955,
@@ -1335,6 +1397,8 @@
    "deaths": 1,
    "injuries": 2,
    "damage_usd": 1000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -88.1189,
@@ -1373,6 +1437,8 @@
    "deaths": 1,
    "injuries": 1,
    "damage_usd": 120000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -91.7783,
@@ -1413,6 +1479,8 @@
    "deaths": 3,
    "injuries": 0,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 3,
    "path": [
     [
      -97.6031,
@@ -1459,6 +1527,8 @@
    "deaths": 3,
    "injuries": 22,
    "damage_usd": 20200000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 3,
    "path": [
     [
      -86.7852,
@@ -1505,6 +1575,8 @@
    "deaths": 1,
    "injuries": 0,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -75.6398,
@@ -1543,6 +1615,8 @@
    "deaths": 5,
    "injuries": 60,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 5,
    "path": [
     [
      -81.2899,
@@ -1583,6 +1657,8 @@
    "deaths": 1,
    "injuries": 6,
    "damage_usd": 151000000.0,
+   "deaths_outside_buildings": 1,
+   "deaths_sim_target": 0,
    "path": [
     [
      -97.144,
@@ -1631,6 +1707,8 @@
    "deaths": 7,
    "injuries": 80,
    "damage_usd": 19180000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 7,
    "path": [
     [
      -97.745,
@@ -1681,6 +1759,8 @@
    "deaths": 1,
    "injuries": 2,
    "damage_usd": 5000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 1,
    "path": [
     [
      -75.238,
@@ -1721,6 +1801,8 @@
    "deaths": 0,
    "injuries": 1,
    "damage_usd": 385000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -89.5416,
@@ -1763,6 +1845,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 600000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -94.4566,
@@ -1801,6 +1885,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 4000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -76.498,
@@ -1839,6 +1925,8 @@
    "deaths": 0,
    "injuries": 1,
    "damage_usd": 20000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -79.0482,
@@ -1877,6 +1965,8 @@
    "deaths": 0,
    "injuries": 3,
    "damage_usd": 100000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -92.6223,
@@ -1915,6 +2005,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 600000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -86.1542,
@@ -1953,6 +2045,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 500000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -88.3215,
@@ -1995,6 +2089,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 1025000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -94.4989,
@@ -2041,6 +2137,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 500000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -88.948,
@@ -2079,6 +2177,8 @@
    "deaths": 0,
    "injuries": 1,
    "damage_usd": 150000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -84.6295,
@@ -2117,6 +2217,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 500000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -88.9586,
@@ -2155,6 +2257,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 725000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -90.356,
@@ -2197,6 +2301,8 @@
    "deaths": 0,
    "injuries": 1,
    "damage_usd": 650000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -84.8654,
@@ -2243,6 +2349,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 525000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -81.0045,
@@ -2281,6 +2389,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 250000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -92.0419,
@@ -2319,6 +2429,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 2000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -80.2386,
@@ -2359,6 +2471,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 350000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -95.107,
@@ -2403,6 +2517,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 700000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -91.7697,
@@ -2445,6 +2561,8 @@
    "deaths": 0,
    "injuries": 2,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -97.6563,
@@ -2483,6 +2601,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 500000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -98.2172,
@@ -2521,6 +2641,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 250000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -90.0034,
@@ -2561,6 +2683,8 @@
    "deaths": 0,
    "injuries": 1,
    "damage_usd": 0.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -90.4095,
@@ -2603,6 +2727,8 @@
    "deaths": 0,
    "injuries": 1,
    "damage_usd": 75000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -89.6716,
@@ -2643,6 +2769,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 700000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -77.8058,
@@ -2685,6 +2813,8 @@
    "deaths": 0,
    "injuries": 2,
    "damage_usd": 1200000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -97.7613,
@@ -2723,6 +2853,8 @@
    "deaths": 0,
    "injuries": 5,
    "damage_usd": 2200000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -79.643,
@@ -2761,6 +2893,8 @@
    "deaths": 0,
    "injuries": 2,
    "damage_usd": 500000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -88.7321,
@@ -2799,6 +2933,8 @@
    "deaths": 0,
    "injuries": 3,
    "damage_usd": 20000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -81.0381,
@@ -2839,6 +2975,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 3500000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -87.5483,
@@ -2881,6 +3019,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 500000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -93.2498,
@@ -2919,6 +3059,8 @@
    "deaths": 0,
    "injuries": 3,
    "damage_usd": 1000000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -90.84,
@@ -2957,6 +3099,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 927000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -87.0065,
@@ -2995,6 +3139,8 @@
    "deaths": 0,
    "injuries": 6,
    "damage_usd": 850000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -79.4664,
@@ -3033,6 +3179,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 250000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -80.0897,
@@ -3071,6 +3219,8 @@
    "deaths": 0,
    "injuries": 1,
    "damage_usd": 100000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -81.004,
@@ -3111,6 +3261,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 501000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -83.1308,
@@ -3155,6 +3307,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 1485000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -88.8749,
@@ -3199,6 +3353,8 @@
    "deaths": 0,
    "injuries": 3,
    "damage_usd": 505000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -93.3634,
@@ -3243,6 +3399,8 @@
    "deaths": 0,
    "injuries": 0,
    "damage_usd": 905000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -90.6488,
@@ -3285,6 +3443,8 @@
    "deaths": 0,
    "injuries": 1,
    "damage_usd": 125000.0,
+   "deaths_outside_buildings": 0,
+   "deaths_sim_target": 0,
    "path": [
     [
      -92.1157,

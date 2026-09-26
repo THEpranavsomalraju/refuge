@@ -1,0 +1,15 @@
+driver,importance
+EF rating,0.4043
+Storm duration (hours),0.265
+Social Vulnerability Index,0.1312
+Path width (yd),0.1311
+Path length (mi),0.1301
+Population density (log),0.1166
+Storm system size (reports),0.083
+Hour of day,0.0778
+Share age 65+,0.0645
+No-vehicle households,0.0591
+Mobile home share,0.0563
+Month,0.0485
+Tropical system rain,0.0078
+Tornado (vs flash flood),0.0009

@@ -1,0 +1,785 @@
+{
+ "note": "Held-out historical tornadoes (never used in calibration). building_deaths = NOAA direct deaths minus those recorded in vehicles or outdoors (what the tornado sim models); all_recorded_deaths = every NOAA direct death. p05-p95 from 500 sim runs; for the national model, a Poisson range.",
+ "storms": [
+  {
+   "place_id": "bt_2018_743585",
+   "year": 2018,
+   "state": "LOUISIANA",
+   "ef": 1,
+   "hour": 0,
+   "recorded": 1,
+   "recorded_in_buildings": 1,
+   "calibrated": {
+    "expected": 0.114,
+    "p05": 0.0,
+    "p95": 1.0
+   },
+   "default_params": {
+    "expected": 0.084,
+    "p05": 0.0,
+    "p95": 1.0
+   },
+   "national_model": {
+    "expected": 0.062,
+    "p05": 0.0,
+    "p95": 1.0
+   }
+  },
+  {
+   "place_id": "bt_2023_1098430",
+   "year": 2023,
+   "state": "TEXAS",
+   "ef": 3,
+   "hour": 19,
+   "recorded": 4,
+   "recorded_in_buildings": 1,
+   "calibrated": {
+    "expected": 0.006,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.004,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.091,
+    "p05": 0.0,
+    "p95": 1.0
+   }
+  },
+  {
+   "place_id": "bt_2023_1089561",
+   "year": 2023,
+   "state": "INDIANA",
+   "ef": 3,
+   "hour": 22,
+   "recorded": 3,
+   "recorded_in_buildings": 3,
+   "calibrated": {
+    "expected": 0.005,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.004,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.827,
+    "p05": 0.0,
+    "p95": 3.0
+   }
+  },
+  {
+   "place_id": "bt_2020_866540",
+   "year": 2020,
+   "state": "TEXAS",
+   "ef": 1,
+   "hour": 23,
+   "recorded": 1,
+   "recorded_in_buildings": 1,
+   "calibrated": {
+    "expected": 0.0,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.0,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.016,
+    "p05": 0.0,
+    "p95": 0.0
+   }
+  },
+  {
+   "place_id": "bt_2022_1031439",
+   "year": 2022,
+   "state": "MICHIGAN",
+   "ef": 3,
+   "hour": 15,
+   "recorded": 2,
+   "recorded_in_buildings": 2,
+   "calibrated": {
+    "expected": 0.09,
+    "p05": 0.0,
+    "p95": 1.0
+   },
+   "default_params": {
+    "expected": 0.091,
+    "p05": 0.0,
+    "p95": 1.0
+   },
+   "national_model": {
+    "expected": 0.233,
+    "p05": 0.0,
+    "p95": 1.0
+   }
+  },
+  {
+   "place_id": "bt_2023_1085827",
+   "year": 2023,
+   "state": "ILLINOIS",
+   "ef": 1,
+   "hour": 19,
+   "recorded": 1,
+   "recorded_in_buildings": 1,
+   "calibrated": {
+    "expected": 0.004,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.003,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.042,
+    "p05": 0.0,
+    "p95": 0.0
+   }
+  },
+  {
+   "place_id": "bt_2021_997129",
+   "year": 2021,
+   "state": "MISSOURI",
+   "ef": 4,
+   "hour": 19,
+   "recorded": 2,
+   "recorded_in_buildings": 1,
+   "calibrated": {
+    "expected": 0.068,
+    "p05": 0.0,
+    "p95": 1.0
+   },
+   "default_params": {
+    "expected": 0.059,
+    "p05": 0.0,
+    "p95": 1.0
+   },
+   "national_model": {
+    "expected": 3.832,
+    "p05": 1.0,
+    "p95": 7.0
+   }
+  },
+  {
+   "place_id": "bt_2018_735022",
+   "year": 2018,
+   "state": "KENTUCKY",
+   "ef": 2,
+   "hour": 15,
+   "recorded": 1,
+   "recorded_in_buildings": 1,
+   "calibrated": {
+    "expected": 0.004,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.004,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.088,
+    "p05": 0.0,
+    "p95": 1.0
+   }
+  },
+  {
+   "place_id": "bt_2025_1259922",
+   "year": 2025,
+   "state": "MISSISSIPPI",
+   "ef": 4,
+   "hour": 13,
+   "recorded": 3,
+   "recorded_in_buildings": 3,
+   "calibrated": {
+    "expected": 0.467,
+    "p05": 0.0,
+    "p95": 2.0
+   },
+   "default_params": {
+    "expected": 0.433,
+    "p05": 0.0,
+    "p95": 2.0
+   },
+   "national_model": {
+    "expected": 3.589,
+    "p05": 1.0,
+    "p95": 7.0
+   }
+  },
+  {
+   "place_id": "bt_2021_997247",
+   "year": 2021,
+   "state": "KENTUCKY",
+   "ef": 3,
+   "hour": 3,
+   "recorded": 1,
+   "recorded_in_buildings": 1,
+   "calibrated": {
+    "expected": 0.008,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.006,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.663,
+    "p05": 0.0,
+    "p95": 2.0
+   }
+  },
+  {
+   "place_id": "bt_2022_1007112",
+   "year": 2022,
+   "state": "IOWA",
+   "ef": 3,
+   "hour": 17,
+   "recorded": 1,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 0.001,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.0,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.204,
+    "p05": 0.0,
+    "p95": 1.0
+   }
+  },
+  {
+   "place_id": "bt_2025_1278899",
+   "year": 2025,
+   "state": "NORTH DAKOTA",
+   "ef": 5,
+   "hour": 23,
+   "recorded": 3,
+   "recorded_in_buildings": 3,
+   "calibrated": {
+    "expected": 0.334,
+    "p05": 0.0,
+    "p95": 1.0
+   },
+   "default_params": {
+    "expected": 0.244,
+    "p05": 0.0,
+    "p95": 1.0
+   },
+   "national_model": {
+    "expected": 4.299,
+    "p05": 1.0,
+    "p95": 8.0
+   }
+  },
+  {
+   "place_id": "bt_2023_1144554",
+   "year": 2023,
+   "state": "TENNESSEE",
+   "ef": 2,
+   "hour": 16,
+   "recorded": 3,
+   "recorded_in_buildings": 3,
+   "calibrated": {
+    "expected": 0.077,
+    "p05": 0.0,
+    "p95": 1.0
+   },
+   "default_params": {
+    "expected": 0.062,
+    "p05": 0.0,
+    "p95": 1.0
+   },
+   "national_model": {
+    "expected": 0.29,
+    "p05": 0.0,
+    "p95": 1.0
+   }
+  },
+  {
+   "place_id": "bt_2024_1175811",
+   "year": 2024,
+   "state": "OKLAHOMA",
+   "ef": 4,
+   "hour": 23,
+   "recorded": 1,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 2.305,
+    "p05": 0.0,
+    "p95": 5.0
+   },
+   "default_params": {
+    "expected": 2.24,
+    "p05": 0.0,
+    "p95": 5.0
+   },
+   "national_model": {
+    "expected": 3.857,
+    "p05": 1.0,
+    "p95": 7.0
+   }
+  },
+  {
+   "place_id": "bt_2024_1182278",
+   "year": 2024,
+   "state": "TEXAS",
+   "ef": 3,
+   "hour": 21,
+   "recorded": 7,
+   "recorded_in_buildings": 7,
+   "calibrated": {
+    "expected": 6.245,
+    "p05": 3.0,
+    "p95": 10.0
+   },
+   "default_params": {
+    "expected": 7.264,
+    "p05": 3.0,
+    "p95": 11.0
+   },
+   "national_model": {
+    "expected": 0.946,
+    "p05": 0.0,
+    "p95": 3.0
+   }
+  },
+  {
+   "place_id": "bt_2020_913544",
+   "year": 2020,
+   "state": "VIRGINIA",
+   "ef": 1,
+   "hour": 2,
+   "recorded": 0,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 0.004,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.003,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.012,
+    "p05": 0.0,
+    "p95": 0.0
+   }
+  },
+  {
+   "place_id": "bt_2021_979869",
+   "year": 2021,
+   "state": "PENNSYLVANIA",
+   "ef": 1,
+   "hour": 8,
+   "recorded": 0,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 0.0,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.0,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.005,
+    "p05": 0.0,
+    "p95": 0.0
+   }
+  },
+  {
+   "place_id": "bt_2025_1248890",
+   "year": 2025,
+   "state": "INDIANA",
+   "ef": 1,
+   "hour": 21,
+   "recorded": 0,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 0.005,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.004,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.009,
+    "p05": 0.0,
+    "p95": 0.0
+   }
+  },
+  {
+   "place_id": "bt_2022_1013976",
+   "year": 2022,
+   "state": "TENNESSEE",
+   "ef": 1,
+   "hour": 18,
+   "recorded": 0,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 0.01,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.006,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.014,
+    "p05": 0.0,
+    "p95": 0.0
+   }
+  },
+  {
+   "place_id": "bt_2017_673031",
+   "year": 2017,
+   "state": "GEORGIA",
+   "ef": 2,
+   "hour": 14,
+   "recorded": 0,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 0.001,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.001,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.165,
+    "p05": 0.0,
+    "p95": 1.0
+   }
+  },
+  {
+   "place_id": "bt_2023_1148139",
+   "year": 2023,
+   "state": "LOUISIANA",
+   "ef": 1,
+   "hour": 19,
+   "recorded": 0,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 0.0,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.0,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.016,
+    "p05": 0.0,
+    "p95": 0.0
+   }
+  },
+  {
+   "place_id": "bt_2021_993605",
+   "year": 2021,
+   "state": "IOWA",
+   "ef": 2,
+   "hour": 16,
+   "recorded": 0,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 0.0,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.0,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.072,
+    "p05": 0.0,
+    "p95": 1.0
+   }
+  },
+  {
+   "place_id": "bt_2023_1089134",
+   "year": 2023,
+   "state": "TENNESSEE",
+   "ef": 2,
+   "hour": 17,
+   "recorded": 0,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 0.039,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.035,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.152,
+    "p05": 0.0,
+    "p95": 1.0
+   }
+  },
+  {
+   "place_id": "bt_2021_988873",
+   "year": 2021,
+   "state": "MISSOURI",
+   "ef": 3,
+   "hour": 20,
+   "recorded": 0,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 0.004,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.003,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.41,
+    "p05": 0.0,
+    "p95": 2.0
+   }
+  },
+  {
+   "place_id": "bt_2024_1182948",
+   "year": 2024,
+   "state": "ILLINOIS",
+   "ef": 1,
+   "hour": 12,
+   "recorded": 0,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 0.0,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.0,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.005,
+    "p05": 0.0,
+    "p95": 0.0
+   }
+  },
+  {
+   "place_id": "bt_2019_820413",
+   "year": 2019,
+   "state": "NORTH CAROLINA",
+   "ef": 1,
+   "hour": 18,
+   "recorded": 0,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 0.001,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.001,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.03,
+    "p05": 0.0,
+    "p95": 0.0
+   }
+  },
+  {
+   "place_id": "bt_2018_745825",
+   "year": 2018,
+   "state": "MISSISSIPPI",
+   "ef": 2,
+   "hour": 10,
+   "recorded": 0,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 0.163,
+    "p05": 0.0,
+    "p95": 1.0
+   },
+   "default_params": {
+    "expected": 0.129,
+    "p05": 0.0,
+    "p95": 1.0
+   },
+   "national_model": {
+    "expected": 0.127,
+    "p05": 0.0,
+    "p95": 1.0
+   }
+  },
+  {
+   "place_id": "bt_2025_1242130",
+   "year": 2025,
+   "state": "INDIANA",
+   "ef": 2,
+   "hour": 2,
+   "recorded": 0,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 0.018,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.015,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.292,
+    "p05": 0.0,
+    "p95": 1.0
+   }
+  },
+  {
+   "place_id": "bt_2023_1077195",
+   "year": 2023,
+   "state": "LOUISIANA",
+   "ef": 2,
+   "hour": 17,
+   "recorded": 0,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 0.022,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.021,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.222,
+    "p05": 0.0,
+    "p95": 1.0
+   }
+  },
+  {
+   "place_id": "bt_2025_1242834",
+   "year": 2025,
+   "state": "MISSOURI",
+   "ef": 2,
+   "hour": 13,
+   "recorded": 0,
+   "recorded_in_buildings": 0,
+   "calibrated": {
+    "expected": 0.0,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "default_params": {
+    "expected": 0.0,
+    "p05": 0.0,
+    "p95": 0.0
+   },
+   "national_model": {
+    "expected": 0.03,
+    "p05": 0.0,
+    "p95": 0.0
+   }
+  }
+ ],
+ "summary": {
+  "building_deaths": {
+   "calibrated": {
+    "recorded_deaths": 28,
+    "predicted_deaths": 10.0,
+    "total_error": -18.0,
+    "mean_abs_error_per_storm": 0.772,
+    "spearman": 0.491,
+    "coverage_p05_p95": 0.667,
+    "weighted_poisson_deviance": 0.9209
+   },
+   "default_params": {
+    "recorded_deaths": 28,
+    "predicted_deaths": 10.72,
+    "total_error": -17.28,
+    "mean_abs_error_per_storm": 0.758,
+    "spearman": 0.496,
+    "coverage_p05_p95": 0.667,
+    "weighted_poisson_deviance": 0.9723
+   },
+   "national_model": {
+    "recorded_deaths": 28,
+    "predicted_deaths": 20.6,
+    "total_error": -7.4,
+    "mean_abs_error_per_storm": 0.936,
+    "spearman": 0.507,
+    "coverage_p05_p95": 0.8,
+    "weighted_poisson_deviance": 0.6256
+   }
+  },
+  "all_recorded_deaths": {
+   "calibrated": {
+    "recorded_deaths": 34,
+    "predicted_deaths": 10.0,
+    "total_error": -24.0,
+    "mean_abs_error_per_storm": 0.905,
+    "spearman": 0.523,
+    "coverage_p05_p95": 0.6,
+    "weighted_poisson_deviance": 1.2686
+   },
+   "default_params": {
+    "recorded_deaths": 34,
+    "predicted_deaths": 10.72,
+    "total_error": -23.28,
+    "mean_abs_error_per_storm": 0.891,
+    "spearman": 0.517,
+    "coverage_p05_p95": 0.6,
+    "weighted_poisson_deviance": 1.341
+   },
+   "national_model": {
+    "recorded_deaths": 34,
+    "predicted_deaths": 20.6,
+    "total_error": -13.4,
+    "mean_abs_error_per_storm": 0.989,
+    "spearman": 0.599,
+    "coverage_p05_p95": 0.8,
+    "weighted_poisson_deviance": 0.7201
+   }
+  }
+ }
+}
