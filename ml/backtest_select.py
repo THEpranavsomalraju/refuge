@@ -163,6 +163,12 @@ def main():
     for r in chosen.iter_rows(named=True):
         pts = [(r["start_lon"], r["start_lat"])] + list(zip(r["end_lons"], r["end_lats"]))
         path = [[round(lon, 5), round(lat, 5)] for lon, lat in pts]
+        # rule: NOAA coordinates must describe the path. Drawn length under half the recorded length
+        # (e.g. begin == end) means the sim would put the storm in the wrong place.
+        drawn_km = sum(haversine_km(a[1], a[0], b[1], b[0]) for a, b in zip(path, path[1:]))
+        if r["place_id"] not in EXCLUDE and drawn_km < 0.5 * r["length_km"]:
+            EXCLUDE[r["place_id"]] = (f"NOAA begin/end points give a {drawn_km:.1f} km path vs "
+                                      f"{r['length_km']:.1f} km recorded, so the path location is unknown.")
         rows.append({
             "place_id": r["place_id"], "split": r["split"], "stratum": r["stratum"], "weight": round(r["weight"], 4),
             "excluded": r["place_id"] in EXCLUDE, "exclude_reason": EXCLUDE.get(r["place_id"]),
