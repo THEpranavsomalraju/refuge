@@ -34,6 +34,11 @@ LINK_MINUTES = (-2, 10)
 # Placeholder until per-storm lead times from the IEM warning archive are wired in; stated in METHODS.md.
 WARNING_MIN_DEFAULT = 10
 
+# Storms kept in the list but left out of calibration/backtest scoring, with the reason (stated in METHODS.md).
+EXCLUDE = {
+    "bt_2021_996712": "All 6 deaths were in the Amazon DLI4 warehouse, which has no NSI record (Structures checked OSM).",
+}
+
 OUT_LIST = ROOT / "ml" / "backtest" / "tornadoes.json"
 OUT_SCEN = ROOT / "data" / "backtest" / "scenarios"
 
@@ -160,6 +165,7 @@ def main():
         path = [[round(lon, 5), round(lat, 5)] for lon, lat in pts]
         rows.append({
             "place_id": r["place_id"], "split": r["split"], "stratum": r["stratum"], "weight": round(r["weight"], 4),
+            "excluded": r["place_id"] in EXCLUDE, "exclude_reason": EXCLUDE.get(r["place_id"]),
             "year": r["year"], "begin_time_local": str(r["begin_time_local"]), "hour": r["hour"], "month": r["month"],
             "state": r["state"], "states": r["states"], "county_fips": r["county_fips"], "noaa_event_ids": r["event_ids"],
             "ef": r["ef"], "width_m": round(r["width_m"], 1), "length_km": round(r["length_km"], 2),
