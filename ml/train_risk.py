@@ -209,8 +209,15 @@ def county_risk(df, rounds):
     ).filter(pl.col("state_fips").is_in(df["state_fips"].unique().to_list()))
     n_years = df["year"].max() - df["year"].min() + 1
 
+    # severity descriptors of the reference storms: national medians for that event type
+    med = {t: df.filter(pl.col("is_tornado") == t).select(
+        pl.col("duration_h").median(), pl.col("episode_events").median()).row(0, named=True) for t in (0, 1)}
+
     def reference(frame, tornado, hour):
         return frame.with_columns(
+            duration_h=pl.lit(med[tornado]["duration_h"], pl.Float64),
+            episode_events=pl.lit(med[tornado]["episode_events"], pl.Float64),
+            cause_tropical=pl.lit(None if tornado else 0, pl.Float64),
             is_tornado=pl.lit(tornado), ef_rating=pl.lit(2 if tornado else None, pl.Float64),
             tor_length_mi=pl.lit(5.0 if tornado else None, pl.Float64),
             tor_width_yd=pl.lit(200.0 if tornado else None, pl.Float64),
@@ -249,7 +256,8 @@ def county_risk(df, rounds):
     write_json(EXPORTS / "county_risk.json", {
         "note": ("expected_deaths_per_decade: model-predicted direct deaths from the county's own 1996-2025 tornado "
                  "and flash flood events, per 10 years. ref_*: predicted deaths for the same reference storm in every "
-                 "county (EF2 tornado, 5 mi x 200 yd, April; flash flood in July), so counties compare on vulnerability. "
+                 "county (EF2 tornado, 5 mi x 200 yd, April; non-tropical flash flood in July; median duration and storm "
+                 "system size), so counties compare on vulnerability. "
                  "All values are out-of-fold: predicted by a model that never saw the county's state."),
         "fields": fields,
         "counties": rows,

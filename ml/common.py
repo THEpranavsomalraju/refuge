@@ -30,6 +30,10 @@ RISK_FEATURES = [
     "noveh_share",
     "log_pop_density",
     "svi",
+    # storm severity descriptors, mostly for flash floods (which have no EF / path size)
+    "duration_h",
+    "episode_events",
+    "cause_tropical",
 ]
 
 FEATURE_LABELS = {
@@ -44,6 +48,9 @@ FEATURE_LABELS = {
     "noveh_share": "No-vehicle households",
     "log_pop_density": "Population density (log)",
     "svi": "Social Vulnerability Index",
+    "duration_h": "Storm duration (hours)",
+    "episode_events": "Storm system size (reports)",
+    "cause_tropical": "Tropical system rain",
 }
 
 
@@ -51,8 +58,10 @@ def load_model_frame():
     """Tornado + flash flood events in the 50 states + DC, joined to county features."""
     ev = pl.read_parquet(PROCESSED / "events.parquet")
     cf = pl.read_parquet(PROCESSED / "county_features.parquet")
+    # size of the whole storm system: every NOAA report (any type) in the same episode
+    episode = ev.group_by("episode_id").agg(episode_events=pl.len())
     df = (
-        ev.filter(pl.col("event_type").is_in(FOCUS_TYPES) & pl.col("state_fips").is_in(STATE_FIPS_US))
+        ev.join(episode, on="episode_id", how="left").filter(pl.col("event_type").is_in(FOCUS_TYPES) & pl.col("state_fips").is_in(STATE_FIPS_US))
         .join(cf.select("county_fips", "mh_share", "age65_share", "noveh_share", "pop_density", "svi"),
               on="county_fips", how="left")
         .with_columns(
@@ -61,6 +70,10 @@ def load_model_frame():
             # widths/lengths only exist for tornadoes; a 0 width is "not recorded"
             tor_width_yd=pl.when(pl.col("tor_width_yd") > 0).then(pl.col("tor_width_yd")),
             tor_length_mi=pl.when(pl.col("tor_length_mi") > 0).then(pl.col("tor_length_mi")),
+            duration_h=((pl.col("end_time") - pl.col("begin_time")).dt.total_minutes() / 60).clip(0, 72),
+            # flood_cause is only recorded from 2006 on; earlier years stay null rather than 0
+            cause_tropical=pl.when(pl.col("flood_cause").is_not_null())
+            .then((pl.col("flood_cause") == "Heavy Rain / Tropical System").cast(pl.Int8)),
         )
     )
     return df

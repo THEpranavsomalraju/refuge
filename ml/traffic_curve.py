@@ -7,9 +7,15 @@ car, SUV, van or pickup, weighted by the NHTS trip weights). Built from NHTS 201
 (~920k trips) because NHTS 2022 (~31k trips) is too thin at night, especially rural.
 2022 is used as a check.
 
+Daily vehicles per road come from FHWA Highway Statistics 2023: VM-2 (annual vehicle miles)
+divided by HM-20 (road miles) and 365, by rural/urban and functional class, mapped to OSM tags.
+
 Structures turns this into crossings.json cars_per_hour:
-  cars_per_hour[h] = daily vehicles on the road * share[h]
+  cars_per_hour[h] = daily_volume[osm_tag] * share[h]
 """
+import html
+import re
+
 import numpy as np
 import polars as pl
 
@@ -21,6 +27,43 @@ SOURCES = {
     2017: ("trippub.csv", ["03", "04", "05", "06"]),
     2022: ("tripv2pub.csv", ["01", "02", "03", "04"]),
 }
+
+
+FHWA = ROOT / "data" / "raw" / "fhwa"
+FC = ["Interstate", "Other freeways and expressways", "Other principal arterial", "Minor arterial",
+      "Major collector", "Minor collector", "Local"]
+# OSM highway tag -> FHWA functional class, following the OSM US tagging guidelines. Approximate.
+OSM_TO_FC = {
+    "motorway": "Interstate",
+    "trunk": "Other freeways and expressways",
+    "primary": "Other principal arterial",
+    "secondary": "Minor arterial",
+    "tertiary": "Major collector",
+    "unclassified": "Minor collector",
+    "residential": "Local",
+    "service": "Local",
+}
+
+
+def fhwa_us_total(table):
+    """U.S. Total row: 7 rural classes, rural total, 7 urban classes, urban total, grand total."""
+    s = (FHWA / f"{table}_2023.html").read_text(encoding="utf-8", errors="ignore")
+    for row in re.findall(r"<tr[^>]*>(.*?)</tr>", s, flags=re.S | re.I):
+        cells = [html.unescape(re.sub(r"<[^>]+>", "", c)).strip()
+                 for c in re.findall(r"<t[hd][^>]*>(.*?)</t[hd]>", row, flags=re.S | re.I)]
+        if cells and cells[0] == "U.S. Total":
+            vals = [float(c.replace(",", "")) for c in cells[1:]]
+            assert len(vals) == 17, f"{table}: expected 17 values, got {len(vals)}"
+            return {"rural": vals[0:7], "urban": vals[8:15]}
+    raise ValueError(f"no U.S. Total row in {table}")
+
+
+def daily_volumes():
+    vmt, miles = fhwa_us_total("vm2"), fhwa_us_total("hm20")  # millions of vehicle miles / year, miles
+    by_fc = {area: {fc: round(v * 1e6 / 365 / m) for fc, v, m in zip(FC, vmt[area], miles[area])}
+             for area in ("rural", "urban")}
+    by_osm = {area: {tag: by_fc[area][fc] for tag, fc in OSM_TO_FC.items()} for area in ("rural", "urban")}
+    return by_fc, by_osm
 
 
 def load(year):
@@ -59,12 +102,22 @@ def main():
             check[key] = {"corr_2017_vs_2022": round(float(np.corrcoef(s17, s22)[0, 1]), 3), "trips_2022": n22}
             print(f"  {key:15s} trips {n17:>7,}  min/hour {min17:>5}  corr with 2022 {check[key]['corr_2017_vs_2022']}")
 
+    by_fc, by_osm = daily_volumes()
+    for area in ("rural", "urban"):
+        print(f"  daily vehicles {area}: " + ", ".join(f"{k} {v:,}" for k, v in by_osm[area].items()))
+
     write_json(EXPORTS / "traffic_by_hour.json", {
         "source": "FHWA National Household Travel Survey 2017, driver trips in car/SUV/van/pickup, weighted",
         "hours": "local clock hour of trip start, 0-23",
-        "use": "cars_per_hour[h] = daily vehicles on the road * share[h]. Use weekday_rural for small towns.",
+        "use": ("cars_per_hour[h] = daily_volume_by_osm_tag[area][highway] * curves[day_area].share[h]. "
+                "Small towns: area 'rural', curve 'weekday_rural'. Chapel Hill: 'urban'."),
         "curves": curves,
         "check_vs_nhts_2022": check,
+        "daily_volume_source": ("FHWA Highway Statistics 2023, VM-2 vehicle miles / HM-20 public road miles / 365, "
+                                "U.S. totals. Average vehicles per day on a road of that class."),
+        "daily_volume_by_osm_tag": by_osm,
+        "osm_tag_to_fhwa_class": OSM_TO_FC,
+        "daily_volume_by_fhwa_class": by_fc,
     })
 
 

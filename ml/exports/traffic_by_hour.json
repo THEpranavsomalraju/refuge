@@ -1,7 +1,7 @@
 {
  "source": "FHWA National Household Travel Survey 2017, driver trips in car/SUV/van/pickup, weighted",
  "hours": "local clock hour of trip start, 0-23",
- "use": "cars_per_hour[h] = daily vehicles on the road * share[h]. Use weekday_rural for small towns.",
+ "use": "cars_per_hour[h] = daily_volume_by_osm_tag[area][highway] * curves[day_area].share[h]. Small towns: area 'rural', curve 'weekday_rural'. Chapel Hill: 'urban'.",
  "curves": {
   "weekday_rural": {
    "share": [
@@ -310,6 +310,59 @@
   "all_all": {
    "corr_2017_vs_2022": 0.995,
    "trips_2022": 20424
+  }
+ },
+ "daily_volume_source": "FHWA Highway Statistics 2023, VM-2 vehicle miles / HM-20 public road miles / 365, U.S. totals. Average vehicles per day on a road of that class.",
+ "daily_volume_by_osm_tag": {
+  "rural": {
+   "motorway": 25292,
+   "trunk": 16807,
+   "primary": 6154,
+   "secondary": 3043,
+   "tertiary": 1121,
+   "unclassified": 487,
+   "residential": 179,
+   "service": 179
+  },
+  "urban": {
+   "motorway": 81429,
+   "trunk": 58084,
+   "primary": 19531,
+   "secondary": 9833,
+   "tertiary": 4396,
+   "unclassified": 2590,
+   "residential": 928,
+   "service": 928
+  }
+ },
+ "osm_tag_to_fhwa_class": {
+  "motorway": "Interstate",
+  "trunk": "Other freeways and expressways",
+  "primary": "Other principal arterial",
+  "secondary": "Minor arterial",
+  "tertiary": "Major collector",
+  "unclassified": "Minor collector",
+  "residential": "Local",
+  "service": "Local"
+ },
+ "daily_volume_by_fhwa_class": {
+  "rural": {
+   "Interstate": 25292,
+   "Other freeways and expressways": 16807,
+   "Other principal arterial": 6154,
+   "Minor arterial": 3043,
+   "Major collector": 1121,
+   "Minor collector": 487,
+   "Local": 179
+  },
+  "urban": {
+   "Interstate": 81429,
+   "Other freeways and expressways": 58084,
+   "Other principal arterial": 19531,
+   "Minor arterial": 9833,
+   "Major collector": 4396,
+   "Minor collector": 2590,
+   "Local": 928
   }
  }
 }

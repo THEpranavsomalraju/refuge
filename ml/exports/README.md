@@ -19,5 +19,5 @@ All deaths are NOAA Storm Events direct deaths, 50 states + DC, 1996-2025. Hours
 | `county_risk.json` | national map (deck.gl) | `fields` names the columns; `counties["37021"]` is a row in that order. Key is the 5 digit county FIPS string. Connecticut uses 2022 planning region codes, so it will not match older county maps. |
 | `model_metrics.json` | methods section | `risk`: grouped by state folds, time split, calibration by decile. `location`: log loss vs baseline. |
 | `fatalities_dots.csv` | Story lead (Flourish) | one row per death: year, event_type, location_class, age_band, sex, fatality_type (D direct, I indirect). |
-| `traffic_by_hour.json` | Structures (`cars_per_hour` in crossings.json) | `curves.weekday_rural.share`: 24 hourly shares summing to 1. `cars_per_hour[h] = daily vehicles * share[h]`. From FHWA NHTS 2017. |
+| `traffic_by_hour.json` | Structures (`cars_per_hour` in crossings.json) | `cars_per_hour[h] = daily_volume_by_osm_tag["rural"][highway] * curves.weekday_rural.share[h]`. Shares: 24 values summing to 1, from FHWA NHTS 2017. Daily volumes: FHWA Highway Statistics 2023 (VM-2 / HM-20), keyed by OSM `highway` tag, rural and urban. |
 | `tornado_width_by_ef.json` | Simulation (default widths) | `by_ef.EF3.width_m.median` etc., p10 to p90, 2007-2025 tornado segments. |

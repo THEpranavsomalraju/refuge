@@ -6,6 +6,7 @@
 Storm Events: newest details + fatalities file per year (1996-2025).
 SVI 2022 county parquet (includes ACS 2018-2022 county counts).
 NHTS 2017 + 2022 (FHWA travel survey) trip files for the hourly traffic curve.
+FHWA Highway Statistics 2023 tables VM-2 (VMT) and HM-20 (road miles) for daily volume per road class.
 """
 import argparse
 import re
@@ -101,6 +102,16 @@ def download_svi():
     print(f"svi: {status}")
 
 
+FHWA_TABLES = {t: f"https://www.fhwa.dot.gov/policyinformation/statistics/2023/{t}.cfm" for t in ("vm2", "hm20")}
+
+
+def download_fhwa():
+    out = RAW / "fhwa"
+    out.mkdir(parents=True, exist_ok=True)
+    for name, url in FHWA_TABLES.items():
+        print(f"fhwa {name}: {download_file(url, out / f'{name}_2023.html')}")
+
+
 def download_nhts():
     out = RAW / "nhts"
     out.mkdir(parents=True, exist_ok=True)
@@ -114,9 +125,9 @@ def download_nhts():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--only", choices=["storm", "svi", "nhts"])
+    ap.add_argument("--only", choices=["storm", "svi", "nhts", "fhwa"])
     args = ap.parse_args()
-    steps = {"storm": download_storm, "svi": download_svi, "nhts": download_nhts}
+    steps = {"storm": download_storm, "svi": download_svi, "nhts": download_nhts, "fhwa": download_fhwa}
     for name, fn in steps.items():
         if args.only in (None, name):
             fn()
