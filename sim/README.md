@@ -162,5 +162,12 @@ node sim/dist/cli.js --scenario sim/tests/fixtures/bt_2021_996712.scenario.json 
 
 The fixture path/width/hour were copied from ML's training record; the 10-minute
 warning, 500 runs, and seed 42 match its scenario producer. No held-out results
-were used to tune defaults. Compatibility with the actual `write_place_lite`
-producer must be tested once its files are available.
+were used to tune defaults.
+
+Verified 2026-09-26 against a real `write_place_lite` folder from Structures
+(`places/phase-1` @ 25c3c6d): the `bt_2021_996712` path buffered by
+width/2 + 1 km gave 1,266 NSI buildings, 345 building-only cells, `[]`
+crossings, and empty `streams`/`roads`. Expected and simulate modes both
+exited 0 with ordered output. With uncalibrated defaults the recorded scenario
+gives 0.0053 expected deaths and 271 people exposed; the 6 real deaths were in
+the Amazon DLI4 warehouse, which has no NSI record (ML excludes this storm).

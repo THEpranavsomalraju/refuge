@@ -120,5 +120,8 @@ instead of a root-level scratch directory to honor folder ownership.
 - Review scope confirmed: empirical lethality validity and real Structures
   compatibility await calibration and actual producer files; flood, vehicle
   exposure, protections, and cell aggregation remain later approved chunks.
+- Real producer check (2026-09-26): `write_place_lite` output from
+  `places/phase-1` @ 25c3c6d for `bt_2021_996712` (1,266 buildings) ran in
+  both modes with exit 0; 3-scenario batch in 0.04 s wall time.
 - Delivery: source-only commit and push requested; the handoff message records
   the final commit and remote verification. No generated dist/ files included.
