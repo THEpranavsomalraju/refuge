@@ -4,10 +4,9 @@
 
 events.parquet          one row per NOAA event (tornadoes are per county segment)
 fatalities.parquet      one row per death, location mapped to our classes
-county_features.parquet ACS + SVI features by 5 digit county FIPS
+county_features.parquet SVI 2022 features (ACS 2018-2022 counts) by 5 digit county FIPS
 narratives.parquet      event/episode narratives for Tornado + Flash Flood only
 """
-import json
 from pathlib import Path
 
 import polars as pl
@@ -261,31 +260,6 @@ def build_county_features():
         svi_housing_transport=pl.col("RPL_THEME4"),
     ).with_columns(source=pl.lit("svi2022"))
 
-    acs_path = RAW / "acs" / "acs2023_county.json"
-    if acs_path.exists():
-        rows = json.loads(acs_path.read_text())
-        acs = pl.DataFrame(rows[1:], schema=rows[0], orient="row")
-        age_cols = [c for c in acs.columns if c.startswith("B01001_")]
-        acs = acs.select(
-            county_fips=pl.col("state") + pl.col("county"),
-            pop=pl.col("B01003_001E").cast(pl.Float64),
-            housing_units=pl.col("B25001_001E").cast(pl.Float64),
-            mobile_homes=pl.col("B25024_010E").cast(pl.Float64),
-            units_total=pl.col("B25024_001E").cast(pl.Float64),
-            households=pl.col("B08201_001E").cast(pl.Float64),
-            households_noveh=pl.col("B08201_002E").cast(pl.Float64),
-            age65=pl.sum_horizontal([pl.col(c).cast(pl.Float64) for c in age_cols]),
-        )
-        # prefer ACS 2023 counts where present, keep SVI for area, day pop, SVI ranks
-        cf = cf.join(acs, on="county_fips", how="full", suffix="_acs", coalesce=True)
-        for c in ["pop", "housing_units", "mobile_homes", "households", "households_noveh", "age65"]:
-            cf = cf.with_columns(pl.coalesce(f"{c}_acs", c).alias(c)).drop(f"{c}_acs")
-        cf = cf.with_columns(
-            source=pl.when(pl.col("area_sqmi").is_null()).then(pl.lit("acs2023_only"))
-            .when(pl.col("units_total").is_null()).then(pl.lit("svi2022"))
-            .otherwise(pl.lit("acs2023+svi2022"))
-        )
-        print(f"  acs 2023 merged: {acs.height} counties")
 
     cf = cf.with_columns(
         mh_share=pl.col("mobile_homes") / pl.col("housing_units"),

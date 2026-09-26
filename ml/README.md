@@ -9,12 +9,12 @@ python3.12 -m venv ml/.venv
 ml/.venv/bin/pip install -r ml/requirements.txt
 ```
 
-Optional: put `CENSUS_API_KEY=...` in `ml/.env` (gitignored). Without it, county features come from SVI 2022, which already includes ACS 2018-2022 counts.
+County features come from SVI 2022, which includes ACS 2018-2022 county counts. Territories (PR, Guam, etc.) are left out of the models since SVI has no county rows for them.
 
 ## Run
 
 ```bash
-ml/.venv/bin/python ml/download.py       # raw files -> data/raw/  (~300 MB, cached)
+ml/.venv/bin/python ml/download.py       # raw files -> data/raw/  (~320 MB, cached)
 ml/.venv/bin/python ml/build_tables.py   # -> data/processed/*.parquet
 ml/.venv/bin/python ml/check_phase1.py   # sanity checks
 ```
