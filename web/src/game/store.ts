@@ -253,18 +253,18 @@ export const useGame = create<GameState>((set, get) => {
     set(patch) {
       set(patch);
       if (get().step !== 'storm_setup') return;
+      // The camera never moves while the player is drawing: each click only updates the preview.
+      const drawing = get().drawing;
       if (get().path.length < 2) {
-        // Nothing drawn yet: show the whole town so every part of it can be clicked.
-        const [w, s, e, n] = get().place!.meta.bbox;
-        scene.frameCoords([[w, s], [e, n]]);
+        // Nothing drawn yet: show the whole town once, so every part of it can be clicked.
+        if (!drawing) { const [w, s, e, n] = get().place!.meta.bbox; scene.frameCoords([[w, s], [e, n]]); }
         return;
       }
       // Preview the storm line: tornado strip at the EF width, hurricane track as a line of points.
-      if (get().hazard === 'tornado') { scene.showTornadoPath(get().path, WIDTH_BY_EF[get().ef]!); scene.frameStormPath(); }
+      if (get().hazard === 'tornado') { scene.showTornadoPath(get().path, WIDTH_BY_EF[get().ef]!); if (!drawing) scene.frameStormPath(); }
       else {
         const track = (scenarioOf() as { track: TrackRow[] }).track;
         if (ext.showHurricaneTrack) ext.showHurricaneTrack(track, get().category);
-        else scene.frameCoords(get().path);
       }
     },
     startDrawing() {

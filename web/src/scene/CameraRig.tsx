@@ -25,13 +25,15 @@ export function CameraRig({ frame }: { frame: Frame }) {
       let [x, z] = frame.toXZ(goal.center[0], goal.center[1]);
       x = Math.min(frame.width / 2, Math.max(-frame.width / 2, x));
       z = Math.min(frame.depth / 2, Math.max(-frame.depth / 2, z));
-      const radiusM = Math.min(goal.radiusM, Math.max(frame.width, frame.depth));
+      // Never pull back past the town: the widest view fits the town edge to edge (half its size, plus a small margin).
+      const radiusM = Math.min(goal.radiusM, 0.55 * Math.max(frame.width, frame.depth));
       const t1 = new THREE.Vector3(x, frame.groundY(x, z), z);
       const dir = camera.position.clone().sub(controls.target).normalize();
       // Distance that fits a circle of radiusM in the narrower field of view.
       const vFov = THREE.MathUtils.degToRad(camera.fov);
       const hFov = 2 * Math.atan(Math.tan(vFov / 2) * (size.width / Math.max(1, size.height)));
-      const dist = (radiusM / Math.tan(Math.min(vFov, hFov) / 2)) * 1.1;
+      // ...but never farther than the opening view of the whole town (StartCamera sits at ~0.85 x the town size).
+      const dist = Math.min((radiusM / Math.tan(Math.min(vFov, hFov) / 2)) * 1.1, 0.9 * Math.max(frame.width, frame.depth));
       move.current = {
         seq: goal.seq, start: performance.now(), ms: Math.max(1, goal.ms),
         p0: camera.position.clone(), t0: controls.target.clone(),

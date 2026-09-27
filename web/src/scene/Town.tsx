@@ -79,5 +79,5 @@ function StartCamera({ frame }: { frame: Frame }) {
     camera.lookAt(target);
     controls.target.copy(target); controls.update();
   }, [frame, camera, controls]);
-  return <MapControls makeDefault maxPolarAngle={Math.PI * 0.46} minDistance={150} maxDistance={Math.max(frame.width, frame.depth) * 2} />;
+  return <MapControls makeDefault maxPolarAngle={Math.PI * 0.46} minDistance={150} maxDistance={Math.max(frame.width, frame.depth) * 1.1} />;
 }
