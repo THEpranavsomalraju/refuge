@@ -290,16 +290,17 @@ function Planning() {
   const h = hurricane ? shelterRules.hurricane : shelterRules.tornado;
   const t = shelterRules.tornado;
   const reach = Math.round(t.walk_speed_mps * Math.max(0, warningOf(g) - t.mobilize_min) * 60);
-  const spent = g.selected.reduce((s, id) => s + (g.candidates.find(c => c.building_id === id)?.cost_usd ?? 0), 0);
+  const byId = (id: string) => g.candidates.find(c => c.building_id === id);
+  const spent = g.selected.reduce((s, id) => s + (byId(id)?.cost_usd ?? 0), 0);
   const shown = g.candidates.slice(0, SHOWN_CANDIDATES);
   return (
     <>
       <div style={muted}>
-        Click a school, church or business on the map, or pick from the list, to turn it into a shelter: a FEMA P-361 hardened
-        core ({pct(shelterRules.hardened_share)} of the footprint, {h.sqft_per_person} sq ft per person, {usd(h.cost_per_person)} per person).
+        Click a highlighted school, church or business on the map to make it a shelter (click again to remove): a FEMA P-361
+        hardened core, {h.sqft_per_person} sq ft per person, {usd(h.cost_per_person)} per person.
         {hurricane
           ? ` Displaced residents within ${shelterRules.hurricane.reach_km} km drive there before landfall, nearest first.`
-          : ` The building's own occupants go first, then about ${pct(t.compliance)} of mobile-home residents within a ${reach} m walk (${warningOf(g)} min warning).`}
+          : ` Its own occupants go first, then about ${pct(t.compliance)} of mobile-home residents within a ${reach} m walk.`}
       </div>
       <Row label="Budget">
         <input type="number" min={0} step={hurricane ? 1_000_000 : 50_000} value={g.budget} style={{ ...input, width: 130 }}
@@ -307,17 +308,38 @@ function Planning() {
       </Row>
       <div style={bar}><div style={{ ...barFill, width: pct(Math.min(1, g.budget ? spent / g.budget : 0)) }} /></div>
       <div style={row}><span style={muted}>Spent</span><span style={mono}>{usd(spent)} of {usd(g.budget)}</span></div>
-      <div style={muted}>Most effective buildings for this storm ({objective(g).effect}):</div>
-      <div style={{ display: 'grid', gap: 4, maxHeight: 260, overflowY: 'auto' }}>
-        {shown.map(c => <CandidateRow key={c.building_id} c={c} spent={spent} />)}
-        {shown.length === 0 && <div style={muted}>No eligible buildings: needs schools, churches or businesses with a known footprint.</div>}
-      </div>
-      <button style={bestButton} onClick={() => void g.fillBest()}>
-        ★ Use the best plan for {usd(g.budget)}
-      </button>
+      {g.notice && <div style={bad}>{g.notice}</div>}
+
+      <div style={{ fontWeight: 600 }}>Your shelters ({g.selected.length})</div>
+      {g.selected.length === 0 && <div style={muted}>None yet. Click a highlighted building on the map, or a suggestion below.</div>}
+      {g.selected.map(id => {
+        const c = byId(id);
+        if (!c) return null;
+        return (
+          <div key={id} style={{ ...site, borderColor: '#e3eae7', cursor: 'default' }}>
+            <span style={row}>
+              <button style={{ ...link, color: '#e3eae7', padding: 0, textAlign: 'left' }} onClick={() => g.inspect(id)}>{CLASS_WORDS[c.cls] ?? c.cls}</button>
+              <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span style={mono}>{objective(g).short} {c.effectiveness.toFixed(1)}</span>
+                <button aria-label={`Remove ${CLASS_WORDS[c.cls] ?? c.cls}`} style={{ ...link, fontSize: 15 }} onClick={() => g.toggle(id)}>×</button>
+              </span>
+            </span>
+            <span style={muted}>{num(c.capacity)} people · {usd(c.cost_usd)}</span>
+          </div>
+        );
+      })}
       <button style={primary} onClick={() => void g.replay()}>
         Replay storm with {g.selected.length} shelter{g.selected.length === 1 ? '' : 's'}
       </button>
+      <button style={bestButton} onClick={() => void g.fillBest()}>
+        ★ Use the best plan for {usd(g.budget)}
+      </button>
+
+      <div style={muted}>Top suggestions for this storm ({objective(g).effect}):</div>
+      <div style={{ display: 'grid', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
+        {shown.map(c => <CandidateRow key={c.building_id} c={c} spent={spent} />)}
+        {shown.length === 0 && <div style={muted}>No eligible buildings: needs schools, churches or businesses with a known footprint.</div>}
+      </div>
     </>
   );
 }
@@ -327,7 +349,7 @@ function CandidateRow({ c, spent }: { c: ShelterCandidate; spent: number }) {
   const on = g.selected.includes(c.building_id);
   const affordable = on || spent + c.cost_usd <= g.budget;
   return (
-    <button onClick={() => g.inspect(c.building_id)}
+    <button onClick={() => { g.toggle(c.building_id); g.inspect(c.building_id); }}
       style={{ ...site, borderColor: on ? '#e3eae7' : g.inspected === c.building_id ? '#93a4a0' : '#2c3a37', opacity: affordable ? 1 : 0.5 }}>
       <span style={row}><span>{on ? '■' : '□'} {CLASS_WORDS[c.cls] ?? c.cls}</span><span style={mono}>{objective(g).short} {c.effectiveness.toFixed(1)}</span></span>
       <span style={muted}>{num(c.capacity)} people · {usd(c.cost_usd)}</span>
@@ -358,9 +380,8 @@ function ShelterCard() {
           <div style={row}><span>Mobile homes in reach</span><span style={mono}>{num(c.mh_homes_in_reach)}</span></div>
           <div style={{ ...row, fontWeight: 700 }}><span>{hurricane ? 'Displaced people served' : 'Lives saved'} if converted</span><span style={mono}>{c.effectiveness.toFixed(1)}</span></div>
           <div style={muted}>Hardened safe room (FEMA P-361), built to survive a direct hit.</div>
-          <button style={on ? secondary : primary} disabled={!on && spent + c.cost_usd > g.budget} onClick={() => g.toggle(id)}>
-            {on ? 'Remove' : spent + c.cost_usd > g.budget ? 'Over budget' : 'Select'}
-          </button>
+          <button style={on ? secondary : primary} onClick={() => g.toggle(id)}>{on ? 'Remove' : 'Select'}</button>
+          {!on && spent + c.cost_usd > g.budget && <div style={bad}>Over budget: {usd(g.budget - spent)} left.</div>}
         </>
       )}
     </div>
