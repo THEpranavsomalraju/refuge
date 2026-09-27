@@ -350,7 +350,10 @@ export const useGame = create<GameState>((set, get) => {
       else void showMap(after);
     },
     toggleMap() {
-      if (get().mapHidden) { get().show(get().view); return; }
+      const { mapHidden, step, baseline } = get();
+      // In the plan step only the map comes back: show() would reset the shelter markers.
+      if (mapHidden && step === 'plan' && baseline) { set({ mapHidden: false }); void showMap(baseline); return; }
+      if (mapHidden) { get().show(get().view); return; }
       scene.hideRiskMap();
       set({ mapHidden: true });
     },

@@ -373,6 +373,7 @@ function Planning() {
       <button style={bestButton} onClick={() => void g.fillBest()}>
         ★ Use the best plan for {usd(g.budget)}
       </button>
+      <MapToggle />
 
       <div style={muted}>Top suggestions for this storm ({objective(g).effect}):</div>
       <div style={{ display: 'grid', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
@@ -499,11 +500,19 @@ function Views({ options }: { options: MapView[] }) {
           {VIEW_WORDS[v]}
         </button>
       ))}
-      <button onClick={g.toggleMap} aria-pressed={g.mapHidden}
-        style={{ ...tab, flexBasis: '100%', background: g.mapHidden ? '#e3eae7' : 'transparent', color: g.mapHidden ? '#101817' : '#e3eae7' }}>
-        {g.mapHidden ? 'Show the risk map' : 'Hide the risk map (see buildings)'}
-      </button>
+      <MapToggle />
     </div>
+  );
+}
+
+/** Lowers the risk layer so the buildings show, or raises it again. */
+function MapToggle() {
+  const g = useGame();
+  return (
+    <button onClick={g.toggleMap} aria-pressed={g.mapHidden}
+      style={{ ...tab, flexBasis: '100%', background: g.mapHidden ? '#e3eae7' : 'transparent', color: g.mapHidden ? '#101817' : '#e3eae7' }}>
+      {g.mapHidden ? 'Show the risk map' : 'Hide the risk map (see buildings)'}
+    </button>
   );
 }
 
