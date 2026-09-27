@@ -27,6 +27,8 @@ export interface ChartSpec {
   bare?: boolean;
   /** Cover the chart until clicked, so maps that zoom on scroll don't trap page scrolling. */
   clickToInteract?: boolean;
+  /** Short text under the chart: what it shows, caveats. */
+  note?: string;
 }
 
 export interface ChartsSection extends Base { kind: 'charts'; intro?: string; charts: ChartSpec[] }

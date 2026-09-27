@@ -1,0 +1,126 @@
+<!doctype html>
+<!-- Backtest: 30 real tornadoes held out from calibration, recorded vs simulated.
+     Data: /data/backtest.json (ml/exports). "Recorded" is the comparison target: NOAA direct deaths
+     minus known vehicle / outdoor / water / other locations (unknown locations kept). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/brand.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="/charts/_lib/chart-kit.js"></script>
+  <style>
+    body { margin: 0; background: transparent; font-size: 12px; }
+    svg { display: block; overflow: visible; }
+    .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 10px; color: var(--fg); }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .key-ring { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--chart-actual); box-sizing: border-box; }
+    .key-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--chart-model); }
+    .key-range { width: 22px; height: 6px; border-radius: 3px; background: var(--chart-model); opacity: 0.45; }
+    .group { fill: var(--cream); font: 600 12px var(--font-display); letter-spacing: 0.02em; }
+    .foot { margin: 8px 0 0; font-size: 11px; color: var(--fg-muted); }
+  </style>
+</head>
+<body>
+  <div class="legend">
+    <span><i class="key-ring"></i>Counted deaths (recorded)</span>
+    <span><i class="key-dot"></i>Simulated (expected)</span>
+    <span><i class="key-range"></i>Simulated range (90% of 500 runs)</span>
+  </div>
+  <svg id="chart" role="img" aria-label="Recorded versus simulated deaths for 30 held-out tornadoes"></svg>
+  <p class="foot" id="foot"></p>
+
+  <script>
+    const title = s => s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    const clock = h => (h % 12 || 12) + (h < 12 ? ' AM' : ' PM');
+    const ABBR = { ALABAMA: 'AL', ALASKA: 'AK', ARIZONA: 'AZ', ARKANSAS: 'AR', CALIFORNIA: 'CA', COLORADO: 'CO', CONNECTICUT: 'CT',
+      DELAWARE: 'DE', FLORIDA: 'FL', GEORGIA: 'GA', HAWAII: 'HI', IDAHO: 'ID', ILLINOIS: 'IL', INDIANA: 'IN', IOWA: 'IA', KANSAS: 'KS',
+      KENTUCKY: 'KY', LOUISIANA: 'LA', MAINE: 'ME', MARYLAND: 'MD', MASSACHUSETTS: 'MA', MICHIGAN: 'MI', MINNESOTA: 'MN',
+      MISSISSIPPI: 'MS', MISSOURI: 'MO', MONTANA: 'MT', NEBRASKA: 'NE', NEVADA: 'NV', 'NEW HAMPSHIRE': 'NH', 'NEW JERSEY': 'NJ',
+      'NEW MEXICO': 'NM', 'NEW YORK': 'NY', 'NORTH CAROLINA': 'NC', 'NORTH DAKOTA': 'ND', OHIO: 'OH', OKLAHOMA: 'OK', OREGON: 'OR',
+      PENNSYLVANIA: 'PA', 'RHODE ISLAND': 'RI', 'SOUTH CAROLINA': 'SC', 'SOUTH DAKOTA': 'SD', TENNESSEE: 'TN', TEXAS: 'TX', UTAH: 'UT',
+      VERMONT: 'VT', VIRGINIA: 'VA', WASHINGTON: 'WA', 'WEST VIRGINIA': 'WV', WISCONSIN: 'WI', WYOMING: 'WY' };
+    const num = v => v >= 10 || Number.isInteger(v) ? String(Math.round(v)) : v.toFixed(1);
+
+    fetch('/data/backtest.json').then(r => r.json()).then(d => {
+      const storms = d.storms.map(s => ({
+        ...s, target: s.recorded_in_buildings, sim: s.calibrated,
+        long: `${title(s.state)} ${s.year} · EF${s.ef}`, short: `${ABBR[s.state] ?? title(s.state)} ${s.year} · EF${s.ef}`,
+      })).sort((a, b) => b.target - a.target || b.sim.expected - a.sim.expected);
+      // Two storms can share a name; add the hour to tell them apart.
+      for (const key of ['long', 'short']) {
+        const counts = d3.rollup(storms, v => v.length, s => s[key]);
+        storms.forEach(s => { if (counts.get(s[key]) > 1) s[key] += ` · ${clock(s.hour)}`; });
+      }
+
+      const groups = [
+        { label: 'Storms with counted deaths', rows: storms.filter(s => s.target > 0) },
+        { label: 'Storms with none counted', rows: storms.filter(s => s.target === 0) },
+      ];
+      const maxX = Math.max(10, d3.max(storms, s => Math.max(s.target, s.sim.p95)));
+      const tip = RefugeChart.tooltip();
+
+      RefugeChart.onWidth(W => {
+        const rowH = 22, groupH = 30, T = 20, R = 16;
+        storms.forEach(s => { s.name = W < 560 ? s.short : s.long; });
+        // Label column fits the longest storm name (capped so the plot keeps room on phones).
+        const probe = d3.select('#chart').append('text').attr('class', 'rc-label');
+        const longest = d3.max(storms, s => probe.text(s.name).node().getComputedTextLength());
+        probe.remove();
+        const L = Math.min(longest + 14, W * 0.5);
+        // Lay rows out top to bottom, with a header before each group.
+        let yPos = T;
+        const items = [];
+        for (const g of groups) {
+          items.push({ header: g.label, y: yPos + 18 });
+          yPos += groupH;
+          for (const s of g.rows) { items.push({ storm: s, y: yPos }); yPos += rowH; }
+        }
+        const H = yPos + 4;
+        const svg = d3.select('#chart').attr('viewBox', `0 0 ${W} ${H}`).attr('width', W).attr('height', H);
+        svg.selectAll('*').remove();
+        const x = d3.scaleLinear().domain([0, maxX]).range([L, W - R]);
+
+        const ticks = x.ticks(Math.min(6, Math.floor((W - L) / 50)));
+        svg.append('g').selectAll('line').data(ticks).join('line')
+          .attr('x1', x).attr('x2', x).attr('y1', T - 4).attr('y2', H).style('stroke', 'var(--chart-grid)');
+        svg.append('g').selectAll('text').data(ticks).join('text').attr('class', 'rc-muted')
+          .attr('x', x).attr('y', T - 8).attr('text-anchor', 'middle').text(t => t);
+        svg.append('text').attr('class', 'rc-muted').attr('x', L - 10).attr('y', T - 8).attr('text-anchor', 'end').text('deaths');
+
+        for (const it of items.filter(i => i.header)) {
+          svg.append('text').attr('class', 'group').attr('x', 0).attr('y', it.y).text(it.header);
+        }
+
+        const rows = svg.append('g').selectAll('g').data(items.filter(i => i.storm)).join('g')
+          .attr('transform', it => `translate(0,${it.y})`);
+        rows.append('text').attr('class', 'rc-label').attr('x', L - 10).attr('y', rowH / 2).attr('dy', '0.35em')
+          .attr('text-anchor', 'end').text(it => it.storm.name)
+          .each(function () { RefugeChart.fitText(this, L - 14); });
+        rows.append('rect').attr('y', rowH / 2 - 3).attr('height', 6).attr('rx', 3)
+          .attr('x', it => x(it.storm.sim.p05)).attr('width', it => Math.max(0, x(it.storm.sim.p95) - x(it.storm.sim.p05)))
+          .style('fill', 'var(--chart-model)').attr('opacity', 0.45);
+        rows.append('circle').attr('cy', rowH / 2).attr('r', 4.5).attr('cx', it => x(it.storm.sim.expected))
+          .style('fill', 'var(--chart-model)').style('stroke', 'var(--navy)').attr('stroke-width', 2);
+        rows.append('circle').attr('cy', rowH / 2).attr('r', 6).attr('cx', it => x(it.storm.target))
+          .attr('fill', 'none').style('stroke', 'var(--chart-actual)').attr('stroke-width', 2);
+        rows.append('rect').attr('width', W).attr('height', rowH).attr('fill', 'transparent')
+          .on('mousemove', (e, it) => {
+            const s = it.storm, sim = s.sim;
+            const all = s.recorded !== s.target ? ` <span class="muted">(${s.recorded} direct deaths in all)</span>` : '';
+            tip.show(e, `<b>${title(s.state)} ${s.year}, EF${s.ef}</b> <span class="muted">· ${clock(s.hour)}</span><br>` +
+              `Counted: ${s.target}${all}<br>Simulated: ${num(sim.expected)} <span class="muted">(range ${num(sim.p05)}–${num(sim.p95)})</span><br>` +
+              `<span class="muted">Before calibration ${num(s.default_params.expected)} · national model ${num(s.national_model.expected)}</span>`);
+          })
+          .on('mouseleave', () => tip.hide());
+      });
+
+      const sum = d.summary.building_deaths.calibrated;
+      document.getElementById('foot').textContent =
+        `All ${storms.length} storms: ${num(sum.predicted_deaths)} simulated vs ${sum.recorded_deaths} recorded · ` +
+        `rank correlation ${sum.spearman.toFixed(2)} · recorded inside the range for ${Math.round(sum.coverage_p05_p95 * 100)}% of storms.`;
+    });
+    RefugeChart.reportHeight();
+  </script>
+</body>
+</html>

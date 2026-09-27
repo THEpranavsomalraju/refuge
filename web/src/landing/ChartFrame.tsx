@@ -52,6 +52,7 @@ export function ChartFrame({ chart }: { chart: ChartSpec }) {
           )}
         </div>
       )}
+      {chart.note && <p className="chart-note">{chart.note}</p>}
     </figure>
   );
 }

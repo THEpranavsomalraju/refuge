@@ -26,12 +26,13 @@
   --link: var(--cyan);
   --hero-bg: var(--navy);
 
-  /* chart series, in order */
-  --series-1: var(--cyan);
-  --series-2: var(--blue);
-  --series-3: var(--violet);
-  --series-4: var(--cream);
-  --series-5: var(--coral);
+  /* chart marks on navy. Checked with the dataviz palette validator (dark, surface #232E43):
+     lightness band, colorblind separation and 3:1 contrast all pass for this pair.
+     The raw --cyan is too bright for marks; keep it for text and highlights. */
+  --chart-model: #2F86F5;   /* what a model predicts */
+  --chart-actual: var(--coral);  /* what really happened */
+  --chart-grid: rgba(238, 228, 215, 0.10);
+  --chart-axis: rgba(238, 228, 215, 0.55);
 
   /* type */
   --font-display: 'Chakra Petch', system-ui, sans-serif;

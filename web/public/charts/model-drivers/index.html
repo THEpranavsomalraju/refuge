@@ -1,0 +1,81 @@
+<!doctype html>
+<!-- What the national model leans on most. Data: /data/shap_summary.json (ml/exports). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/brand.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="/charts/_lib/chart-kit.js"></script>
+  <style>
+    body { margin: 0; background: transparent; }
+    svg { display: block; overflow: visible; }
+    .foot { margin: 6px 0 0; font-size: 11px; color: var(--fg-muted); }
+  </style>
+</head>
+<body>
+  <svg id="chart" role="img" aria-label="Share of the model's influence by feature"></svg>
+  <p class="foot" id="foot"></p>
+
+  <script>
+    const SHOW = 8;
+    // Plainer names for the feature labels in shap_summary.json.
+    const NAMES = {
+      'EF rating': 'Tornado strength (EF rating)',
+      'Storm duration (hours)': 'How long the storm lasted',
+      'Social Vulnerability Index': 'County social vulnerability',
+      'Path width (yd)': 'Path width',
+      'Path length (mi)': 'Path length',
+      'Population density (log)': 'Population density',
+      'Storm system size (reports)': 'Size of the storm system',
+      'Hour of day': 'Hour of day',
+      'Share age 65+': 'Share of residents 65+',
+      'No-vehicle households': 'Households without a car',
+      'Mobile home share': 'Share of mobile homes',
+    };
+
+    // Shorter still, for phone widths.
+    const SHORT = {
+      'Tornado strength (EF rating)': 'EF rating', 'How long the storm lasted': 'Storm duration',
+      'County social vulnerability': 'Social vulnerability', 'Size of the storm system': 'Storm system size',
+      'Share of residents 65+': 'Residents 65+', 'Households without a car': 'No-car households',
+    };
+
+    fetch('/data/shap_summary.json').then(r => r.json()).then(d => {
+      const total = d3.sum(d.importance, f => f.mean_abs_shap);
+      const rows = d.importance.slice(0, SHOW).map(f => ({ ...f, name: NAMES[f.label] ?? f.label, share: f.mean_abs_shap / total }));
+      const rest = d.importance.length - SHOW;
+
+      const tip = RefugeChart.tooltip();
+
+      RefugeChart.onWidth(W => {
+      const rowH = 30, R = 40, H = rows.length * rowH;
+      rows.forEach(r => { r.label = W < 480 ? (SHORT[r.name] ?? r.name) : r.name; });
+      // Label column fits the longest name, capped so the bars keep room on phones.
+      const probe = d3.select('#chart').append('text').attr('class', 'rc-label');
+      const longest = d3.max(rows, r => probe.text(r.label).node().getComputedTextLength());
+      probe.remove();
+      const L = Math.min(longest + 14, W * 0.5);
+      const svg = d3.select('#chart').attr('viewBox', `0 0 ${W} ${H}`).attr('width', W).attr('height', H);
+      svg.selectAll('*').remove();
+      const x = d3.scaleLinear().domain([0, d3.max(rows, r => r.share)]).range([0, W - L - R]);
+
+      const g = svg.selectAll('g.row').data(rows).join('g').attr('transform', (r, i) => `translate(0,${i * rowH})`);
+      g.append('text').attr('class', 'rc-label').attr('x', L - 10).attr('y', rowH / 2).attr('dy', '0.35em').attr('text-anchor', 'end').text(r => r.label)
+        .each(function () { RefugeChart.fitText(this, L - 14); });
+      g.append('path').attr('d', r => RefugeChart.hbar(L, 7, Math.max(2, x(r.share)), rowH - 14)).style('fill', 'var(--chart-model)');
+      g.append('text').attr('class', 'rc-muted').attr('x', r => L + x(r.share) + 6).attr('y', rowH / 2).attr('dy', '0.35em')
+        .text(r => Math.round(r.share * 100) + '%');
+      // Hit target: the whole row.
+      g.append('rect').attr('width', W).attr('height', rowH).attr('fill', 'transparent')
+        .on('mousemove', (e, r) => tip.show(e, `<b>${r.name}</b><br>${(r.share * 100).toFixed(1)}% of the model's influence<br><span class="muted">mean |SHAP| ${r.mean_abs_shap.toFixed(3)}</span>`))
+        .on('mouseleave', () => tip.hide());
+      });
+
+      document.getElementById('foot').textContent =
+        `Share of total influence (mean absolute SHAP). ${rest} more features have smaller effects.`;
+    });
+    RefugeChart.reportHeight();
+  </script>
+</body>
+</html>

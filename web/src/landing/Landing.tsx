@@ -14,7 +14,7 @@ export function Landing() {
     const target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
     const main = document.querySelector('main');
     if (!target || !main) return;
-    const jump = () => target.scrollIntoView();
+    const jump = () => target.scrollIntoView({ behavior: 'instant' });
     jump();
     const ro = new ResizeObserver(jump);
     ro.observe(main);

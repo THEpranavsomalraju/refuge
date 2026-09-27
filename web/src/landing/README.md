@@ -21,8 +21,10 @@ landing.css         layout only
 1. Copy `web/public/charts/_template/` to `web/public/charts/<your-chart>/`, and put your HTML/JS in its `index.html`. Any library from a CDN works. It runs isolated in an iframe.
 2. Add one line to a `charts` section in `site.config.ts`:
    `{ src: '<your-chart>', title: 'Deaths by month', height: 400 }`
-   Options: `wide: true` spans the full row. `bare: true` drops the card and caption, for charts with their own heading. `clickToInteract: true` covers the chart until it's clicked, for maps that zoom on scroll. `src` can also be a full URL (e.g. a Flourish embed).
+   Options: `note: '…'` adds a line of text under the chart. `wide: true` spans the full row. `bare: true` drops the card and caption, for charts with their own heading. `clickToInteract: true` covers the chart until it's clicked, for maps that zoom on scroll. `src` can also be a full URL (e.g. a Flourish embed).
    If a chart page sets `min-height: 100vh`, give it a starting `height` smaller than its content. The frame grows to fit but can't shrink.
+
+Helpers: `/charts/_lib/chart-kit.js` (load after D3) gives a hover tooltip, auto-height, width-aware redraw (`onWidth`), rounded bars and label fitting. The "Does it work?" charts (`model-drivers`, `ef-risk`, `deadly-storm-catch`, `backtest`) show how to use it. Chart colors: `--chart-model` (predictions) and `--chart-actual` (what really happened) in `brand.css` are checked for colorblind separation and contrast on navy; the raw `--cyan` is too bright for bars and dots.
 
 Data: `ml/exports/*` is served at `/data/*`, e.g. `fetch('/data/backtest.json')`. Brand: `<link rel="stylesheet" href="/brand.css">`, then use `var(--cyan)`, `var(--font-body)`, etc. The template's last `<script>` lets the frame auto-fit the chart's height.
 

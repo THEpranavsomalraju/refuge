@@ -1,0 +1,67 @@
+<!doctype html>
+<!-- Share of deadly storms that land in the model's riskiest 5%, on 2020–2025 storms it never saw.
+     Data: /data/model_metrics.json (ml/exports), risk.time_split. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/brand.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="/charts/_lib/chart-kit.js"></script>
+  <style>
+    body { margin: 0; background: transparent; }
+    svg { display: block; overflow: visible; }
+    .foot { margin: 6px 0 0; font-size: 11px; color: var(--fg-muted); }
+  </style>
+</head>
+<body>
+  <svg id="chart" role="img" aria-label="Share of deadly storms caught in the model's riskiest 5 percent"></svg>
+  <p class="foot" id="foot"></p>
+
+  <script>
+    const pct = v => Math.round(v * 100) + '%';
+
+    fetch('/data/model_metrics.json').then(r => r.json()).then(d => {
+      const t = d.risk.time_split;
+      const rows = [
+        { name: 'Tornadoes', m: t.by_event_type['Tornado'] },
+        { name: 'All storms', m: t },
+        { name: 'Flash floods', m: t.by_event_type['Flash Flood'] },
+      ].map(r => ({ ...r, v: r.m.recall_fatal_top5pct }));
+      const tip = RefugeChart.tooltip();
+
+      RefugeChart.onWidth(W => {
+        const rowH = 34, L = 110, R = 50, T = 26, plotB = T + rows.length * rowH, H = plotB + 20;
+        const svg = d3.select('#chart').attr('viewBox', `0 0 ${W} ${H}`).attr('width', W).attr('height', H);
+        svg.selectAll('*').remove();
+        const x = d3.scaleLinear().domain([0, 1]).range([L, W - R]);
+
+        // Grid at 0 / 25 / 50 / 75 / 100%.
+        const ticks = [0, 0.25, 0.5, 0.75, 1];
+        svg.append('g').selectAll('line').data(ticks).join('line')
+          .attr('x1', x).attr('x2', x).attr('y1', T - 6).attr('y2', plotB).style('stroke', 'var(--chart-grid)');
+        svg.append('g').selectAll('text').data(ticks).join('text').attr('class', 'rc-muted')
+          .attr('x', x).attr('y', T - 12).attr('text-anchor', 'middle').text(pct);
+
+        const g = svg.selectAll('g.row').data(rows).join('g').attr('transform', (r, i) => `translate(0,${T + i * rowH})`);
+        g.append('text').attr('class', 'rc-label').attr('x', L - 12).attr('y', rowH / 2).attr('dy', '0.35em').attr('text-anchor', 'end').text(r => r.name);
+        g.append('path').attr('d', r => RefugeChart.hbar(x(0), 8, x(r.v) - x(0), rowH - 16)).style('fill', 'var(--chart-model)');
+        g.append('text').attr('class', 'rc-label').attr('x', r => x(r.v) + 8).attr('y', rowH / 2).attr('dy', '0.35em').text(r => pct(r.v));
+        g.append('rect').attr('width', W).attr('height', rowH).attr('fill', 'transparent')
+          .on('mousemove', (e, r) => tip.show(e, `<b>${r.name}, 2020–2025</b><br>${pct(r.v)} of ${r.m.n_fatal_events.toLocaleString()} deadly storms were in the model's riskiest 5%<br><span class="muted">AUC ${r.m.auc_fatal.toFixed(2)} · ${r.m.n_events.toLocaleString()} storms</span>`))
+          .on('mouseleave', () => tip.hide());
+
+        // What picking storms at random would catch; labeled below the rows so it clears the bars.
+        svg.append('line').attr('x1', x(0.05)).attr('x2', x(0.05)).attr('y1', T - 4).attr('y2', plotB + 4)
+          .style('stroke', 'var(--cream)').attr('stroke-width', 1.5).attr('stroke-dasharray', '4 3');
+        svg.append('text').attr('class', 'rc-muted').attr('x', x(0.05)).attr('y', H - 2).text('↑ random pick: 5%');
+      });
+
+      document.getElementById('foot').textContent =
+        `Trained on storms through 2019, tested on ${t.n_events.toLocaleString()} storms from 2020–2025. ` +
+        `AUC ${t.by_event_type['Tornado'].auc_fatal.toFixed(2)} for tornadoes, ${t.by_event_type['Flash Flood'].auc_fatal.toFixed(2)} for flash floods.`;
+    });
+    RefugeChart.reportHeight();
+  </script>
+</body>
+</html>

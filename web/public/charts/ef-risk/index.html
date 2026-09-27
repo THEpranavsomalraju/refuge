@@ -1,0 +1,54 @@
+<!doctype html>
+<!-- Expected deaths by EF rating, relative to an average event. Data: /data/shap_summary.json (ml/exports). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/brand.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="/charts/_lib/chart-kit.js"></script>
+  <style>
+    body { margin: 0; background: transparent; }
+    svg { display: block; overflow: visible; }
+    .foot { margin: 6px 0 0; font-size: 11px; color: var(--fg-muted); }
+  </style>
+</head>
+<body>
+  <svg id="chart" role="img" aria-label="Expected deaths by EF rating, relative to an average storm"></svg>
+  <p class="foot">Expected deaths compared with an average storm (1× = average), from the model's SHAP values.</p>
+
+  <script>
+    const fmt = v => (v < 1 ? v.toFixed(1) : Math.round(v)) + '×';
+
+    fetch('/data/shap_summary.json').then(r => r.json()).then(d => {
+      const rows = d.dependence.ef_rating.map(p => ({ ef: 'EF' + p.x, rr: p.relative_risk, n: p.n }));
+      const tip = RefugeChart.tooltip();
+
+      RefugeChart.onWidth(W => {
+      const H = 240, T = 22, B = 26, L = 8, R = 8;
+      const svg = d3.select('#chart').attr('viewBox', `0 0 ${W} ${H}`).attr('width', W).attr('height', H);
+      svg.selectAll('*').remove();
+      const x = d3.scaleBand().domain(rows.map(r => r.ef)).range([L, W - R]).paddingInner(0.28).paddingOuter(0.1);
+      const y = d3.scaleLinear().domain([0, d3.max(rows, r => r.rr)]).range([H - B, T]);
+
+      svg.append('line').attr('x1', L).attr('x2', W - R).attr('y1', y(0)).attr('y2', y(0)).style('stroke', 'var(--chart-axis)');
+
+      const g = svg.selectAll('g.bar').data(rows).join('g');
+      // Bar with rounded top, square at the baseline.
+      g.append('path').style('fill', 'var(--chart-model)').attr('d', r => {
+        const x0 = x(r.ef), w = x.bandwidth(), y0 = y(0), y1 = Math.min(y(r.rr), y0 - 2), rad = Math.min(4, (y0 - y1) / 2);
+        return `M${x0},${y0}V${y1 + rad}Q${x0},${y1} ${x0 + rad},${y1}H${x0 + w - rad}Q${x0 + w},${y1} ${x0 + w},${y1 + rad}V${y0}Z`;
+      });
+      g.append('text').attr('class', 'rc-label').attr('text-anchor', 'middle')
+        .attr('x', r => x(r.ef) + x.bandwidth() / 2).attr('y', r => Math.min(y(r.rr), y(0) - 2) - 6).text(r => fmt(r.rr));
+      g.append('text').attr('class', 'rc-muted').attr('text-anchor', 'middle')
+        .attr('x', r => x(r.ef) + x.bandwidth() / 2).attr('y', H - 8).text(r => r.ef);
+      g.append('rect').attr('x', r => x(r.ef) - 6).attr('width', x.bandwidth() + 12).attr('y', 0).attr('height', H).attr('fill', 'transparent')
+        .on('mousemove', (e, r) => tip.show(e, `<b>${r.ef}</b><br>${r.rr.toFixed(2)}× the expected deaths of an average storm<br><span class="muted">${r.n.toLocaleString()} storms in the sample</span>`))
+        .on('mouseleave', () => tip.hide());
+      });
+    });
+    RefugeChart.reportHeight();
+  </script>
+</body>
+</html>
