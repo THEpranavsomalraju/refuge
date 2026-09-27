@@ -53,14 +53,16 @@ export function legendFor(hazard: LegendHazard, cutoffs: TornadoCutoffs | Hurric
  * with no shelters. Blue = fewer deaths (tornado) or fewer displaced (hurricane).
  */
 export function differenceLegendFor(hazard: LegendHazard): Legend {
-  const what = hazard === 'tornado' ? 'deaths' : 'people displaced';
+  const tornado = hazard === 'tornado';
   return {
-    title: 'What your plan changed',
+    title: 'What the shelters changed',
     rows: [
-      { label: 'Safer', range: `fewer ${what} expected; darker = more of that area's risk prevented`,
+      { label: tornado ? 'Lives saved' : 'Sheltered', range: tornado
+          ? 'blocks where people reach a shelter and risk drops; darker blue = more lives saved'
+          : 'blocks whose displaced residents now have a shelter bed; darker blue = more people sheltered',
         color: `linear-gradient(90deg, ${DIFF_COLOR.savedLow}, ${DIFF_COLOR.savedHigh})`, hatched: false },
-      { label: 'No change', range: 'same as without shelters', color: DIFF_COLOR.unchanged, hatched: false },
-      { label: 'Worse', range: `more ${what} expected`, color: DIFF_COLOR.worse, hatched: false },
+      { label: 'No change', range: tornado ? 'nobody here reaches a shelter' : 'nobody displaced here reaches a shelter', color: DIFF_COLOR.unchanged, hatched: false },
+      { label: 'Worse', range: tornado ? 'more deaths expected' : 'more people displaced', color: DIFF_COLOR.worse, hatched: false },
     ],
     outline: null,
     height: hazard === 'tornado' ? 'Height: lives saved in that area' : 'Height: people kept in their homes',
@@ -75,8 +77,9 @@ export function RiskLegend({ legend }: { legend: Legend }) {
       {legend.rows.map(r => (
         <div key={r.label} style={row}>
           <span aria-hidden style={{
-            width: 14, height: 14, borderRadius: 3, flex: 'none', background: r.color, minWidth: 14,
-            backgroundImage: r.hatched ? 'repeating-linear-gradient(135deg, rgba(12,16,18,0.75) 0 3px, transparent 3px 7px)' : undefined,
+            width: 14, height: 14, borderRadius: 3, flex: 'none', minWidth: 14,
+            // One shorthand only: mixing background with backgroundImage made React drop the gradient swatches.
+            background: r.hatched ? `repeating-linear-gradient(135deg, rgba(12,16,18,0.75) 0 3px, transparent 3px 7px), ${r.color}` : r.color,
           }} />
           <span style={{ fontWeight: 600, minWidth: 64 }}>{r.label}</span>
           <span style={{ color: '#b9c6c2', fontVariantNumeric: 'tabular-nums' }}>{r.range}{r.hatched ? ' (hatched)' : ''}</span>

@@ -336,8 +336,10 @@ function Planning() {
   const shown = g.candidates.slice(0, SHOWN_CANDIDATES);
   return (
     <>
+      {g.baseline && (g.event ? <RecordedVsSimulated /> : <Summary r={g.baseline} />)}
+      <div style={{ fontWeight: 700, marginTop: 4 }}>Plan your shelters</div>
       <div style={muted}>
-        Click a highlighted school, church or business on the map to make it a shelter (click again to remove): a FEMA P-361
+        Hover a pin or a highlighted building to see how many people it could shelter and what it costs. Click to add it. Click a highlighted school, church or business on the map to make it a shelter (click again to remove): a FEMA P-361
         hardened core, {h.sqft_per_person} sq ft per person, {usd(h.cost_per_person)} per person.
         {hurricane
           ? ` Displaced residents within ${shelterRules.hurricane.reach_km} km drive there before landfall, nearest first.`
@@ -370,7 +372,7 @@ function Planning() {
         );
       })}
       <button style={primary} onClick={() => void g.replay()}>
-        Replay storm with {g.selected.length} shelter{g.selected.length === 1 ? '' : 's'}
+        Submit plan: replay the storm with {g.selected.length} shelter{g.selected.length === 1 ? '' : 's'}
       </button>
       <button style={bestButton} onClick={() => void g.fillBest()}>
         ★ Use the best plan for {usd(g.budget)}
@@ -484,6 +486,21 @@ function BeforeAfter() {
   );
 }
 
+/** "Your plan: 2 shelters, 2,000 beds, $12.0M. 1,000 of 11,122 displaced people get a shelter bed (9%)." */
+function PlanSentence({ who, ids, result }: { who: string; ids: readonly string[]; result: Result }) {
+  const g = useGame();
+  const cs = ids.map(id => g.candidates.find(c => c.building_id === id)).filter(Boolean);
+  const beds = cs.reduce((s, c) => s + (c?.capacity ?? 0), 0);
+  const cost = cs.reduce((s, c) => s + (c?.cost_usd ?? 0), 0);
+  const head = `${who}: ${ids.length} shelter${ids.length === 1 ? '' : 's'}, ${num(beds)} places, ${usd(cost)}.`;
+  if (isHurricane(result) && isHurricane(g.baseline!)) {
+    const sheltered = result.sheltered ?? 0, displaced = g.baseline.displaced;
+    return <div style={muted}>{head} {num(sheltered)} of {num(displaced)} displaced people get a shelter bed ({pct(displaced ? sheltered / displaced : 0)}).</div>;
+  }
+  const before = (g.baseline as DetailedResult).expected_deaths, after = (result as DetailedResult).expected_deaths;
+  return <div style={muted}>{head} Saves {(before - after).toFixed(1)} of {before.toFixed(1)} expected deaths.</div>;
+}
+
 function Compare() {
   const g = useGame();
   const plan = g.optimal!.plan;
@@ -502,6 +519,8 @@ function Compare() {
           <div style={muted}>of the {unit} the {label.toLowerCase()} plan achieves</div></>}
       <div style={row}><span>Your plan</span><span style={mono}>{yours.toFixed(1)} · {usd(yourCost)}</span></div>
       <div style={row}><span>{label} plan</span><span style={mono}>{plan.value.toFixed(1)} · {usd(plan.cost_usd)}</span></div>
+      <PlanSentence who="Your plan" ids={g.selected} result={g.yours!} />
+      <PlanSentence who={`${label} plan`} ids={plan.building_ids} result={g.optimal!.result} />
       <div style={muted}>
         {label} plan: {names}.
         {plan.method === 'exhaustive'

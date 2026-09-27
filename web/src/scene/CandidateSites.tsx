@@ -15,13 +15,15 @@ export function CandidateSites({ frame }: { frame: Frame }) {
         const y = frame.groundY(x, z);
         const color = s.selected ? PALETTE.shelter : PALETTE.site;
         const click = () => useSceneStore.getState().onSiteClick?.(s.id);
+        const over = () => useSceneStore.setState({ hoverId: s.id });
+        const out = () => { if (useSceneStore.getState().hoverId === s.id) useSceneStore.setState({ hoverId: null }); };
         return (
           <group key={s.id} position={[x, y, z]}>
-            <mesh position={[0, PIN_M / 2, 0]} onClick={e => { e.stopPropagation(); click(); }}>
+            <mesh position={[0, PIN_M / 2, 0]} onClick={e => { e.stopPropagation(); click(); }} onPointerOver={over} onPointerOut={out}>
               <cylinderGeometry args={[3, 3, PIN_M, 8]} />
               <meshBasicMaterial color={color} />
             </mesh>
-            <mesh position={[0, PIN_M, 0]} onClick={e => { e.stopPropagation(); click(); }}>
+            <mesh position={[0, PIN_M, 0]} onClick={e => { e.stopPropagation(); click(); }} onPointerOver={over} onPointerOut={out}>
               <sphereGeometry args={[12, 16, 12]} />
               <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} />
             </mesh>
@@ -33,6 +35,8 @@ export function CandidateSites({ frame }: { frame: Frame }) {
               <button
                 type="button"
                 onClick={click}
+                onMouseEnter={over}
+                onMouseLeave={out}
                 aria-pressed={!!s.selected}
                 style={{
                   font: '600 12px "Public Sans", "Segoe UI", system-ui, sans-serif', whiteSpace: 'nowrap',

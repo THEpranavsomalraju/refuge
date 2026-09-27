@@ -296,6 +296,8 @@ export const useGame = create<GameState>((set, get) => {
         set({ step: 'storm_animation', drawing: false });
         const baseline = await run([]);
         set({ baseline, step: 'results_map', view: 'before' });
+        // Shelter options pop up as soon as the storm has passed: pins, highlights, hover cards.
+        await get().plan();
       } catch (e) { fail(e); }
     },
     async plan() {
