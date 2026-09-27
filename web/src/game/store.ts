@@ -60,6 +60,8 @@ interface GameState {
   yours: Result | null;
   optimal: { plan: ShelterPlan; result: Result } | null;
   view: MapView;
+  /** Risk layer lowered so the buildings show in their own colors (results screens). */
+  mapHidden: boolean;
 
   go(step: Step): void;
   chooseMode(mode: 'past' | 'future'): Promise<void>;
@@ -87,6 +89,8 @@ interface GameState {
   replay(): Promise<void>;
   best(): Promise<void>;
   show(view: MapView): void;
+  /** Lower the risk layer to see the buildings, or raise the current view again. */
+  toggleMap(): void;
   restart(): void;
 }
 
@@ -139,14 +143,14 @@ export const useGame = create<GameState>((set, get) => {
     scene.onGroundClick(null); scene.onBuildingClick(null);
   };
   const fresh = { baseline: null, yours: null, optimal: null, candidates: [], selected: [], inspected: null, notice: null,
-    view: 'before' as MapView, error: null, drawing: false, build: null };
+    view: 'before' as MapView, mapHidden: false, error: null, drawing: false, build: null };
 
   const showMap = (r: Result) => isHurricane(r) ? scene.showDisplacementMap(r.cells) : scene.showRiskMap(r.cells, riskBands);
   /** Simulate, animate the storm, then raise the map and end on the worst cells. */
   async function run(shelters: string[]): Promise<Result> {
     const s = scenarioOf(shelters);
     scene.hideRiskMap(); scene.clearBuildingGlow();
-    set({ busy: s.hazard === 'hurricane' ? 'Computing wind at every building…' : 'Running 500 simulated storms…' });
+    set({ mapHidden: false, busy: s.hazard === 'hurricane' ? 'Computing wind at every building…' : 'Running 500 simulated storms…' });
     const result = await sim.run(s);
     set({ busy: null });
     if (s.hazard === 'tornado') {
@@ -171,7 +175,7 @@ export const useGame = create<GameState>((set, get) => {
     build: null, hazard: 'tornado', placeId: 'lumberton', place: null,
     ef: showcase.ef, category: 2, hour: showcase.hour, warning: showcase.warning_min, path: [], drawing: false,
     budget: defaultBudget.tornado, baseline: null, candidates: [], selected: [], inspected: null, notice: null, yours: null, optimal: null,
-    view: 'before',
+    view: 'before', mapHidden: false,
 
     go(step) { set({ step, error: null }); },
     async chooseMode(mode) {
@@ -341,9 +345,14 @@ export const useGame = create<GameState>((set, get) => {
       const after = view.startsWith('yours') ? yours : view.startsWith('optimal') ? optimal?.result : baseline;
       if (!baseline || !after) return;
       showShelters(view === 'before' ? [] : view.startsWith('yours') ? selected : optimal!.plan.building_ids);
-      set({ view });
+      set({ view, mapHidden: false });
       if (view.endsWith('_diff')) void scene.showDifference(baseline.cells, after.cells);
       else void showMap(after);
+    },
+    toggleMap() {
+      if (get().mapHidden) { get().show(get().view); return; }
+      scene.hideRiskMap();
+      set({ mapHidden: true });
     },
     restart() {
       clearScene();
