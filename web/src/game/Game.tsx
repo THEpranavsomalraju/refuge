@@ -338,6 +338,10 @@ function Planning() {
     <>
       {g.baseline && (g.event ? <RecordedVsSimulated /> : <Summary r={g.baseline} />)}
       <div style={{ fontWeight: 700, marginTop: 4 }}>Plan your shelters</div>
+      <button onClick={g.toggleMap} aria-pressed={g.mapHidden}
+        style={{ ...tab, background: g.mapHidden ? '#e3eae7' : 'transparent', color: g.mapHidden ? '#101817' : '#e3eae7' }}>
+        {g.mapHidden ? 'Show the risk map' : 'Hide the risk map to see the shelter options'}
+      </button>
       <div style={muted}>
         Hover a pin or a highlighted building to see how many people it could shelter and what it costs. Click to add it. Click a highlighted school, church or business on the map to make it a shelter (click again to remove): a FEMA P-361
         hardened core, {h.sqft_per_person} sq ft per person, {usd(h.cost_per_person)} per person.
@@ -566,7 +570,7 @@ function HoverCard() {
     const c = result.cells[h3];
     if (!c) return null;
     return (
-      <div style={{ ...panel, top: 'auto', bottom: 12, width: 300 }}>
+      <div style={{ ...panel, top: 'auto', bottom: 12, left: '50%', transform: 'translateX(-50%)', width: 300, pointerEvents: 'none' }}>
         <div style={{ fontWeight: 600 }}>{c.band === 'sparse' ? 'Too few residents for a stable estimate.' : `${pct(c.share)} of residents displaced`}</div>
         <div style={row}><span>Residents</span><span style={mono}>{num(c.residents)}</span></div>
         <div style={row}><span>Displaced{g.view !== 'before' ? ' without shelter' : ''}</span><span style={mono}>{num(c.displaced)}</span></div>
@@ -577,7 +581,7 @@ function HoverCard() {
   if (!c) return null;
   const text = c.band === 'sparse' ? 'Too few people for a stable estimate.' : `${oneInN(c.risk)} chance of death for someone here`;
   return (
-    <div style={{ ...panel, top: 'auto', bottom: 12, width: 300 }}>
+    <div style={{ ...panel, top: 'auto', bottom: 12, left: '50%', transform: 'translateX(-50%)', width: 300, pointerEvents: 'none' }}>
       <div style={{ fontWeight: 600 }}>{text}</div>
       <div style={row}><span>People at {hourWords(hourOf(g))}</span><span style={mono}>{Math.round(c.people)}</span></div>
       {c.expected_deaths > 0 && <div style={row}><span>Expected deaths</span><span style={mono}>{c.expected_deaths.toFixed(2)} ({c.p05}–{c.p95})</span></div>}

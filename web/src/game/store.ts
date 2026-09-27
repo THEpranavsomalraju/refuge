@@ -376,7 +376,11 @@ export const useGame = create<GameState>((set, get) => {
       else void showMap(after);
     },
     toggleMap() {
-      if (get().mapHidden) { get().show(get().view); return; }
+      if (get().mapHidden) {
+        // While planning, bring the map back without touching the player's shelter markers or pins.
+        if (get().step === 'plan' && get().baseline) { set({ mapHidden: false }); void showMap(get().baseline!); return; }
+        get().show(get().view); return;
+      }
       scene.hideRiskMap();
       set({ mapHidden: true });
     },
