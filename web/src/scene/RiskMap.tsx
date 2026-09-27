@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { RISK_RISE_MS } from './api';
+import { RISK_RISE_MS } from './timing';
 import type { Frame } from './geo';
 import { RISK_COLOR } from './palette';
 import { useSceneStore } from './store';
