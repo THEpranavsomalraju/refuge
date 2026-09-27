@@ -46,6 +46,20 @@ export function trackSampler(track: TrackRow[], frame: Frame): (t: number) => Ey
   };
 }
 
+/**
+ * The stretch of the track (as progress 0..1) where the eye is within CLIP_M of the town.
+ * playHurricane spends its whole duration on this stretch; the 150 km extensions the game
+ * adds to drawn tracks are skipped. Falls back to the whole track if it never comes near.
+ */
+export function nearTownWindow(at: (t: number) => EyeState): [number, number] {
+  let first = -1, last = -1;
+  for (let i = 0; i <= 600; i++) {
+    const e = at(i / 600);
+    if (Math.hypot(e.x, e.z) <= CLIP_M) { if (first < 0) first = i; last = i; }
+  }
+  return first < 0 || last <= first ? [0, 1] : [first / 600, last / 600];
+}
+
 /** Progress (0..1) at which the eye passes closest to the town center. */
 export function closestApproach(at: (t: number) => EyeState): number {
   let best = 0, bestD = Infinity;
@@ -64,14 +78,14 @@ export function HurricaneTrack({ frame }: { frame: Frame }) {
     const at = trackSampler(hurricane.track, frame);
     const line = new THREE.Line(trackLine(at, frame), new THREE.LineBasicMaterial({ color: '#c9d3dc', transparent: true, opacity: 0.7 }));
     line.raycast = () => {};
-    return { at, closest: closestApproach(at), line };
+    return { at, closest: closestApproach(at), window: nearTownWindow(at), line };
   }, [hurricane, frame]);
   useEffect(() => () => { built?.line.geometry.dispose(); (built?.line.material as THREE.Material | undefined)?.dispose(); }, [built]);
   if (!hurricane || !built) return null;
   return (
     <group>
       <primitive object={built.line} />
-      <Eye at={built.at} closest={built.closest} frame={frame} category={hurricane.category} />
+      <Eye at={built.at} closest={built.closest} window={built.window} frame={frame} category={hurricane.category} />
     </group>
   );
 }
@@ -88,7 +102,7 @@ function trackLine(at: (t: number) => EyeState, frame: Frame): THREE.BufferGeome
   return g;
 }
 
-function Eye({ at, closest, frame, category }: { at: (t: number) => EyeState; closest: number; frame: Frame; category: number }) {
+function Eye({ at, closest, window, frame, category }: { at: (t: number) => EyeState; closest: number; window: [number, number]; frame: Frame; category: number }) {
   const group = useRef<THREE.Group>(null);
   const cloud = useRef<THREE.Mesh>(null);
   const eyewall = useRef<THREE.Mesh>(null);
@@ -112,9 +126,11 @@ function Eye({ at, closest, frame, category }: { at: (t: number) => EyeState; cl
   useFrame((_, dt) => {
     const g = group.current;
     if (!g) return;
-    const t = useSceneStore.getState().hurricaneT;
-    const playing = t !== null;
-    const e = at(playing ? t : closest);
+    const raw = useSceneStore.getState().hurricaneT;
+    const playing = raw !== null;
+    // Playback covers only the stretch near town.
+    const t = playing ? window[0] + raw * (window[1] - window[0]) : closest;
+    const e = at(t);
     g.position.set(e.x, frame.groundY(e.x, e.z), e.z);
 
     // Cloud band out to about 3 x RMW, clear eye inside ~0.35 x RMW, turning counterclockwise.
@@ -145,9 +161,10 @@ function Eye({ at, closest, frame, category }: { at: (t: number) => EyeState; cl
     if (!playing) { camStage.current = 'idle'; return; }
     const span = Math.max(frame.width, frame.depth);
     if (camStage.current === 'idle') {
+      // Wide over the whole town (the camera never frames more than the town).
       camStage.current = 'wide';
       const [lon, lat] = frame.toLonLat(0, 0);
-      const r = Math.min(25_000, Math.max(span, 1.5 * e.rmwM)) / 111_000;
+      const r = span / 2 / 111_000;
       scene.frameCoords([[lon - r, lat - r], [lon + r, lat + r]], 1500, 0);
     } else if (camStage.current === 'wide' && t >= Math.min(0.95, closest + 0.05)) {
       camStage.current = 'settled';

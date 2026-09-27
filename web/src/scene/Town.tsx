@@ -1,6 +1,6 @@
 import { MapControls } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Buildings } from './Buildings';
 import { CameraRig } from './CameraRig';
@@ -68,12 +68,16 @@ function Place({ place }: { place: PlaceData }) {
 /** Oblique view from the south-southwest, whole town in frame. */
 function StartCamera({ frame }: { frame: Frame }) {
   const { camera, controls } = useThree(s => ({ camera: s.camera, controls: s.controls as unknown as { target: THREE.Vector3; update(): void } | null }));
+  // Place the camera once per town (when the controls exist), never again on clicks or re-renders.
+  const placedFor = useRef<Frame | null>(null);
   useEffect(() => {
+    if (!controls || placedFor.current === frame) return;
+    placedFor.current = frame;
     const d = Math.max(frame.width, frame.depth);
     const target = new THREE.Vector3(0, frame.groundY(0, 0), 0);
     camera.position.set(-0.18 * d, target.y + 0.55 * d, 0.62 * d);
     camera.lookAt(target);
-    if (controls) { controls.target.copy(target); controls.update(); }
+    controls.target.copy(target); controls.update();
   }, [frame, camera, controls]);
   return <MapControls makeDefault maxPolarAngle={Math.PI * 0.46} minDistance={150} maxDistance={Math.max(frame.width, frame.depth) * 2} />;
 }

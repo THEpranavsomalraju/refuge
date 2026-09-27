@@ -25,14 +25,7 @@ export function buildBuildingGeometry(buildings: BuildingRecord[], frame: Frame)
 
   buildings.forEach((b, i) => {
     starts[i] = pos.length / 3;
-    let ring = (b.footprint ?? square(b.lon, b.lat)).map(([lon, lat]) => frame.toXZ(lon, lat));
-    if (ring.length < 3) ring = square(b.lon, b.lat).map(([lon, lat]) => frame.toXZ(lon, lat));
-    if (signedArea(ring) < 0) ring = ring.slice().reverse();
-
-    let gMin = Infinity, gMax = -Infinity;
-    for (const [x, z] of ring) { const g = frame.groundY(x, z); gMin = Math.min(gMin, g); gMax = Math.max(gMax, g); }
-    const y0 = gMin - SINK_M;
-    const y1 = gMax + (b.cls === 'MH' ? MH_HEIGHT_M : Math.max(1, b.stories ?? 1) * STORY_HEIGHT_M);
+    const { ring, y0, y1 } = buildingShape(b, frame);
     color.set(CLASS_COLOR[b.cls]);
 
     const push = (x: number, y: number, z: number) => { pos.push(x, y, z); col.push(color.r, color.g, color.b); };
@@ -61,6 +54,21 @@ export function buildBuildingGeometry(buildings: BuildingRecord[], frame: Frame)
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
   return { geometry, starts, baseColors };
+}
+
+/**
+ * A building's footprint in scene x/z (counter-clockwise), base y (slightly below ground),
+ * and roof y. Shared by the merged mesh and the hover outline so they always match.
+ */
+export function buildingShape(b: BuildingRecord, frame: Frame): { ring: [number, number][]; y0: number; y1: number } {
+  let ring = (b.footprint ?? square(b.lon, b.lat)).map(([lon, lat]) => frame.toXZ(lon, lat));
+  if (ring.length < 3) ring = square(b.lon, b.lat).map(([lon, lat]) => frame.toXZ(lon, lat));
+  if (signedArea(ring) < 0) ring = ring.slice().reverse();
+  let gMin = Infinity, gMax = -Infinity;
+  for (const [x, z] of ring) { const g = frame.groundY(x, z); gMin = Math.min(gMin, g); gMax = Math.max(gMax, g); }
+  const y0 = gMin - SINK_M;
+  const y1 = gMax + (b.cls === 'MH' ? MH_HEIGHT_M : Math.max(1, b.stories ?? 1) * STORY_HEIGHT_M);
+  return { ring, y0, y1 };
 }
 
 /** Building index owning a vertex (binary search over starts). */

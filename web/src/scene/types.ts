@@ -146,6 +146,16 @@ export interface SceneAPI {
   buildServerAvailable(): Promise<boolean>;
   /** Builds a new city with the local build server; resolves with its place_id when done. */
   buildCity(city: string, state: string, onUpdate?: (s: BuildStatus) => void): Promise<string>;
+  /**
+   * Shelter candidates: color these buildings on one teal scale by value (0..1), everything
+   * else neutral; hovering one shows a pointer and an outline. null clears. The risk map
+   * lowers and fades while candidates are highlighted so the buildings stay visible.
+   */
+  highlightBuildings(values: Record<string, number> | null): void;
+  /** Ground circle of radiusM around a selected shelter (321 m tornado walk, 3 km hurricane drive). */
+  showReach(id: string, lon: number, lat: number, radiusM: number): void;
+  /** Remove one reach circle, or all of them. */
+  hideReach(id?: string): void;
   /** Hurricane track rows [lon, lat, vmax_kt, rmw_km, B, time_h]; draws the track and category. */
   showHurricaneTrack(track: TrackRow[], category: number): void;
   /** Moves the eye along the track by time_h (cloud band, eyewall ring, rain); resolves at the end. */

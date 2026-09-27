@@ -21,13 +21,17 @@ export function CameraRig({ frame }: { frame: Frame }) {
     const goal = useSceneStore.getState().camera;
     if (goal && goal.seq !== lastSeq.current && controls) {
       lastSeq.current = goal.seq;
-      const [x, z] = frame.toXZ(goal.center[0], goal.center[1]);
+      // Stay on the town: center inside the town rectangle, radius at most the town's size.
+      let [x, z] = frame.toXZ(goal.center[0], goal.center[1]);
+      x = Math.min(frame.width / 2, Math.max(-frame.width / 2, x));
+      z = Math.min(frame.depth / 2, Math.max(-frame.depth / 2, z));
+      const radiusM = Math.min(goal.radiusM, Math.max(frame.width, frame.depth));
       const t1 = new THREE.Vector3(x, frame.groundY(x, z), z);
       const dir = camera.position.clone().sub(controls.target).normalize();
       // Distance that fits a circle of radiusM in the narrower field of view.
       const vFov = THREE.MathUtils.degToRad(camera.fov);
       const hFov = 2 * Math.atan(Math.tan(vFov / 2) * (size.width / Math.max(1, size.height)));
-      const dist = (goal.radiusM / Math.tan(Math.min(vFov, hFov) / 2)) * 1.1;
+      const dist = (radiusM / Math.tan(Math.min(vFov, hFov) / 2)) * 1.1;
       move.current = {
         seq: goal.seq, start: performance.now(), ms: Math.max(1, goal.ms),
         p0: camera.position.clone(), t0: controls.target.clone(),

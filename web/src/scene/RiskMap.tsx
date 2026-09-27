@@ -14,6 +14,9 @@ const RISE_ORDER = ['green', 'yellow', 'red', 'deep_red'] as const;
 type RiseBand = typeof RISE_ORDER[number];
 const BAND_MS = (RISK_RISE_MS - RISK_FADE_MS) / RISE_ORDER.length;
 
+/** Height share of the risk map while shelter candidates are highlighted. */
+const LOWERED = 0.1;
+
 /** Tornado prism height from expected deaths in the cell: scaled and capped (meters). */
 export const cellHeightM = (expectedDeaths: number) => Math.min(450, 40 + 180 * Math.sqrt(Math.max(0, expectedDeaths)));
 /** Hurricane prism height from displaced people in the cell: scaled and capped (meters). */
@@ -66,6 +69,9 @@ export function RiskMap({ place, frame }: { place: PlaceData; frame: Frame }) {
   const hatchTex = useMemo(makeHatchTexture, []);
   const built = useMemo(() => (risk ? buildLayer(place, frame, risk.cells) : null), [risk, place, frame]);
   const riseRef = useRef<Record<RiseBand, number>>({ green: -1, yellow: -1, red: -1, deep_red: -1 });
+  // While shelter candidates are highlighted, the map lowers and fades so buildings show.
+  const lowered = useSceneStore(s => s.highlight !== null);
+  const factor = useRef(1);
 
   useEffect(() => () => {
     if (!built) return;
@@ -76,9 +82,11 @@ export function RiskMap({ place, frame }: { place: PlaceData; frame: Frame }) {
   useFrame(() => {
     if (!risk || !built) return;
     const elapsed = performance.now() - risk.shownAt - RISK_FADE_MS;
+    const goal = useSceneStore.getState().highlight ? LOWERED : 1;
+    factor.current += Math.sign(goal - factor.current) * Math.min(Math.abs(goal - factor.current), 0.06);
     RISE_ORDER.forEach((band, i) => {
       const t = Math.min(1, Math.max(0, (elapsed - i * BAND_MS) / BAND_MS));
-      const eased = 1 - Math.pow(1 - t, 3);
+      const eased = (1 - Math.pow(1 - t, 3)) * factor.current;
       if (Math.abs(eased - riseRef.current[band]) < 1e-4) return;
       riseRef.current[band] = eased;
       const g = built.groups[band];
@@ -101,10 +109,11 @@ export function RiskMap({ place, frame }: { place: PlaceData; frame: Frame }) {
       {RISE_ORDER.map(band => (
         <group key={band}>
           <mesh geometry={built.groups[band].prism} raycast={() => null}>
-            <meshStandardMaterial color={RISK_COLOR[band]} roughness={0.6} metalness={0} emissive={RISK_COLOR[band]} emissiveIntensity={0.5} />
+            <meshStandardMaterial color={RISK_COLOR[band]} roughness={0.6} metalness={0} emissive={RISK_COLOR[band]} emissiveIntensity={0.5}
+              transparent={lowered} opacity={lowered ? 0.45 : 1} depthWrite={!lowered} />
           </mesh>
           <lineSegments geometry={built.groups[band].edges} raycast={() => null}>
-            <lineBasicMaterial color="#f4f7f5" transparent opacity={0.55} />
+            <lineBasicMaterial color="#f4f7f5" transparent opacity={lowered ? 0.25 : 0.55} />
           </lineSegments>
           {built.groups[band].hatch && (
             <mesh geometry={built.groups[band].hatch!} raycast={() => null} renderOrder={3}>
