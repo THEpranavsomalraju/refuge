@@ -1,4 +1,4 @@
-import { RISK_COLOR } from './palette';
+import { DIFF_COLOR, RISK_COLOR } from './palette';
 
 // Legends for the risk map (tornado) and displacement map (hurricane). Both hazards use
 // the same four colors; only the title and labels change. Cutoffs are passed in, never
@@ -9,8 +9,9 @@ export type LegendHazard = 'tornado' | 'hurricane';
 export interface TornadoCutoffs { yellow: number; red: number; deep_red: number }
 export interface HurricaneCutoffs { moderate: number; severe: number; extreme: number }
 
+/** `color` may be a CSS color or a CSS gradient (used for the difference view's blue scale). */
 export interface LegendRow { label: string; range: string; color: string; hatched: boolean }
-export interface Legend { title: string; rows: LegendRow[]; outline: string; height: string }
+export interface Legend { title: string; rows: LegendRow[]; outline: string | null; height: string }
 
 const oneIn = (p: number) => `1 in ${Math.round(1 / p).toLocaleString('en-US')}`;
 const pct = (x: number) => `${Math.round(x * 100)}%`;
@@ -47,6 +48,25 @@ export function legendFor(hazard: LegendHazard, cutoffs: TornadoCutoffs | Hurric
   };
 }
 
+/**
+ * Legend for the difference view (scene.showDifference): what the plan changed compared
+ * with no shelters. Blue = fewer deaths (tornado) or fewer displaced (hurricane).
+ */
+export function differenceLegendFor(hazard: LegendHazard): Legend {
+  const what = hazard === 'tornado' ? 'deaths' : 'people displaced';
+  return {
+    title: 'What your plan changed',
+    rows: [
+      { label: 'Safer', range: `fewer ${what} expected; darker = more of that area's risk prevented`,
+        color: `linear-gradient(90deg, ${DIFF_COLOR.savedLow}, ${DIFF_COLOR.savedHigh})`, hatched: false },
+      { label: 'No change', range: 'same as without shelters', color: DIFF_COLOR.unchanged, hatched: false },
+      { label: 'Worse', range: `more ${what} expected`, color: DIFF_COLOR.worse, hatched: false },
+    ],
+    outline: null,
+    height: hazard === 'tornado' ? 'Height: lives saved in that area' : 'Height: people kept in their homes',
+  };
+}
+
 /** Ready-made legend panel; the game can place it anywhere or draw its own from legendFor(). */
 export function RiskLegend({ legend }: { legend: Legend }) {
   return (
@@ -55,17 +75,19 @@ export function RiskLegend({ legend }: { legend: Legend }) {
       {legend.rows.map(r => (
         <div key={r.label} style={row}>
           <span aria-hidden style={{
-            width: 14, height: 14, borderRadius: 3, flex: 'none', background: r.color,
+            width: 14, height: 14, borderRadius: 3, flex: 'none', background: r.color, minWidth: 14,
             backgroundImage: r.hatched ? 'repeating-linear-gradient(135deg, rgba(12,16,18,0.75) 0 3px, transparent 3px 7px)' : undefined,
           }} />
           <span style={{ fontWeight: 600, minWidth: 64 }}>{r.label}</span>
           <span style={{ color: '#b9c6c2', fontVariantNumeric: 'tabular-nums' }}>{r.range}{r.hatched ? ' (hatched)' : ''}</span>
         </div>
       ))}
-      <div style={row}>
-        <span aria-hidden style={{ width: 12, height: 12, borderRadius: 2, flex: 'none', border: `1.5px solid ${RISK_COLOR.sparse}` }} />
-        <span style={muted}>{legend.outline}</span>
-      </div>
+      {legend.outline && (
+        <div style={row}>
+          <span aria-hidden style={{ width: 12, height: 12, borderRadius: 2, flex: 'none', border: `1.5px solid ${RISK_COLOR.sparse}` }} />
+          <span style={muted}>{legend.outline}</span>
+        </div>
+      )}
       <div style={muted}>{legend.height}</div>
     </div>
   );
