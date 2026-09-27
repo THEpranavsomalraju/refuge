@@ -157,20 +157,8 @@ function Eye({ at, closest, window, frame, category }: { at: (t: number) => EyeS
       label.current.textContent = `${cat > 0 ? `Category ${cat}` : 'Tropical storm'} · ${Math.round(e.vmaxKt * KT_TO_MPH)} mph`;
     }
 
-    // Camera: wide when the storm starts, then settle over town as the eye passes.
-    if (!playing) { camStage.current = 'idle'; return; }
-    const span = Math.max(frame.width, frame.depth);
-    if (camStage.current === 'idle') {
-      // Wide over the whole town (the camera never frames more than the town).
-      camStage.current = 'wide';
-      const [lon, lat] = frame.toLonLat(0, 0);
-      const r = span / 2 / 111_000;
-      scene.frameCoords([[lon - r, lat - r], [lon + r, lat + r]], 1500, 0);
-    } else if (camStage.current === 'wide' && t >= Math.min(0.95, closest + 0.05)) {
-      camStage.current = 'settled';
-      const [a, b] = [frame.toLonLat(-frame.width / 2, frame.depth / 2), frame.toLonLat(frame.width / 2, -frame.depth / 2)];
-      scene.frameCoords([a, b], 2500, 0);
-    }
+    // Camera: stays where the player put it; the game frames the hardest-hit blocks after the storm.
+    if (!playing) camStage.current = 'idle';
   });
 
   return (

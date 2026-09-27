@@ -4,6 +4,7 @@ import { PAST_EVENTS, type PastEvent } from './events';
 import { hurricaneParams, isHurricane, riskBands, shelterRules, type DetailedResult, type HurricaneRun,
   type Result, type ShelterCandidate } from './simClient';
 import { SHOWN_CANDIDATES, useGame, type MapView } from './store';
+import { useSceneStore } from '../scene/store';
 import { GROUPS, deaths, driverWords, hourWords, oneInN, usd } from './format';
 
 type G = ReturnType<typeof useGame.getState>;
@@ -39,6 +40,7 @@ export function Game({ load }: { load: LoadState }) {
         {g.error && <button style={secondary} onClick={g.restart}>Back to start</button>}
       </div>
       {g.step === 'plan' && g.inspected && <ShelterCard />}
+      {g.step === 'plan' && <ShelterHoverCard />}
       {g.baseline && !g.mapHidden && <HoverCard />}
       {g.baseline && !g.mapHidden && <div style={legendBox}><RiskLegend legend={legend} /></div>}
     </>
@@ -397,6 +399,34 @@ function CandidateRow({ c, spent }: { c: ShelterCandidate; spent: number }) {
 }
 
 /** Card for the building the player clicked (plan step). */
+/** Follows the cursor over a highlighted shelter option: what converting it would do, and how to pick it. */
+function ShelterHoverCard() {
+  const g = useGame();
+  const hoverId = useSceneStore(s => s.hoverId);
+  const [pos, setPos] = useState<[number, number] | null>(null);
+  useEffect(() => {
+    const move = (e: MouseEvent) => setPos([e.clientX, e.clientY]);
+    window.addEventListener('mousemove', move);
+    return () => window.removeEventListener('mousemove', move);
+  }, []);
+  const i = hoverId ? g.candidates.findIndex(c => c.building_id === hoverId) : -1;
+  if (i < 0 || !pos) return null;
+  const c = g.candidates[i]!;
+  const b = g.place?.buildings.find(x => x.id === c.building_id);
+  const hurricane = g.hazard === 'hurricane';
+  const on = g.selected.includes(c.building_id);
+  return (
+    <div style={{ ...panel, position: 'fixed', left: pos[0] + 18, top: pos[1] + 18, right: 'auto', bottom: 'auto', width: 250, pointerEvents: 'none', zIndex: 30 }}>
+      <div style={row}><b>{b ? CLASS_WORDS[b.cls] ?? b.cls : 'Building'}</b><span style={muted}>#{i + 1} of {g.candidates.length}</span></div>
+      <div style={{ ...row, fontWeight: 700 }}><span>{hurricane ? 'Displaced people served' : 'Lives saved'}</span><span style={mono}>{c.effectiveness.toFixed(1)}</span></div>
+      <div style={row}><span>Capacity</span><span style={mono}>{num(c.capacity)} people</span></div>
+      <div style={row}><span>Cost</span><span style={mono}>{usd(c.cost_usd)}</span></div>
+      <div style={row}><span>{hurricane ? 'Displaced people in reach' : 'People in reach'}</span><span style={mono}>{num(c.people_in_reach)}</span></div>
+      <div style={muted}>{on ? 'Selected: click to remove' : 'Click to add to your plan'}</div>
+    </div>
+  );
+}
+
 function ShelterCard() {
   const g = useGame();
   const id = g.inspected!;

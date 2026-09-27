@@ -136,7 +136,20 @@ export const useGame = create<GameState>((set, get) => {
       return scene.placeProtection('safe_room', b.lon, b.lat);
     });
   };
+  /** Labeled pins over the top shelter options (and any selected ones); clicking a pin selects or removes it. */
+  const refreshPins = () => {
+    const hurricane = get().hazard === 'hurricane';
+    const sel = new Set(get().selected);
+    const ranked = get().candidates;
+    const shown = ranked.filter((c, i) => i < SHOWN_CANDIDATES || sel.has(c.building_id));
+    scene.showCandidateSites(shown.map(c => ({
+      id: c.building_id, lon: c.lon, lat: c.lat, selected: sel.has(c.building_id),
+      label: `#${ranked.indexOf(c) + 1} · ${hurricane ? `${Math.round(c.effectiveness)} served` : `${c.effectiveness.toFixed(1)} lives`}`,
+    })));
+  };
+  const hidePins = () => { scene.hideCandidateSites(); scene.onSiteClick(null); };
   const clearScene = () => {
+    hidePins();
     showShelters([]);
     ext.highlightBuildings?.(null);
     scene.hideRiskMap(); scene.clearBuildingGlow(); scene.hideTornadoPath(); ext.hideHurricaneTrack?.();
@@ -165,8 +178,15 @@ export const useGame = create<GameState>((set, get) => {
       ext.hideHurricaneTrack?.();
     }
     await showMap(result);
-    // Show the whole risk picture: every affected cell in view.
-    scene.frameRiskMap();
+    if (isHurricane(result)) {
+      // A hurricane touches the whole town; end on the hardest-hit blocks instead of zooming out to all of it.
+      const worst = Object.entries(result.cells as Record<string, { displaced: number }>)
+        .sort((a, b) => b[1].displaced - a[1].displaced).slice(0, 25).map(([h3]) => h3);
+      if (worst.length) scene.focusCells(worst);
+    } else {
+      // Tornado: every affected cell in view (the path's footprint).
+      scene.frameRiskMap();
+    }
     return result;
   }
 
@@ -289,7 +309,9 @@ export const useGame = create<GameState>((set, get) => {
         ext.highlightBuildings?.(Object.fromEntries(get().candidates.map(c => [c.building_id, top > 0 ? c.effectiveness / top : 0])));
         showShelters(get().selected);
         scene.onBuildingClick(b => get().pickFromMap(b.id));
+        scene.onSiteClick(id => get().pickFromMap(id));
         set({ step: 'plan', notice: null });
+        refreshPins();
       } catch (e) { fail(e); }
     },
     inspect(id) { set({ inspected: id }); },
@@ -307,6 +329,7 @@ export const useGame = create<GameState>((set, get) => {
       if (adding) scene.frameCoords([[c.lon, c.lat]], 1200, 350);
       set({ selected, notice: null });
       showShelters(selected);
+      if (get().step === 'plan') refreshPins();
     },
     pickFromMap(id) {
       if (candidate(id)) get().toggle(id);
@@ -319,13 +342,14 @@ export const useGame = create<GameState>((set, get) => {
         const selected = optimal.plan.building_ids.filter(id => candidate(id));
         set({ selected, busy: null });
         showShelters(selected);
+      if (get().step === 'plan') refreshPins();
         const picks = selected.map(candidate).map(c => [c!.lon, c!.lat] as LonLat);
         if (picks.length) scene.frameCoords(picks, 1500, 400);
       } catch (e) { fail(e); }
     },
     async replay() {
       try {
-        scene.onBuildingClick(null); ext.highlightBuildings?.(null);
+        scene.onBuildingClick(null); ext.highlightBuildings?.(null); hidePins();
         set({ step: 'replay', yours: null, inspected: null, notice: null });
         const yours = await run(get().selected);
         set({ yours, view: 'yours' });
