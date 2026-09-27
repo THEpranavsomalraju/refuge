@@ -1,10 +1,18 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
-import { scene, type Band, type LoadState } from '../scene';
-import type { SceneExtensions } from '../shared/contract';
-import { HURRICANE_READY, PAST_EVENTS } from './events';
-import { riskBands, shelterRules, type DetailedResult } from './simClient';
-import { CITIES, SHOWN_CANDIDATES, useGame, type MapView } from './store';
-import { BAND_COLOR, BAND_WORDS, GROUPS, deaths, driverWords, hourWords, oneInN, usd } from './format';
+import { legendFor, RiskLegend, scene, type LoadState } from '../scene';
+import { PAST_EVENTS, type PastEvent } from './events';
+import { hurricaneParams, isHurricane, riskBands, shelterRules, type DetailedResult, type HurricaneRun,
+  type Result, type ShelterCandidate } from './simClient';
+import { SHOWN_CANDIDATES, useGame, type MapView } from './store';
+import { GROUPS, deaths, driverWords, hourWords, oneInN, usd } from './format';
+
+type G = ReturnType<typeof useGame.getState>;
+const num = (n: number) => Math.round(n).toLocaleString('en-US');
+const pct = (x: number) => `${Math.round(x * 100)}%`;
+/** Scenario hour for display: the event's own hour in past mode. */
+const hourOf = (g: G) => g.event ? Number(g.event.scenario.hour) : g.hour;
+const warningOf = (g: G) => g.event ? Number(g.event.scenario.warning_min ?? 0) : g.warning;
+const CLASS_WORDS: Record<string, string> = { SCHOOL: 'School', WORSHIP: 'Place of worship', COMMERCIAL: 'Business', BIGROOF: 'Big-box / warehouse' };
 
 /** Game UI (plan section 1): intro -> mode -> past event or future storm -> storm -> map -> plan -> replay -> best plan -> score. */
 export function Game({ load }: { load: LoadState }) {
@@ -12,24 +20,28 @@ export function Game({ load }: { load: LoadState }) {
   useEffect(() => {
     if (load.state === 'ready' && load.place.meta.place_id === g.placeId) void g.placeLoaded(load.place);
     if (load.state === 'error') g.placeFailed(load.message);
-  }, [load, g.placeId]); // eslint-disable-line react-hooks/exhaustive-deps
+    // g.place resets to null when a town is chosen; rerun so an already-loaded town (same id) is picked up again.
+  }, [load, g.placeId, g.place === null]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const title = g.event ? g.event.title
+    : g.place && !['intro', 'choose_mode', 'choose_city'].includes(g.step) ? g.place.meta.name : 'Refuge';
+  const legend = g.hazard === 'hurricane'
+    ? legendFor('hurricane', hurricaneParams.cells.bands, hurricaneParams.cells.min_residents)
+    : legendFor('tornado', riskBands, riskBands.min_cell_people);
   return (
     <>
       <div style={panel}>
-        <div style={{ fontWeight: 700, fontSize: 15 }}>{g.event ? g.event.title : g.place && g.step !== 'intro' && g.step !== 'choose_mode' ? g.place.meta.name : 'Refuge'}</div>
+        <div style={{ fontWeight: 700, fontSize: 15 }}>{title}</div>
         {g.error && <div style={bad}>{g.error}</div>}
         {g.busy ? <div style={muted}>{g.busy}</div> : <Step />}
         {g.error && <button style={secondary} onClick={g.restart}>Back to start</button>}
       </div>
+      {g.step === 'plan' && g.inspected && <ShelterCard />}
       {g.baseline && <HoverCard />}
-      {g.baseline && <Legend />}
+      {g.baseline && !g.view.endsWith('_diff') && <div style={legendBox}><RiskLegend legend={legend} /></div>}
     </>
   );
 }
-
-/** Scenario hour for display: the event's own hour in past mode. */
-const hourOf = (g: ReturnType<typeof useGame.getState>) => g.event ? Number(g.event.scenario.hour) : g.hour;
 
 function Step() {
   const g = useGame();
@@ -42,43 +54,25 @@ function Step() {
     );
     case 'choose_mode': return (
       <>
-        <button style={choice} onClick={() => g.chooseMode('past')}><b>Past disaster</b><span style={muted}>Replay a real storm on today's buildings and compare with what NOAA recorded.</span></button>
-        <button style={choice} onClick={() => g.chooseMode('future')}><b>Future storm</b><span style={muted}>Pick a town and design the storm yourself.</span></button>
+        <button style={choice} onClick={() => void g.chooseMode('past')}><b>Past disaster</b><span style={muted}>Replay a real storm on today's buildings and compare with what NOAA recorded.</span></button>
+        <button style={choice} onClick={() => void g.chooseMode('future')}><b>Future storm</b><span style={muted}>Pick a town and design the storm yourself.</span></button>
       </>
     );
-    case 'choose_event': return (
-      <>
-        {PAST_EVENTS.map(e => {
-          const ready = e.hazard === 'tornado' || HURRICANE_READY;
-          return (
-            <button key={e.id} style={{ ...choice, opacity: ready ? 1 : 0.45 }} disabled={!ready} onClick={() => g.chooseEvent(e.id)}>
-              <b>{e.title}</b><span style={muted}>{e.subtitle}</span>
-              <span style={muted}>{ready ? `${e.recorded.deaths_direct} direct deaths recorded` : 'Hurricane mode is coming next'}</span>
-            </button>
-          );
-        })}
-        <button style={secondary} onClick={() => g.go('choose_mode')}>Back</button>
-      </>
-    );
-    case 'choose_city': return (
-      <>
-        {CITIES.map(c => <button key={c.place_id} style={choice} onClick={() => g.chooseCity(c.place_id)}><b>{c.name}</b></button>)}
-        <button style={secondary} onClick={() => g.go('choose_mode')}>Back</button>
-      </>
-    );
+    case 'choose_event': return <ChooseEvent />;
+    case 'choose_city': return <ChooseCity />;
     case 'choose_hazard': return (
       <>
-        <button style={choice} onClick={g.chooseHazard}><b>Tornado</b><span style={muted}>Chance of death per person.</span></button>
-        <button style={{ ...choice, opacity: 0.45 }} disabled><b>Hurricane</b><span style={muted}>Damage and displacement: coming next.</span></button>
-        <button style={secondary} onClick={() => g.go('choose_city')}>Back</button>
+        <button style={choice} onClick={() => g.chooseHazard('tornado')}><b>Tornado</b><span style={muted}>Chance of death per person, and shelters that save lives.</span></button>
+        <button style={choice} onClick={() => g.chooseHazard('hurricane')}><b>Hurricane</b><span style={muted}>Damage and displacement, and shelters for people who lose their homes.</span></button>
+        <button style={secondary} onClick={() => void g.chooseMode('future')}>Back</button>
       </>
     );
     case 'load_place': return <div style={muted}>Loading town…</div>;
     case 'storm_setup': return <Setup />;
-    case 'storm_animation': return <div style={muted}>Storm passing through town…</div>;
+    case 'storm_animation': return <div style={muted}>{g.hazard === 'hurricane' ? 'Hurricane passing…' : 'Storm passing through town…'}</div>;
     case 'results_map': return (
       <>
-        {g.event ? <RecordedVsSimulated /> : <Summary title="Without shelters" r={g.baseline!} hour={g.hour} />}
+        {g.event ? <RecordedVsSimulated /> : <Summary r={g.baseline!} />}
         <button style={primary} onClick={() => void g.plan()}>Plan shelters</button>
       </>
     );
@@ -86,7 +80,7 @@ function Step() {
     case 'replay': return g.yours ? (
       <>
         <BeforeAfter />
-        <Views options={['before', 'yours']} />
+        <Views options={['before', 'yours', 'yours_diff']} />
         <button style={primary} onClick={() => void g.best()}>Compare with the best plan</button>
         <button style={secondary} onClick={() => void g.plan()}>Change my plan</button>
       </>
@@ -96,40 +90,126 @@ function Step() {
   }
 }
 
-function Setup() {
+function ChooseEvent() {
   const g = useGame();
-  const canDraw = typeof (scene as typeof scene & SceneExtensions).onGroundClick === 'function';
   return (
     <>
-      <Row label="Strength">
-        <select value={g.ef} onChange={e => g.set({ ef: Number(e.target.value) })} style={input}>
-          {[0, 1, 2, 3, 4, 5].map(ef => <option key={ef} value={ef}>EF{ef}</option>)}
-        </select>
-      </Row>
+      {PAST_EVENTS.map(e => {
+        const ready = g.builtEvents.has(e.id);
+        return (
+          <button key={e.id} style={{ ...choice, opacity: ready ? 1 : 0.45 }} disabled={!ready} onClick={() => g.chooseEvent(e.id)}>
+            <b>{e.title}</b><span style={muted}>{e.subtitle}</span>
+            <span style={muted}>{ready ? recordedLine(e) : 'Town still being built'}</span>
+          </button>
+        );
+      })}
+      <button style={secondary} onClick={() => g.go('choose_mode')}>Back</button>
+    </>
+  );
+}
+const recordedLine = (e: PastEvent) => e.hazard === 'tornado'
+  ? `${e.recorded.deaths_direct} direct deaths recorded`
+  : `${usd(e.recorded.property_damage_usd ?? 0)} property damage recorded`;
+
+function ChooseCity() {
+  const g = useGame();
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  return (
+    <>
+      {g.cities.length === 0 && <div style={muted}>Loading cities…</div>}
+      {g.cities.map(c => (
+        <button key={c.place_id} style={{ ...choice, opacity: c.status === 'ready' ? 1 : 0.45 }} disabled={c.status !== 'ready'}
+          onClick={() => g.chooseCity(c.place_id)}>
+          <b>{c.name}</b>{c.status !== 'ready' && <span style={muted}>{c.status === 'building' ? 'Building…' : 'Not built'}</span>}
+        </button>
+      ))}
+      {g.canBuild && (
+        <div style={{ display: 'grid', gap: 6, borderTop: '1px solid #2c3a37', paddingTop: 8 }}>
+          <div style={{ fontWeight: 600 }}>Build a new city</div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <input placeholder="City" value={city} onChange={e => setCity(e.target.value)} style={{ ...input, flex: 1 }} />
+            <input placeholder="ST" maxLength={2} value={state} onChange={e => setState(e.target.value.toUpperCase())} style={{ ...input, width: 44 }} />
+          </div>
+          {g.build ? (
+            <>
+              <div style={bar}><div style={{ ...barFill, width: pct(g.build.progress) }} /></div>
+              <div style={muted}>{g.build.message}</div>
+            </>
+          ) : (
+            <button style={secondary} disabled={!city.trim() || state.length !== 2} onClick={() => void g.buildCity(city.trim(), state)}>
+              Build (1–3 minutes)
+            </button>
+          )}
+        </div>
+      )}
+      <button style={secondary} onClick={() => g.go('choose_mode')}>Back</button>
+    </>
+  );
+}
+
+function Setup() {
+  const g = useGame();
+  const tornado = g.hazard === 'tornado';
+  return (
+    <>
+      {tornado ? (
+        <Row label="Strength">
+          <select value={g.ef} onChange={e => g.set({ ef: Number(e.target.value) })} style={input}>
+            {[0, 1, 2, 3, 4, 5].map(ef => <option key={ef} value={ef}>EF{ef}</option>)}
+          </select>
+        </Row>
+      ) : (
+        <Row label="Category">
+          <select value={g.category} onChange={e => g.set({ category: Number(e.target.value) })} style={input}>
+            {[1, 2, 3, 4, 5].map(c => <option key={c} value={c}>Category {c}</option>)}
+          </select>
+        </Row>
+      )}
       <Row label={`Time: ${hourWords(g.hour)}`}>
         <input type="range" min={0} max={23} value={g.hour} onChange={e => g.set({ hour: Number(e.target.value) })} />
       </Row>
-      <Row label={`Warning: ${g.warning} min`}>
-        <input type="range" min={0} max={30} value={g.warning} onChange={e => g.set({ warning: Number(e.target.value) })} />
-      </Row>
-      {canDraw
-        ? <button style={secondary} onClick={g.startDrawing}>{g.drawing ? `Click the map: ${g.path.length} point${g.path.length === 1 ? '' : 's'}` : 'Draw the path'}</button>
-        : <div style={muted}>Path drawing arrives with the scene's ground-click hook; using {g.placeId === 'lumberton' ? 'the showcase path through both mobile-home parks' : 'a path through the town center'}.</div>}
+      {tornado && (
+        <Row label={`Warning: ${g.warning} min`}>
+          <input type="range" min={0} max={30} value={g.warning} onChange={e => g.set({ warning: Number(e.target.value) })} />
+        </Row>
+      )}
+      <button style={secondary} onClick={g.startDrawing}>
+        {g.drawing ? `Click the map to add points: ${g.path.length} so far` : `Draw the ${tornado ? 'path' : 'track'} (2+ clicks)`}
+      </button>
+      {!g.drawing && <div style={muted}>Using {g.placeId === 'lumberton' && tornado ? 'the showcase path through both mobile-home parks' : `a default ${tornado ? 'path' : 'track'} through the town center`} until you draw one.</div>}
+      {!tornado && <div style={muted}>Forward speed 20 km/h; size and shape from recent Category {g.category} hurricanes (NOAA HURDAT2).</div>}
       <button style={primary} disabled={g.path.length < 2} onClick={() => void g.play()}>Play storm</button>
     </>
   );
 }
 
-function Summary({ title, r, hour }: { title: string; r: DetailedResult; hour: number }) {
+function Summary({ r }: { r: Result }) {
+  const g = useGame();
+  if (isHurricane(r)) return <HurricaneSummary r={r} />;
   return (
     <div style={{ display: 'grid', gap: 4 }}>
-      <div style={muted}>{title} · {hourWords(hour)}</div>
-      <div style={{ fontSize: 30, fontWeight: 700, lineHeight: 1 }}>{deaths(r.expected_deaths)}</div>
+      <div style={muted}>Without shelters · {hourWords(hourOf(g))}</div>
+      <div style={big}>{deaths(r.expected_deaths)}</div>
       <div style={muted}>expected deaths · range {r.p05}–{r.p95} in 90% of 500 runs</div>
-      {GROUPS.map(({ label, classes }) => {
-        const v = classes.reduce((a, c) => a + (r.by_class[c as keyof typeof r.by_class] ?? 0), 0);
-        return v >= 0.05 ? <div key={label} style={row}><span>{label}</span><span style={mono}>{deaths(v)}</span></div> : null;
-      })}
+      {groups(r).map(([label, v]) => <div key={label} style={row}><span>{label}</span><span style={mono}>{deaths(v)}</span></div>)}
+    </div>
+  );
+}
+const groups = (r: DetailedResult) => GROUPS.map(({ label, classes }) =>
+  [label, classes.reduce((a, c) => a + (r.by_class[c as keyof typeof r.by_class] ?? 0), 0)] as const).filter(([, v]) => v >= 0.05);
+
+const RES_WORDS: Record<string, string> = { MH: 'Mobile homes', RES_WOOD: 'Wood-frame houses', RES_MASONRY: 'Masonry houses', MULTI: 'Apartments' };
+function HurricaneSummary({ r }: { r: HurricaneRun }) {
+  return (
+    <div style={{ display: 'grid', gap: 4 }}>
+      <div style={muted}>Without shelters · homes at major damage or worse</div>
+      <div style={big}>{num(r.displaced)}</div>
+      <div style={muted}>of {num(r.residents)} residents displaced · {num(r.destroyed)} from destroyed homes</div>
+      {Object.entries(r.by_class).filter(([, c]) => c.displaced >= 0.5).map(([cls, c]) => (
+        <div key={cls} style={row}><span>{RES_WORDS[cls] ?? cls}</span><span style={mono}>{num(c.displaced)} of {num(c.residents)}</span></div>
+      ))}
+      <div style={muted}>Expected deaths from wind at home: {r.expected_deaths.toFixed(2)} (hurricane wind rarely kills people indoors).</div>
     </div>
   );
 }
@@ -138,25 +218,38 @@ function Summary({ title, r, hour }: { title: string; r: DetailedResult; hour: n
 function RecordedVsSimulated() {
   const g = useGame();
   const e = g.event!, r = g.baseline!;
-  const groups = GROUPS.map(({ label, classes }) => [label, classes.reduce((a, c) => a + (r.by_class[c as keyof typeof r.by_class] ?? 0), 0)] as const)
-    .filter(([, v]) => v >= 0.05);
+  const rec = e.recorded as PastEvent['recorded'] & { deaths_indirect?: number };
   return (
     <div style={{ display: 'grid', gap: 6 }}>
       <div style={muted}>{e.subtitle}</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-        <div style={{ display: 'grid', gap: 3 }}>
+        <div style={{ display: 'grid', gap: 3, alignContent: 'start' }}>
           <div style={muted}>Recorded (NOAA)</div>
-          <div style={{ fontSize: 26, fontWeight: 700, lineHeight: 1 }}>{e.recorded.deaths_direct}</div>
+          <div style={bigger}>{rec.deaths_direct}</div>
           <div style={muted}>direct deaths</div>
-          {e.recorded.injuries_direct !== undefined && <div style={muted}>{e.recorded.injuries_direct} injuries</div>}
-          {Object.entries(e.recorded.death_locations ?? {}).map(([loc, n]) => <div key={loc} style={muted}>{n} · {loc}</div>)}
+          {rec.injuries_direct !== undefined && <div style={muted}>{rec.injuries_direct} injuries</div>}
+          {rec.deaths_indirect !== undefined && <div style={muted}>{rec.deaths_indirect} indirect deaths</div>}
+          {rec.property_damage_usd !== undefined && <div style={muted}>{usd(rec.property_damage_usd)} property damage</div>}
+          {Object.entries(rec.death_locations ?? {}).map(([loc, n]) => <div key={loc} style={muted}>{n} · {loc}</div>)}
+          {rec.zones && <div style={muted}>Zones: {rec.zones.join(', ')}</div>}
         </div>
-        <div style={{ display: 'grid', gap: 3 }}>
+        <div style={{ display: 'grid', gap: 3, alignContent: 'start' }}>
           <div style={muted}>Simulated</div>
-          <div style={{ fontSize: 26, fontWeight: 700, lineHeight: 1 }}>{deaths(r.expected_deaths)}</div>
-          <div style={muted}>expected · {r.p05}–{r.p95}</div>
-          <div style={muted}>injuries not modeled</div>
-          {groups.map(([label, v]) => <div key={label} style={muted}>{deaths(v)} · {label}</div>)}
+          {isHurricane(r) ? (
+            <>
+              <div style={bigger}>{r.expected_deaths.toFixed(2)}</div>
+              <div style={muted}>expected deaths from wind at home</div>
+              <div style={muted}>{num(r.displaced)} displaced of {num(r.residents)} residents</div>
+              <div style={muted}>{num(r.destroyed)} from destroyed homes</div>
+            </>
+          ) : (
+            <>
+              <div style={bigger}>{deaths(r.expected_deaths)}</div>
+              <div style={muted}>expected · {r.p05}–{r.p95}</div>
+              <div style={muted}>injuries not modeled</div>
+              {groups(r).map(([label, v]) => <div key={label} style={muted}>{deaths(v)} · {label}</div>)}
+            </>
+          )}
         </div>
       </div>
       {e.notes.map(n => <div key={n} style={{ ...muted, fontSize: 11 }}>{n}</div>)}
@@ -164,58 +257,113 @@ function RecordedVsSimulated() {
   );
 }
 
-const CLASS_WORDS: Record<string, string> = { SCHOOL: 'School', WORSHIP: 'Place of worship', COMMERCIAL: 'Business', BIGROOF: 'Big-box / warehouse' };
+/** Words for the plan's objective, per hazard. */
+const objective = (g: G) => g.hazard === 'hurricane'
+  ? { effect: 'displaced people served if converted', unit: 'need served', short: 'serves' }
+  : { effect: 'lives saved if converted', unit: 'lives saved', short: 'saves' };
 
 function Planning() {
   const g = useGame();
+  const hurricane = g.hazard === 'hurricane';
+  const h = hurricane ? shelterRules.hurricane : shelterRules.tornado;
   const t = shelterRules.tornado;
-  const reach = Math.round(t.walk_speed_mps * Math.max(0, (g.event ? Number(g.event.scenario.warning_min) : g.warning) - t.mobilize_min) * 60);
-  const spent = [...g.placed.keys()].reduce((s, id) => s + (g.candidates.find(c => c.building_id === id)?.cost_usd ?? 0), 0);
+  const reach = Math.round(t.walk_speed_mps * Math.max(0, warningOf(g) - t.mobilize_min) * 60);
+  const spent = g.selected.reduce((s, id) => s + (g.candidates.find(c => c.building_id === id)?.cost_usd ?? 0), 0);
   const shown = g.candidates.slice(0, SHOWN_CANDIDATES);
   return (
     <>
       <div style={muted}>
-        Turn existing buildings into tornado shelters (a FEMA P-361 hardened core, {Math.round(shelterRules.hardened_share * 100)}% of
-        the footprint, {t.sqft_per_person} sq ft per person, {usd(t.cost_per_person)} per person). The building's own occupants go first,
-        then about {Math.round(t.compliance * 100)}% of mobile-home residents within a {reach} m walk ({g.event ? Number(g.event.scenario.warning_min) : g.warning} min warning).
-        People inside are modeled as safe. Tornado shelter only.
+        Click a school, church or business on the map, or pick from the list, to turn it into a shelter: a FEMA P-361 hardened
+        core ({pct(shelterRules.hardened_share)} of the footprint, {h.sqft_per_person} sq ft per person, {usd(h.cost_per_person)} per person).
+        {hurricane
+          ? ` Displaced residents within ${shelterRules.hurricane.reach_km} km drive there before landfall, nearest first.`
+          : ` The building's own occupants go first, then about ${pct(t.compliance)} of mobile-home residents within a ${reach} m walk (${warningOf(g)} min warning).`}
       </div>
       <Row label="Budget">
-        <input type="number" min={0} step={50000} value={g.budget} style={{ ...input, width: 120 }}
+        <input type="number" min={0} step={hurricane ? 1_000_000 : 50_000} value={g.budget} style={{ ...input, width: 130 }}
           onChange={e => g.set({ budget: Math.max(0, Number(e.target.value) || 0) })} />
       </Row>
-      <div style={row}><span>Spent</span><span style={mono}>{usd(spent)} of {usd(g.budget)}</span></div>
-      <div style={muted}>Most effective buildings for this storm (lives saved if converted alone):</div>
-      <div style={{ display: 'grid', gap: 4, maxHeight: 300, overflowY: 'auto' }}>
-        {shown.map(c => {
-          const on = g.placed.has(c.building_id);
-          const affordable = on || spent + c.cost_usd <= g.budget;
-          return (
-            <button key={c.building_id} disabled={!affordable} onClick={() => g.toggle(c.building_id)}
-              style={{ ...site, display: 'grid', gap: 2, borderColor: on ? '#e3eae7' : '#2c3a37', opacity: affordable ? 1 : 0.4 }}>
-              <span style={row}><span>{on ? '■' : '□'} {CLASS_WORDS[c.cls] ?? c.cls}</span><span style={mono}>saves {c.effectiveness.toFixed(1)}</span></span>
-              <span style={muted}>{c.capacity} people · {usd(c.cost_usd)} · {Math.round(c.people_in_reach)} mobile-home residents in reach</span>
-            </button>
-          );
-        })}
-        {shown.length === 0 && <div style={muted}>No eligible buildings: needs schools, churches or businesses with a known footprint (footprint_sqft).</div>}
+      <div style={bar}><div style={{ ...barFill, width: pct(Math.min(1, g.budget ? spent / g.budget : 0)) }} /></div>
+      <div style={row}><span style={muted}>Spent</span><span style={mono}>{usd(spent)} of {usd(g.budget)}</span></div>
+      <div style={muted}>Most effective buildings for this storm ({objective(g).effect}):</div>
+      <div style={{ display: 'grid', gap: 4, maxHeight: 260, overflowY: 'auto' }}>
+        {shown.map(c => <CandidateRow key={c.building_id} c={c} spent={spent} />)}
+        {shown.length === 0 && <div style={muted}>No eligible buildings: needs schools, churches or businesses with a known footprint.</div>}
       </div>
       <button style={primary} onClick={() => void g.replay()}>
-        Replay storm with {g.placed.size} shelter{g.placed.size === 1 ? '' : 's'}
+        Replay storm with {g.selected.length} shelter{g.selected.length === 1 ? '' : 's'}
       </button>
     </>
   );
 }
 
+function CandidateRow({ c, spent }: { c: ShelterCandidate; spent: number }) {
+  const g = useGame();
+  const on = g.selected.includes(c.building_id);
+  const affordable = on || spent + c.cost_usd <= g.budget;
+  return (
+    <button onClick={() => g.inspect(c.building_id)}
+      style={{ ...site, borderColor: on ? '#e3eae7' : g.inspected === c.building_id ? '#93a4a0' : '#2c3a37', opacity: affordable ? 1 : 0.5 }}>
+      <span style={row}><span>{on ? '■' : '□'} {CLASS_WORDS[c.cls] ?? c.cls}</span><span style={mono}>{objective(g).short} {c.effectiveness.toFixed(1)}</span></span>
+      <span style={muted}>{num(c.capacity)} people · {usd(c.cost_usd)}</span>
+    </button>
+  );
+}
+
+/** Card for the building the player clicked (plan step). */
+function ShelterCard() {
+  const g = useGame();
+  const id = g.inspected!;
+  const c = g.candidates.find(x => x.building_id === id);
+  const b = g.place?.buildings.find(x => x.id === id);
+  const on = g.selected.includes(id);
+  const spent = g.selected.reduce((s, x) => s + (g.candidates.find(y => y.building_id === x)?.cost_usd ?? 0), 0);
+  const hurricane = g.hazard === 'hurricane';
+  return (
+    <div style={{ ...panel, left: 'auto', right: 12, top: 'auto', bottom: 12, width: 300 }}>
+      <div style={row}><b>{b ? CLASS_WORDS[b.cls] ?? b.cls : 'Building'}</b><button style={link} onClick={() => g.inspect(null)}>close</button></div>
+      {!c ? (
+        <div style={muted}>This building can't be a shelter: only schools, places of worship and businesses with a known footprint qualify.</div>
+      ) : (
+        <>
+          <div style={row}><span>Footprint</span><span style={mono}>{num(c.footprint_sqft)} sq ft</span></div>
+          <div style={row}><span>Capacity</span><span style={mono}>{num(c.capacity)} people, {hurricane ? shelterRules.hurricane.sqft_per_person : shelterRules.tornado.sqft_per_person} sq ft each</span></div>
+          <div style={row}><span>Cost</span><span style={mono}>{usd(c.cost_usd)}</span></div>
+          <div style={row}><span>{hurricane ? 'Displaced people in reach' : 'People in reach'}</span><span style={mono}>{num(c.people_in_reach)}</span></div>
+          <div style={row}><span>Mobile homes in reach</span><span style={mono}>{num(c.mh_homes_in_reach)}</span></div>
+          <div style={{ ...row, fontWeight: 700 }}><span>{hurricane ? 'Displaced people served' : 'Lives saved'} if converted</span><span style={mono}>{c.effectiveness.toFixed(1)}</span></div>
+          <div style={muted}>Hardened safe room (FEMA P-361), built to survive a direct hit.</div>
+          <button style={on ? secondary : primary} disabled={!on && spent + c.cost_usd > g.budget} onClick={() => g.toggle(id)}>
+            {on ? 'Remove' : spent + c.cost_usd > g.budget ? 'Over budget' : 'Select'}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 function BeforeAfter() {
   const g = useGame();
-  const saved = g.baseline!.expected_deaths - g.yours!.expected_deaths;
+  const before = g.baseline!, after = g.yours!;
+  const n = g.selected.length;
+  const plural = `${n} shelter${n === 1 ? '' : 's'}`;
+  if (isHurricane(before) && isHurricane(after)) {
+    return (
+      <div style={{ display: 'grid', gap: 4 }}>
+        <div style={row}><span>Displaced, no shelter: before</span><span style={mono}>{num(before.displaced_unsheltered)}</span></div>
+        <div style={row}><span>With your {plural}</span><span style={mono}>{num(after.displaced_unsheltered)}</span></div>
+        <div style={{ ...row, fontWeight: 700 }}><span>People sheltered</span><span style={mono}>{num(after.sheltered)}</span></div>
+        <div style={muted}>Need served {(after.need_served ?? 0).toFixed(0)} (1 per person from a destroyed home, 0.5 from major damage).</div>
+      </div>
+    );
+  }
+  const b = before as DetailedResult, a = after as DetailedResult;
   return (
     <div style={{ display: 'grid', gap: 4 }}>
-      <div style={row}><span>Before</span><span style={mono}>{deaths(g.baseline!.expected_deaths)}</span></div>
-      <div style={row}><span>With your {g.placed.size} shelter{g.placed.size === 1 ? '' : 's'}</span><span style={mono}>{deaths(g.yours!.expected_deaths)}</span></div>
-      <div style={{ ...row, fontWeight: 700 }}><span>Lives saved</span><span style={mono}>{saved.toFixed(1)}</span></div>
-      <div style={muted}>{Math.round(g.yours!.sheltered ?? 0)} people in shelters · range {g.yours!.p05}–{g.yours!.p95}</div>
+      <div style={row}><span>Before</span><span style={mono}>{deaths(b.expected_deaths)}</span></div>
+      <div style={row}><span>With your {plural}</span><span style={mono}>{deaths(a.expected_deaths)}</span></div>
+      <div style={{ ...row, fontWeight: 700 }}><span>Lives saved</span><span style={mono}>{(b.expected_deaths - a.expected_deaths).toFixed(1)}</span></div>
+      <div style={muted}>{num(a.sheltered ?? 0)} people in shelters · range {a.p05}–{a.p95}</div>
       <div style={muted}>{HOME_NOTE}</div>
     </div>
   );
@@ -223,40 +371,43 @@ function BeforeAfter() {
 
 function Compare() {
   const g = useGame();
-  const yourSaved = g.baseline!.expected_deaths - g.yours!.expected_deaths;
   const plan = g.optimal!.plan;
+  const yours = isHurricane(g.yours!) ? (g.yours.need_served ?? 0)
+    : (g.baseline as DetailedResult).expected_deaths - (g.yours as DetailedResult).expected_deaths;
   const none = plan.value <= 1e-9;
-  const pct = none ? null : Math.round(100 * yourSaved / plan.value);
-  const yourCost = [...g.placed.keys()].reduce((s, id) => s + (g.candidates.find(c => c.building_id === id)?.cost_usd ?? 0), 0);
+  const yourCost = g.selected.reduce((s, id) => s + (g.candidates.find(c => c.building_id === id)?.cost_usd ?? 0), 0);
   const names = plan.building_ids.map(id => CLASS_WORDS[g.candidates.find(c => c.building_id === id)?.cls ?? ''] ?? id).join(', ') || 'no shelters';
+  const label = plan.label === 'best' ? 'Best' : 'Best found';
+  const unit = objective(g).unit;
   return (
     <>
       {none
-        ? <div style={{ fontWeight: 600 }}>No shelter plan among these buildings saves lives in this storm.</div>
-        : <><div style={{ fontSize: 30, fontWeight: 700, lineHeight: 1 }}>{pct}%</div>
-          <div style={muted}>of the lives the {plan.label} plan saves</div></>}
-      <div style={row}><span>Your plan saves</span><span style={mono}>{yourSaved.toFixed(1)} · {usd(yourCost)}</span></div>
-      <div style={row}><span>{plan.label === 'best' ? 'Best' : 'Best found'} plan saves</span><span style={mono}>{plan.value.toFixed(1)} · {usd(plan.cost_usd)}</span></div>
+        ? <div style={{ fontWeight: 600 }}>No shelter plan among these buildings helps in this storm.</div>
+        : <><div style={big}>{Math.round(100 * yours / plan.value)}%</div>
+          <div style={muted}>of the {unit} the {label.toLowerCase()} plan achieves</div></>}
+      <div style={row}><span>Your plan</span><span style={mono}>{yours.toFixed(1)} · {usd(yourCost)}</span></div>
+      <div style={row}><span>{label} plan</span><span style={mono}>{plan.value.toFixed(1)} · {usd(plan.cost_usd)}</span></div>
       <div style={muted}>
-        {plan.label === 'best' ? 'Best' : 'Best found'} plan: {names}; {deaths(plan.remaining)} expected deaths remain.
+        {label} plan: {names}.
         {plan.method === 'exhaustive'
-          ? ` Every affordable combination of the ${plan.candidates.length} top buildings (including yours) was checked: ${plan.evaluated} plans within ${usd(g.budget)}.`
-          : ` Greedy search with swaps over ${plan.candidates.length} buildings (${plan.evaluated} plans); not guaranteed optimal.`}
+          ? ` Every affordable combination of the ${plan.candidates.length} top buildings (including yours) was checked: ${num(plan.evaluated)} plans within ${usd(g.budget)}.`
+          : ` Greedy search with swaps over ${plan.candidates.length} buildings; not guaranteed optimal.`}
       </div>
-      <div style={muted}>{HOME_NOTE}</div>
-      <Views options={['before', 'yours', 'optimal']} />
+      <Views options={['yours_diff', 'optimal_diff', 'before', 'yours', 'optimal']} />
       <button style={secondary} onClick={() => void g.plan()}>Try another plan</button>
       <button style={secondary} onClick={g.restart}>New storm</button>
     </>
   );
 }
 
-const VIEW_WORDS: Record<MapView, string> = { before: 'No protections', yours: 'Your plan', optimal: 'Best plan' };
+const VIEW_WORDS: Record<MapView, string> = {
+  before: 'No shelters', yours: 'Your plan', optimal: 'Best plan', yours_diff: 'What your plan changed', optimal_diff: 'What the best plan changed',
+};
 const HOME_NOTE = 'The map shows risk where people live: residents who reach a shelter still count in their home cell, with no risk.';
 function Views({ options }: { options: MapView[] }) {
   const g = useGame();
   return (
-    <div style={{ display: 'flex', gap: 4 }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
       {options.map(v => (
         <button key={v} onClick={() => g.show(v)}
           style={{ ...tab, background: g.view === v ? '#e3eae7' : 'transparent', color: g.view === v ? '#101817' : '#e3eae7' }}>
@@ -271,40 +422,28 @@ function HoverCard() {
   const g = useGame();
   const [h3, setH3] = useState<string | null>(null);
   useEffect(() => { scene.onCellHover(setH3); return () => scene.onCellHover(null); }, []);
-  const result = g.view === 'yours' ? g.yours : g.view === 'optimal' ? g.optimal?.result : g.baseline;
-  const c = h3 && result ? result.cells[h3] : null;
+  const result: Result | null | undefined = g.view.startsWith('yours') ? g.yours : g.view.startsWith('optimal') ? g.optimal?.result : g.baseline;
+  if (!h3 || !result) return null;
+  if (isHurricane(result)) {
+    const c = result.cells[h3];
+    if (!c) return null;
+    return (
+      <div style={{ ...panel, top: 'auto', bottom: 12, width: 300 }}>
+        <div style={{ fontWeight: 600 }}>{c.band === 'sparse' ? 'Too few residents for a stable estimate.' : `${pct(c.share)} of residents displaced`}</div>
+        <div style={row}><span>Residents</span><span style={mono}>{num(c.residents)}</span></div>
+        <div style={row}><span>Displaced{g.view !== 'before' ? ' without shelter' : ''}</span><span style={mono}>{num(c.displaced)}</span></div>
+      </div>
+    );
+  }
+  const c = result.cells[h3];
   if (!c) return null;
-  const text = c.band === 'empty' ? 'Nobody here at this hour.'
-    : c.band === 'sparse' ? 'Too few people for a stable estimate.'
-    : `${oneInN(c.risk)} chance of death for someone here`;
+  const text = c.band === 'sparse' ? 'Too few people for a stable estimate.' : `${oneInN(c.risk)} chance of death for someone here`;
   return (
     <div style={{ ...panel, top: 'auto', bottom: 12, width: 300 }}>
       <div style={{ fontWeight: 600 }}>{text}</div>
-      {c.band !== 'empty' && <div style={row}><span>People at {hourWords(hourOf(g))}</span><span style={mono}>{Math.round(c.people)}</span></div>}
+      <div style={row}><span>People at {hourWords(hourOf(g))}</span><span style={mono}>{Math.round(c.people)}</span></div>
       {c.expected_deaths > 0 && <div style={row}><span>Expected deaths</span><span style={mono}>{c.expected_deaths.toFixed(2)} ({c.p05}–{c.p95})</span></div>}
       {c.drivers.length > 0 && <div style={muted}>{driverWords(c.drivers, hourOf(g))}{c.uncertain ? ' · uncertain' : ''}</div>}
-    </div>
-  );
-}
-
-function Legend() {
-  const n = oneInN;
-  const items: [Band, string][] = [
-    ['green', `below ${n(riskBands.yellow)}`],
-    ['yellow', `${n(riskBands.yellow)} to ${n(riskBands.red)}`],
-    ['red', `${n(riskBands.red)} to ${n(riskBands.deep_red)}`],
-    ['deep_red', `above ${n(riskBands.deep_red)}`],
-  ];
-  return (
-    <div style={{ ...panel, left: 'auto', right: 12, width: 250 }}>
-      <div style={{ fontWeight: 600 }}>Chance of death for a person here</div>
-      {items.map(([b, text]) => (
-        <div key={b} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <span style={{ width: 12, height: 12, borderRadius: 2, background: BAND_COLOR[b] }} />
-          <span>{BAND_WORDS[b]}</span><span style={{ ...muted, marginLeft: 'auto' }}>{text}</span>
-        </div>
-      ))}
-      <div style={muted}>Outline only: fewer than {riskBands.min_cell_people} people</div>
     </div>
   );
 }
@@ -314,16 +453,22 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 }
 
 const panel: CSSProperties = {
-  position: 'absolute', top: 12, left: 12, width: 320, padding: '12px 14px', display: 'grid', gap: 8,
+  position: 'absolute', top: 12, left: 12, width: 330, padding: '12px 14px', display: 'grid', gap: 8, maxHeight: 'calc(100% - 24px)', overflowY: 'auto',
   background: 'rgba(16, 24, 23, 0.94)', border: '1px solid #2c3a37', borderRadius: 8, fontSize: 13, color: '#e3eae7',
 };
+const legendBox: CSSProperties = { position: 'absolute', top: 12, right: 12 };
 const row: CSSProperties = { display: 'flex', justifyContent: 'space-between', gap: 10 };
 const muted: CSSProperties = { color: '#93a4a0', fontSize: 12 };
 const bad: CSSProperties = { color: '#f08c73', fontSize: 12 };
+const big: CSSProperties = { fontSize: 30, fontWeight: 700, lineHeight: 1 };
+const bigger: CSSProperties = { fontSize: 26, fontWeight: 700, lineHeight: 1 };
 const mono: CSSProperties = { fontFamily: 'ui-monospace, Consolas, monospace', fontVariantNumeric: 'tabular-nums' };
-const input: CSSProperties = { background: '#101817', color: '#e3eae7', border: '1px solid #2c3a37', borderRadius: 4 };
+const input: CSSProperties = { background: '#101817', color: '#e3eae7', border: '1px solid #2c3a37', borderRadius: 4, padding: '3px 6px' };
 const primary: CSSProperties = { padding: '8px 10px', borderRadius: 6, border: 0, background: '#e3eae7', color: '#101817', fontWeight: 600, cursor: 'pointer' };
 const secondary: CSSProperties = { ...primary, background: 'transparent', color: '#e3eae7', border: '1px solid #2c3a37' };
+const link: CSSProperties = { background: 'none', border: 0, color: '#93a4a0', cursor: 'pointer', fontSize: 12 };
 const choice: CSSProperties = { display: 'grid', gap: 3, padding: '8px 10px', borderRadius: 6, border: '1px solid #2c3a37', background: 'transparent', color: '#e3eae7', cursor: 'pointer', textAlign: 'left' };
-const site: CSSProperties = { ...row, padding: '6px 8px', borderRadius: 6, border: '1px solid', background: 'transparent', color: '#e3eae7', cursor: 'pointer', textAlign: 'left' };
-const tab: CSSProperties = { flex: 1, padding: '5px 6px', borderRadius: 5, border: '1px solid #2c3a37', cursor: 'pointer', fontSize: 12 };
+const site: CSSProperties = { display: 'grid', gap: 2, padding: '6px 8px', borderRadius: 6, border: '1px solid', background: 'transparent', color: '#e3eae7', cursor: 'pointer', textAlign: 'left' };
+const tab: CSSProperties = { flex: '1 1 45%', padding: '5px 6px', borderRadius: 5, border: '1px solid #2c3a37', cursor: 'pointer', fontSize: 12 };
+const bar: CSSProperties = { height: 6, borderRadius: 3, background: '#2c3a37', overflow: 'hidden' };
+const barFill: CSSProperties = { height: '100%', background: '#e3eae7' };

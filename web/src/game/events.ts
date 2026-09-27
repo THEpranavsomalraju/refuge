@@ -23,5 +23,3 @@ export interface PastEvent {
 }
 
 export const PAST_EVENTS = [estill, valleyView, michael, florence] as unknown as PastEvent[];
-/** Hurricane mode lands in plan steps 5-7; until then those events are listed but disabled. */
-export const HURRICANE_READY = false;
