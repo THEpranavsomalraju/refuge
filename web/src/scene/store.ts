@@ -37,6 +37,12 @@ interface SceneState {
   hurricane: { track: TrackRow[]; category: number } | null;
   /** Eye progress along the track by time, 0..1, or null when not playing. */
   hurricaneT: number | null;
+  /** Shelter candidates: building id -> 0..1 (how effective). null = no highlight. */
+  highlight: Map<string, number> | null;
+  /** Building id under the pointer when it is a highlighted candidate. */
+  hoverId: string | null;
+  /** Reach circles around selected shelters, by id. */
+  reach: Record<string, { lon: number; lat: number; radiusM: number }>;
 }
 
 export const useSceneStore = create<SceneState>(() => ({
@@ -58,4 +64,7 @@ export const useSceneStore = create<SceneState>(() => ({
   groundClicks: [],
   hurricane: null,
   hurricaneT: null,
+  highlight: null,
+  hoverId: null,
+  reach: {},
 }));

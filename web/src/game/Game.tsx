@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
-import { legendFor, RiskLegend, scene, type LoadState } from '../scene';
+import { differenceLegendFor, legendFor, RiskLegend, scene, type LoadState } from '../scene';
 import { PAST_EVENTS, type PastEvent } from './events';
 import { hurricaneParams, isHurricane, riskBands, shelterRules, type DetailedResult, type HurricaneRun,
   type Result, type ShelterCandidate } from './simClient';
@@ -25,9 +25,11 @@ export function Game({ load }: { load: LoadState }) {
 
   const title = g.event ? g.event.title
     : g.place && !['intro', 'choose_mode', 'choose_city'].includes(g.step) ? g.place.meta.name : 'Refuge';
-  const legend = g.hazard === 'hurricane'
-    ? legendFor('hurricane', hurricaneParams.cells.bands, hurricaneParams.cells.min_residents)
-    : legendFor('tornado', riskBands, riskBands.min_cell_people);
+  // The blue "what your plan changed" view gets its own legend.
+  const legend = g.view.endsWith('_diff') ? differenceLegendFor(g.hazard)
+    : g.hazard === 'hurricane'
+      ? legendFor('hurricane', hurricaneParams.cells.bands, hurricaneParams.cells.min_residents)
+      : legendFor('tornado', riskBands, riskBands.min_cell_people);
   return (
     <>
       <div style={panel}>
@@ -38,7 +40,7 @@ export function Game({ load }: { load: LoadState }) {
       </div>
       {g.step === 'plan' && g.inspected && <ShelterCard />}
       {g.baseline && <HoverCard />}
-      {g.baseline && !g.view.endsWith('_diff') && <div style={legendBox}><RiskLegend legend={legend} /></div>}
+      {g.baseline && <div style={legendBox}><RiskLegend legend={legend} /></div>}
     </>
   );
 }
@@ -209,12 +211,46 @@ function Setup() {
 function Summary({ r }: { r: Result }) {
   const g = useGame();
   if (isHurricane(r)) return <HurricaneSummary r={r} />;
+  const ef = g.event ? Number(g.event.scenario.ef) : g.ef;
+  const warning = g.event ? Number(g.event.scenario.warning_min) : g.warning;
+  const parts = groups(r);
+  const total = parts.reduce((a, [, v]) => a + v, 0) || 1;
   return (
-    <div style={{ display: 'grid', gap: 4 }}>
-      <div style={muted}>Without shelters · {hourWords(hourOf(g))}</div>
-      <div style={big}>{deaths(r.expected_deaths)}</div>
-      <div style={muted}>expected deaths · range {r.p05}–{r.p95} in 90% of 500 runs</div>
-      {groups(r).map(([label, v]) => <div key={label} style={row}><span>{label}</span><span style={mono}>{deaths(v)}</span></div>)}
+    <div style={{ display: 'grid', gap: 10 }}>
+      <div style={muted}>EF{ef} tornado · {hourWords(hourOf(g))} · {warning} min warning · no shelters</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <Stat value={num(r.people_exposed)} label="people in buildings the storm damaged" />
+        <Stat value={deaths(r.expected_deaths)} label="expected deaths" strong />
+      </div>
+      <div style={muted}>Most likely between <b style={{ color: '#e3eae7' }}>{r.p05}</b> and <b style={{ color: '#e3eae7' }}>{r.p95}</b> deaths (9 in 10 of 500 simulated storms).</div>
+      {parts.length > 0 && (
+        <div style={{ display: 'grid', gap: 5 }}>
+          <div style={{ ...muted, fontWeight: 600 }}>Where the deaths happen</div>
+          {parts.map(([label, v]) => <Bar key={label} label={label} value={deaths(v)} share={v / total} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** One headline number with its meaning underneath. */
+function Stat({ value, label, strong }: { value: string; label: string; strong?: boolean }) {
+  return (
+    <div style={{ display: 'grid', gap: 3, padding: '8px 10px', borderRadius: 6, background: strong ? '#2a1618' : '#18211f', border: `1px solid ${strong ? '#6e2a31' : '#2c3a37'}` }}>
+      <div style={{ ...bigger, color: strong ? '#ffb4ac' : '#e3eae7' }}>{value}</div>
+      <div style={muted}>{label}</div>
+    </div>
+  );
+}
+
+/** A labeled share bar (where deaths or displacement happen). */
+function Bar({ label, value, share }: { label: string; value: string; share: number }) {
+  return (
+    <div style={{ display: 'grid', gap: 2 }}>
+      <div style={row}><span>{label}</span><span style={mono}>{value}</span></div>
+      <div style={{ height: 6, borderRadius: 3, background: '#1c2826', overflow: 'hidden' }}>
+        <div style={{ width: `${Math.max(2, Math.round(share * 100))}%`, height: '100%', background: '#e4572e' }} />
+      </div>
     </div>
   );
 }
@@ -224,12 +260,15 @@ const groups = (r: DetailedResult) => GROUPS.map(({ label, classes }) =>
 const RES_WORDS: Record<string, string> = { MH: 'Mobile homes', RES_WOOD: 'Wood-frame houses', RES_MASONRY: 'Masonry houses', MULTI: 'Apartments' };
 function HurricaneSummary({ r }: { r: HurricaneRun }) {
   return (
-    <div style={{ display: 'grid', gap: 4 }}>
-      <div style={muted}>Without shelters · homes at major damage or worse</div>
-      <div style={big}>{num(r.displaced)}</div>
-      <div style={muted}>of {num(r.residents)} residents displaced · {num(r.destroyed)} from destroyed homes</div>
+    <div style={{ display: 'grid', gap: 10 }}>
+      <div style={muted}>Hurricane · no shelters · displaced = home at major damage or worse</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <Stat value={num(r.displaced)} label={`of ${num(r.residents)} residents displaced (${Math.round((100 * r.displaced) / Math.max(1, r.residents))}%)`} strong />
+        <Stat value={num(r.destroyed)} label="from homes destroyed" />
+      </div>
+      <div style={{ ...muted, fontWeight: 600 }}>Displaced, by type of home</div>
       {Object.entries(r.by_class).filter(([, c]) => c.displaced >= 0.5).map(([cls, c]) => (
-        <div key={cls} style={row}><span>{RES_WORDS[cls] ?? cls}</span><span style={mono}>{num(c.displaced)} of {num(c.residents)}</span></div>
+        <Bar key={cls} label={RES_WORDS[cls] ?? cls} value={`${num(c.displaced)} of ${num(c.residents)}`} share={c.displaced / Math.max(1, c.residents)} />
       ))}
       <div style={muted}>Expected deaths from wind at home: {r.expected_deaths.toFixed(2)} (hurricane wind rarely kills people indoors).</div>
     </div>

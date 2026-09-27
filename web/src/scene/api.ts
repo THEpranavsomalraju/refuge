@@ -105,6 +105,20 @@ export const scene: SceneAPI = {
   listCities,
   buildServerAvailable,
   buildCity,
+  highlightBuildings(values) {
+    useSceneStore.setState({ highlight: values ? new Map(Object.entries(values)) : null, hoverId: null });
+  },
+  showReach(id, lon, lat, radiusM) {
+    useSceneStore.setState(s => ({ reach: { ...s.reach, [id]: { lon, lat, radiusM } } }));
+  },
+  hideReach(id) {
+    useSceneStore.setState(s => {
+      if (id === undefined) return { reach: {} };
+      const reach = { ...s.reach };
+      delete reach[id];
+      return { reach };
+    });
+  },
   showHurricaneTrack(track, category) {
     useSceneStore.setState({ hurricane: { track: track.map(r => [...r] as TrackRow), category }, hurricaneT: null });
   },
