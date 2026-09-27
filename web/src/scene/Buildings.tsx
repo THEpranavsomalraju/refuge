@@ -66,7 +66,11 @@ export function Buildings({ place, frame }: { place: PlaceData; frame: Frame }) 
     e.stopPropagation();
     if (e.faceIndex == null) return;
     const cb = useSceneStore.getState().onBuildingClick;
-    cb?.(place.buildings[buildingAtVertex(built.starts, e.faceIndex * 3)]);
+    // <Bvh> gives the geometry an index buffer and reorders its triangles, so map the hit
+    // triangle through the index to a real vertex before looking up its building.
+    const index = built.geometry.index;
+    const vertex = index ? index.getX(e.faceIndex * 3) : e.faceIndex * 3;
+    cb?.(place.buildings[buildingAtVertex(built.starts, vertex)]);
   };
 
   return (
