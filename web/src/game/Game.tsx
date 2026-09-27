@@ -39,8 +39,8 @@ export function Game({ load }: { load: LoadState }) {
         {g.error && <button style={secondary} onClick={g.restart}>Back to start</button>}
       </div>
       {g.step === 'plan' && g.inspected && <ShelterCard />}
-      {g.baseline && <HoverCard />}
-      {g.baseline && <div style={legendBox}><RiskLegend legend={legend} /></div>}
+      {g.baseline && !g.mapHidden && <HoverCard />}
+      {g.baseline && !g.mapHidden && <div style={legendBox}><RiskLegend legend={legend} /></div>}
     </>
   );
 }
@@ -499,6 +499,10 @@ function Views({ options }: { options: MapView[] }) {
           {VIEW_WORDS[v]}
         </button>
       ))}
+      <button onClick={g.toggleMap} aria-pressed={g.mapHidden}
+        style={{ ...tab, flexBasis: '100%', background: g.mapHidden ? '#e3eae7' : 'transparent', color: g.mapHidden ? '#101817' : '#e3eae7' }}>
+        {g.mapHidden ? 'Show the risk map' : 'Hide the risk map (see buildings)'}
+      </button>
     </div>
   );
 }
