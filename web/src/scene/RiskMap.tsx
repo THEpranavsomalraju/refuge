@@ -15,9 +15,9 @@ type RiseBand = typeof RISE_ORDER[number];
 const BAND_MS = (RISK_RISE_MS - RISK_FADE_MS) / RISE_ORDER.length;
 
 /** Tornado prism height from expected deaths in the cell: scaled and capped (meters). */
-export const cellHeightM = (expectedDeaths: number) => Math.min(320, 10 + 95 * Math.sqrt(Math.max(0, expectedDeaths)));
+export const cellHeightM = (expectedDeaths: number) => Math.min(450, 40 + 180 * Math.sqrt(Math.max(0, expectedDeaths)));
 /** Hurricane prism height from displaced people in the cell: scaled and capped (meters). */
-export const displacedHeightM = (displaced: number) => Math.min(320, 10 + 14 * Math.sqrt(Math.max(0, displaced)));
+export const displacedHeightM = (displaced: number) => Math.min(450, 40 + 22 * Math.sqrt(Math.max(0, displaced)));
 
 /**
  * One drawable cell, whatever the hazard. Both hazards share the colorblind-safe ramp:
@@ -53,6 +53,8 @@ export function hurricaneCells(cells: HurricaneCells): Record<string, RiskCell> 
 interface Group {
   prism: THREE.BufferGeometry;
   hatch: THREE.BufferGeometry | null;
+  /** Outline of each prism's top edge, rising with it. */
+  edges: THREE.BufferGeometry;
   /** Per vertex: ground y and full lift, so the rise only rewrites y. */
   base: Float32Array[];
   lift: Float32Array[];
@@ -67,7 +69,7 @@ export function RiskMap({ place, frame }: { place: PlaceData; frame: Frame }) {
 
   useEffect(() => () => {
     if (!built) return;
-    for (const g of Object.values(built.groups)) { g.prism.dispose(); g.hatch?.dispose(); }
+    for (const g of Object.values(built.groups)) { g.prism.dispose(); g.hatch?.dispose(); g.edges.dispose(); }
     built.sparse.dispose();
   }, [built]);
 
@@ -80,7 +82,7 @@ export function RiskMap({ place, frame }: { place: PlaceData; frame: Frame }) {
       if (Math.abs(eased - riseRef.current[band]) < 1e-4) return;
       riseRef.current[band] = eased;
       const g = built.groups[band];
-      [g.prism, g.hatch].forEach((geo, j) => {
+      [g.prism, g.hatch, g.edges].forEach((geo, j) => {
         if (!geo) return;
         const pos = geo.getAttribute('position') as THREE.BufferAttribute;
         const base = g.base[j], lift = g.lift[j];
@@ -99,8 +101,11 @@ export function RiskMap({ place, frame }: { place: PlaceData; frame: Frame }) {
       {RISE_ORDER.map(band => (
         <group key={band}>
           <mesh geometry={built.groups[band].prism} raycast={() => null}>
-            <meshStandardMaterial color={RISK_COLOR[band]} roughness={0.7} metalness={0} emissive={RISK_COLOR[band]} emissiveIntensity={0.25} />
+            <meshStandardMaterial color={RISK_COLOR[band]} roughness={0.6} metalness={0} emissive={RISK_COLOR[band]} emissiveIntensity={0.5} />
           </mesh>
+          <lineSegments geometry={built.groups[band].edges} raycast={() => null}>
+            <lineBasicMaterial color="#f4f7f5" transparent opacity={0.55} />
+          </lineSegments>
           {built.groups[band].hatch && (
             <mesh geometry={built.groups[band].hatch!} raycast={() => null} renderOrder={3}>
               <meshBasicMaterial map={hatchTex} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-2} />
@@ -116,8 +121,8 @@ export function RiskMap({ place, frame }: { place: PlaceData; frame: Frame }) {
 }
 
 export function buildLayer(place: PlaceData, frame: Frame, cells: Record<string, RiskCell>) {
-  const acc: Record<RiseBand, { pos: number[]; base: number[]; lift: number[]; hPos: number[]; hBase: number[]; hLift: number[]; hUv: number[] }> =
-    Object.fromEntries(RISE_ORDER.map(b => [b, { pos: [], base: [], lift: [], hPos: [], hBase: [], hLift: [], hUv: [] }])) as never;
+  const acc: Record<RiseBand, { pos: number[]; base: number[]; lift: number[]; hPos: number[]; hBase: number[]; hLift: number[]; hUv: number[]; ePos: number[]; eBase: number[]; eLift: number[] }> =
+    Object.fromEntries(RISE_ORDER.map(b => [b, { pos: [], base: [], lift: [], hPos: [], hBase: [], hLift: [], hUv: [], ePos: [], eBase: [], eLift: [] }])) as never;
   const sparse: number[] = [];
 
   // Only cells present in the results are drawn; absent cells were unaffected.
@@ -138,6 +143,11 @@ export function buildLayer(place: PlaceData, frame: Frame, cells: Record<string,
     if (!a) continue;
     const h = r.heightM;
     prism(ring, ground - 1, h + 1, a.pos, a.base, a.lift);
+    for (let k = 0; k < ring.length; k++) {   // top-edge outline
+      const [ax, az] = ring[k], [bx, bz] = ring[(k + 1) % ring.length];
+      a.ePos.push(ax, 0, az, bx, 0, bz);
+      a.eBase.push(ground - 1, ground - 1); a.eLift.push(h + 1.3, h + 1.3);
+    }
     if (r.hatch) {
       const start = a.hPos.length / 3;
       flatTile(ring, 0, a.hPos, a.hUv);
@@ -163,7 +173,12 @@ export function buildLayer(place: PlaceData, frame: Frame, cells: Record<string,
       const hp = hatch.getAttribute('position') as THREE.BufferAttribute;
       for (let v = 0; v < hp.count; v++) hp.setY(v, hb[v]);
     }
-    return [b, { prism: prismGeo, hatch, base: [base, hb], lift: [lift, hl] } satisfies Group];
+    const edges = new THREE.BufferGeometry();
+    edges.setAttribute('position', new THREE.Float32BufferAttribute(a.ePos, 3));
+    const eb = new Float32Array(a.eBase), el = new Float32Array(a.eLift);
+    const ep = edges.getAttribute('position') as THREE.BufferAttribute;
+    for (let v = 0; v < ep.count; v++) ep.setY(v, eb[v]);
+    return [b, { prism: prismGeo, hatch, edges, base: [base, hb, eb], lift: [lift, hl, el] } satisfies Group];
   })) as Record<RiseBand, Group>;
 
   const sparseGeo = new THREE.BufferGeometry();

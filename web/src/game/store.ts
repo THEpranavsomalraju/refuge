@@ -68,6 +68,10 @@ interface GameState {
   placeFailed(message: string): void;
   set(patch: Partial<Pick<GameState, 'ef' | 'category' | 'hour' | 'warning' | 'budget'>>): void;
   startDrawing(): void;
+  /** Remove the last drawn point (also right-click or Backspace on the map). */
+  undoPoint(): void;
+  /** Remove every drawn point. */
+  clearPath(): void;
   play(): Promise<void>;
   plan(): Promise<void>;
   inspect(buildingId: string | null): void;
@@ -162,8 +166,8 @@ export const useGame = create<GameState>((set, get) => {
       scene.frameCoords(s.track.map(r => [r[0], r[1]] as LonLat));
     }
     await showMap(result);
-    const hot = hotCells(result);
-    if (hot.length) scene.focusCells(hot);
+    // Show the whole risk picture: every affected cell in view.
+    scene.frameRiskMap();
     return result;
   }
 
@@ -251,7 +255,21 @@ export const useGame = create<GameState>((set, get) => {
       scene.onGroundClick((lon, lat) => {
         set({ path: [...get().path, [lon, lat] as LonLat] });
         get().set({});
-      });
+      }, () => get().undoPoint());   // right-click or Backspace removes the last point
+    },
+    undoPoint() {
+      if (!get().drawing || get().path.length === 0) return;
+      set({ path: get().path.slice(0, -1) });
+      scene.undoGroundClick();
+      if (get().path.length < 2) { scene.hideTornadoPath(); ext.hideHurricaneTrack?.(); }
+      get().set({});
+    },
+    clearPath() {
+      if (!get().drawing) return;
+      set({ path: [] });
+      scene.clearGroundClicks();
+      scene.hideTornadoPath(); ext.hideHurricaneTrack?.();
+      get().set({});
     },
     async play() {
       try {

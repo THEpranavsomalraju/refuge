@@ -30,6 +30,8 @@ interface SceneState {
   onSiteClick: ((id: string) => void) | null;
   /** While set, clicks on the ground (not drags) are reported here and marked in groundClicks. */
   onGroundClick: ((lon: number, lat: number) => void) | null;
+  /** While drawing, right-click (not a drag) or Backspace asks the game to remove the last point. */
+  onGroundUndo: (() => void) | null;
   groundClicks: LonLat[];
   /** Hurricane track rows [lon, lat, vmax_kt, rmw_km, B, time_h] and the category label. */
   hurricane: { track: TrackRow[]; category: number } | null;
@@ -52,6 +54,7 @@ export const useSceneStore = create<SceneState>(() => ({
   onCellHover: null,
   onSiteClick: null,
   onGroundClick: null,
+  onGroundUndo: null,
   groundClicks: [],
   hurricane: null,
   hurricaneT: null,

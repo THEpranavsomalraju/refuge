@@ -151,11 +151,20 @@ export interface SceneAPI {
   /** Moves the eye along the track by time_h (cloud band, eyewall ring, rain); resolves at the end. */
   playHurricane(durationMs: number, onProgress?: (t: number) => void): Promise<void>;
   hideHurricaneTrack(): void;
-  /** Ground clicks for drawing a tornado path or hurricane track; drags still pan. null stops. */
-  onGroundClick(cb: ((lon: number, lat: number) => void) | null): void;
+  /**
+   * Ground clicks for drawing a tornado path or hurricane track; drags still pan. null stops.
+   * `onUndo` is called on right-click (not a right-drag) or Backspace while drawing.
+   */
+  onGroundClick(cb: ((lon: number, lat: number) => void) | null, onUndo?: () => void): void;
+  /** Remove the last point marker (call when the game drops its last point). */
+  undoGroundClick(): void;
+  /** Remove all point markers (call when the game clears the drawing). */
+  clearGroundClicks(): void;
 
   /** Camera: frame points (plus a margin), the current storm path, or a set of H3 cells. */
   frameCoords(coords: LonLat[], ms?: number, marginM?: number): void;
   frameStormPath(ms?: number): void;
+  /** Frame every cell on the current risk, displacement, or difference map. */
+  frameRiskMap(ms?: number): void;
   focusCells(h3s: string[], ms?: number): void;
 }

@@ -126,9 +126,15 @@ export const scene: SceneAPI = {
       requestAnimationFrame(tick);
     });
   },
-  onGroundClick(cb) {
+  onGroundClick(cb, onUndo) {
     // A new callback (or null) starts a fresh set of point markers.
-    useSceneStore.setState({ onGroundClick: cb, groundClicks: [] });
+    useSceneStore.setState({ onGroundClick: cb, onGroundUndo: cb ? onUndo ?? null : null, groundClicks: [] });
+  },
+  undoGroundClick() {
+    useSceneStore.setState(s => ({ groundClicks: s.groundClicks.slice(0, -1) }));
+  },
+  clearGroundClicks() {
+    useSceneStore.setState({ groundClicks: [] });
   },
   frameCoords(coords, ms = CAMERA_MS, marginM = 300) {
     if (!coords.length) return;
@@ -143,6 +149,13 @@ export const scene: SceneAPI = {
     const radiusM = Math.max(MIN_FRAME_RADIUS_M, Math.hypot(halfW, halfH) + marginM);
     const seq = (useSceneStore.getState().camera?.seq ?? 0) + 1;
     useSceneStore.setState({ camera: { center: [(minLon + maxLon) / 2, lat0], radiusM, ms, seq } });
+  },
+  frameRiskMap(ms = CAMERA_MS) {
+    const { risk, diff } = useSceneStore.getState();
+    const ids = risk ? Object.keys(risk.cells) : diff ? [...new Set([...Object.keys(diff.before), ...Object.keys(diff.after)])] : [];
+    const pts: LonLat[] = [];
+    for (const h of ids) { try { const [lat, lon] = cellToLatLng(h); pts.push([lon, lat]); } catch { /* not an H3 id */ } }
+    scene.frameCoords(pts, ms, 300);
   },
   frameStormPath(ms = CAMERA_MS) {
     const t = useSceneStore.getState().tornado;

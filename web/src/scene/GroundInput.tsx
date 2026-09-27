@@ -57,8 +57,20 @@ export function GroundInput({ frame }: { frame: Frame }) {
       const cb = useSceneStore.getState().onCellHover;
       if (lastCell !== null) { lastCell = null; cb?.(null); }
     };
-    const press = (e: PointerEvent) => { if (e.button === 0) down = { x: e.clientX, y: e.clientY, id: e.pointerId }; };
+    let rightDown: { x: number; y: number } | null = null;
+    const press = (e: PointerEvent) => {
+      if (e.button === 0) down = { x: e.clientX, y: e.clientY, id: e.pointerId };
+      if (e.button === 2) rightDown = { x: e.clientX, y: e.clientY };
+    };
     const release = (e: PointerEvent) => {
+      if (e.button === 2) {
+        // Right-click (not a right-drag, which rotates) removes the last point while drawing.
+        const r = rightDown;
+        rightDown = null;
+        const undo = useSceneStore.getState().onGroundUndo;
+        if (undo && r && Math.hypot(e.clientX - r.x, e.clientY - r.y) <= CLICK_SLOP_PX) undo();
+        return;
+      }
       const start = down;
       down = null;
       const cb = useSceneStore.getState().onGroundClick;
@@ -70,11 +82,18 @@ export function GroundInput({ frame }: { frame: Frame }) {
       cb(p[0], p[1]);
     };
 
+    const key = (e: KeyboardEvent) => {
+      const undo = useSceneStore.getState().onGroundUndo;
+      const typing = e.target instanceof HTMLElement && (e.target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName));
+      if (undo && !typing && (e.key === 'Backspace' || e.key === 'Delete')) { e.preventDefault(); undo(); }
+    };
     el.addEventListener('pointermove', move);
     el.addEventListener('pointerleave', leave);
     el.addEventListener('pointerdown', press);
     el.addEventListener('pointerup', release);
+    window.addEventListener('keydown', key);
     return () => {
+      window.removeEventListener('keydown', key);
       el.removeEventListener('pointermove', move);
       el.removeEventListener('pointerleave', leave);
       el.removeEventListener('pointerdown', press);

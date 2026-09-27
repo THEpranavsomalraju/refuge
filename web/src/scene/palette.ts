@@ -11,7 +11,7 @@ export const PALETTE = {
   roadMajor: '#9aa6a2',
   stream: '#3f8fd0',
   glow: '#ff6a3d',
-  neutral: '#6d7471',
+  neutral: '#3a413f',   // buildings under the risk map: dark, so the bands stand out
   moon: '#c9d6e8',
   path: '#c9d3dc',
   funnel: '#d9e2ea',

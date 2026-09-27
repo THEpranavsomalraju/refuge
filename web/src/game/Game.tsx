@@ -192,6 +192,13 @@ function Setup() {
       <button style={secondary} onClick={g.startDrawing}>
         {g.drawing ? `Click the map to add points: ${g.path.length} so far` : `Draw the ${tornado ? 'path' : 'track'} (2+ clicks)`}
       </button>
+      {g.drawing && (
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button style={{ ...secondary, flex: 1 }} disabled={g.path.length === 0} onClick={g.undoPoint}>Undo last point</button>
+          <button style={{ ...secondary, flex: 1 }} disabled={g.path.length === 0} onClick={g.clearPath}>Clear</button>
+        </div>
+      )}
+      {g.drawing && <div style={muted}>Right-click the map or press Backspace to remove the last point.</div>}
       {!g.drawing && <div style={muted}>Using {g.placeId === 'lumberton' && tornado ? 'the showcase path through both mobile-home parks' : `a default ${tornado ? 'path' : 'track'} through the town center`} until you draw one.</div>}
       {!tornado && <div style={muted}>The storm arrives from {hurricaneParams.drawn_track_extension_km} km out along your line and leaves the same way, at 20 km/h; size and shape from recent Category {g.category} hurricanes (NOAA HURDAT2).</div>}
       <button style={primary} disabled={g.path.length < 2} onClick={() => void g.play()}>Play storm</button>
