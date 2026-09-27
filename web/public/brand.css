@@ -31,6 +31,10 @@
      The raw --cyan is too bright for marks; keep it for text and highlights. */
   --chart-model: #2F86F5;   /* what a model predicts */
   --chart-actual: var(--coral);  /* what really happened */
+  /* building classes, in this order (validated as a set, same surface) */
+  --class-mh: var(--coral);   /* mobile home */
+  --class-house: #2F86F5;     /* house or apartment */
+  --class-public: #C8588A;    /* school, church, business */
   --chart-grid: rgba(238, 228, 215, 0.10);
   --chart-axis: rgba(238, 228, 215, 0.55);
 

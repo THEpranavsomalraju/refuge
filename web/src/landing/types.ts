@@ -31,7 +31,12 @@ export interface ChartSpec {
   note?: string;
 }
 
-export interface ChartsSection extends Base { kind: 'charts'; intro?: string; charts: ChartSpec[] }
+export interface ChartsSection extends Base {
+  kind: 'charts';
+  /** One paragraph, or several. */
+  intro?: string | string[];
+  charts: ChartSpec[];
+}
 
 export interface TextSection extends Base { kind: 'text'; paragraphs: string[] }
 

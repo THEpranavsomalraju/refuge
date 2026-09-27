@@ -1,0 +1,89 @@
+<!doctype html>
+<!-- Lumberton demo storm: shelter size vs lives saved for the 25 candidate buildings that save the most on their own.
+     Data: /data/shelter_candidates_lumberton.json (ml/exports). Rules match sim/params/protections.json. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/brand.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="/charts/_lib/chart-kit.js"></script>
+  <style>
+    body { margin: 0; background: transparent; font-size: 12px; }
+    svg { display: block; overflow: visible; }
+    .callout { fill: var(--cream); font: 11px var(--font-body); }
+  </style>
+</head>
+<body>
+  <svg id="chart" role="img" aria-label="Shelter capacity versus lives saved for 25 candidate buildings in Lumberton"></svg>
+
+  <script>
+    // Every candidate is a public or commercial building, so all share the public-building color.
+    const KIND = { COMMERCIAL: 'Business', WORSHIP: 'Church', SCHOOL: 'School', BIGROOF: 'Big-roof building' };
+    const usd = v => '$' + (v >= 1e6 ? (v / 1e6).toFixed(2) + 'M' : Math.round(v / 1000) + 'k');
+
+    fetch('/data/shelter_candidates_lumberton.json').then(r => r.json()).then(d => {
+      const pts = d.top.map(t => ({ ...t, kind: KIND[t.cls] ?? t.cls }));
+      // Call out the best two and the largest building.
+      const byLives = [...pts].sort((a, b) => b.lives_saved_alone - a.lives_saved_alone);
+      const largest = pts.reduce((a, b) => (b.capacity > a.capacity ? b : a));
+      const callouts = new Set([byLives[0], byLives[1], largest]);
+      const tip = RefugeChart.tooltip();
+
+      RefugeChart.onWidth(W => {
+        const H = 300, T = 12, B = 36, L = 40, R = 16;
+        const svg = d3.select('#chart').attr('viewBox', `0 0 ${W} ${H}`).attr('width', W).attr('height', H);
+        svg.selectAll('*').remove();
+        const x = d3.scaleLinear().domain([0, d3.max(pts, p => p.capacity) * 1.08]).nice().range([L, W - R]);
+        const y = d3.scaleLinear().domain([0, d3.max(pts, p => p.lives_saved_alone) * 1.12]).nice().range([H - B, T]);
+
+        svg.append('g').attr('class', 'rc-axis').attr('transform', `translate(0,${H - B})`)
+          .call(d3.axisBottom(x).ticks(Math.max(3, Math.floor(W / 110))).tickSize(-(H - B - T)).tickPadding(8))
+          .call(g => g.select('.domain').remove());
+        svg.append('g').attr('class', 'rc-axis').attr('transform', `translate(${L},0)`)
+          .call(d3.axisLeft(y).ticks(5).tickSize(-(W - L - R)).tickPadding(8))
+          .call(g => g.select('.domain').remove());
+        svg.append('text').attr('class', 'rc-muted').attr('x', W - R).attr('y', H - 4).attr('text-anchor', 'end').text('people the shelter holds →');
+        svg.append('text').attr('class', 'rc-muted').attr('x', L).attr('y', T - 2).attr('dy', '-0.2em').text('lives saved ↑');
+
+        svg.append('g').selectAll('circle').data(pts).join('circle')
+          .attr('cx', p => x(p.capacity)).attr('cy', p => y(p.lives_saved_alone)).attr('r', 5.5)
+          .style('fill', 'var(--class-public)').style('stroke', 'var(--panel)').attr('stroke-width', 2);
+
+        // Try right, left, below, above; keep the first spot that clears every dot and stays in the plot.
+        const dots = pts.map(p => [x(p.capacity), y(p.lives_saved_alone)]);
+        const spots = [[10, 0, 'start'], [-10, 0, 'end']];
+        for (const oy of [-16, 18, -30, 32]) for (const a of ['end', 'start', 'middle']) spots.push([0, oy, a]);
+        for (const p of callouts) {
+          const px = x(p.capacity), py = y(p.lives_saved_alone);
+          const t = svg.append('text').attr('class', 'callout').attr('dy', '0.35em')
+            .text(W < 560 ? `${p.kind}, ${p.capacity} · ${p.lives_saved_alone.toFixed(1)}`
+              : `${p.kind}, ${p.capacity} people · ${p.lives_saved_alone.toFixed(1)} lives`);
+          const fits = () => {
+            const b = t.node().getBBox();
+            if (b.x < L || b.x + b.width > W - R || b.y < T || b.y + b.height > H - B) return false;
+            return dots.every(([dx, dy]) => (dx === px && dy === py) ||
+              dx < b.x - 7 || dx > b.x + b.width + 7 || dy < b.y - 7 || dy > b.y + b.height + 7);
+          };
+          const ok = spots.some(([ox, oy, anchor]) => {
+            t.attr('x', px + ox).attr('y', py + oy).attr('text-anchor', anchor);
+            return fits();
+          });
+          if (!ok) t.remove();  // nowhere clear: the tooltip still has it
+        }
+
+        // Generous invisible hit targets.
+        svg.append('g').selectAll('circle').data(pts).join('circle')
+          .attr('cx', p => x(p.capacity)).attr('cy', p => y(p.lives_saved_alone)).attr('r', 12).attr('fill', 'transparent')
+          .on('mousemove', (e, p) => tip.show(e,
+            `<b>${p.kind}</b> <span class="muted">· ${p.footprint_sqft.toLocaleString()} sq ft</span><br>` +
+            `Holds ${p.capacity} people · costs ${usd(p.cost_usd)}<br>` +
+            `${p.mh_residents_in_reach} mobile-home residents within a ${d.reach_m} m walk<br>` +
+            `Saves ${p.lives_saved_alone.toFixed(2)} expected lives on its own`))
+          .on('mouseleave', () => tip.hide());
+      });
+    });
+    RefugeChart.reportHeight();
+  </script>
+</body>
+</html>

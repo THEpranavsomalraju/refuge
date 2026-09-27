@@ -1,0 +1,79 @@
+<!doctype html>
+<!-- Where the simulator's building deaths happen, before and after calibration, against the location model.
+     Data: /data/calibration.json (ml/exports): train.default.sim_mix, train.calibrated.sim_mix, target_mix. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/brand.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="/charts/_lib/chart-kit.js"></script>
+  <style>
+    body { margin: 0; background: transparent; font-size: 12px; }
+    svg { display: block; overflow: visible; }
+    .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 10px; color: var(--fg); }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 10px; height: 10px; border-radius: 2px; }
+    .seg-label { fill: #151c2a; font: 600 11px var(--font-body); pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div class="legend" id="legend"></div>
+  <svg id="chart" role="img" aria-label="Share of simulated building deaths by building type, before and after calibration, against the location model"></svg>
+
+  <script>
+    const CLASSES = [
+      { key: 'MH', name: 'Mobile home', color: 'var(--class-mh)' },
+      { key: 'RES', name: 'House or apartment', color: 'var(--class-house)' },
+      { key: 'PUBLIC', name: 'Public building', color: 'var(--class-public)' },
+    ];
+    document.getElementById('legend').innerHTML =
+      CLASSES.map(c => `<span><i style="background:${c.color}"></i>${c.name}</span>`).join('');
+    const pct = v => Math.round(v * 100) + '%';
+
+    fetch('/data/calibration.json').then(r => r.json()).then(d => {
+      const rows = [
+        { name: 'Simulator, before', short: 'Before', mix: d.train.default.sim_mix },
+        { name: 'Simulator, after', short: 'After', mix: d.train.calibrated.sim_mix },
+        { name: 'Location model', short: 'Target', mix: d.target_mix },
+      ];
+      const tip = RefugeChart.tooltip();
+
+      RefugeChart.onWidth(W => {
+        const narrow = W < 480, rowH = 34, gap = 2, R = 4, H = rows.length * rowH;
+        const probe = d3.select('#chart').append('text').attr('class', 'rc-label');
+        const L = d3.max(rows, r => probe.text(narrow ? r.short : r.name).node().getComputedTextLength()) + 14;
+        probe.remove();
+        const svg = d3.select('#chart').attr('viewBox', `0 0 ${W} ${H}`).attr('width', W).attr('height', H);
+        svg.selectAll('*').remove();
+        const x = d3.scaleLinear().domain([0, 1]).range([L, W - R]);
+
+        rows.forEach((row, i) => {
+          const g = svg.append('g').attr('transform', `translate(0,${i * rowH})`);
+          g.append('text').attr('class', 'rc-label').attr('x', L - 12).attr('y', rowH / 2).attr('dy', '0.35em')
+            .attr('text-anchor', 'end').text(narrow ? row.short : row.name);
+          // Normalize so the three shares fill the bar exactly.
+          const total = d3.sum(CLASSES, c => row.mix[c.key]);
+          let acc = 0;
+          CLASSES.forEach((c, j) => {
+            const share = row.mix[c.key] / total, x0 = x(acc), x1 = x(acc + share);
+            acc += share;
+            // 2px surface gap between segments; round only the outer ends.
+            const left = j === 0 ? x0 : x0 + gap / 2, right = j === CLASSES.length - 1 ? x1 : x1 - gap / 2;
+            const w = Math.max(0, right - left), y = 7, h = rowH - 14, r = 4;
+            const rl = j === 0 ? r : 0, rr = j === CLASSES.length - 1 ? r : 0;
+            g.append('path').style('fill', c.color).attr('d',
+              `M${left + rl},${y}H${right - rr}Q${right},${y} ${right},${y + rr}V${y + h - rr}Q${right},${y + h} ${right - rr},${y + h}` +
+              `H${left + rl}Q${left},${y + h} ${left},${y + h - rl}V${y + rl}Q${left},${y} ${left + rl},${y}Z`)
+              .on('mousemove', e => tip.show(e, `<b>${row.name}</b><br>${c.name}: ${(share * 100).toFixed(1)}% of building deaths`))
+              .on('mouseleave', () => tip.hide());
+            if (w > 34) g.append('text').attr('class', 'seg-label').attr('x', left + w / 2).attr('y', rowH / 2)
+              .attr('dy', '0.35em').attr('text-anchor', 'middle').text(pct(share));
+          });
+        });
+      });
+    });
+    RefugeChart.reportHeight();
+  </script>
+</body>
+</html>

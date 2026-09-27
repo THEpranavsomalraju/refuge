@@ -29,7 +29,8 @@ html { scroll-behavior: smooth; scroll-padding-top: var(--nav-h); }
 .section { padding-block: 56px; }
 .section h2 { font-size: 30px; margin: 0 0 8px; }
 .intro, .note { color: var(--fg-muted); }
-.intro { margin: 0 0 24px; font-size: 14px; }
+.intro { margin: 0 0 24px; font-size: 14px; line-height: 1.7; max-width: 900px; }
+.intro + .intro { margin-top: -12px; }
 .note { font-size: 12px; margin-top: 4px; }
 
 /* hero */
