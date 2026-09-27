@@ -128,3 +128,22 @@ test('argument errors fail, while help succeeds', t => {
   const help = spawnSync(process.execPath, [join(simRoot, 'dist/cli.js'), '--help'], { encoding: 'utf8' });
   assert.equal(help.status, 0, help.stderr); assert.match(help.stdout, /--params/);
 });
+
+test('CLI runs hurricane scenarios (totals only) and validates tracks', t => {
+  const f = setup(t);
+  const hurricane = { place_id: 'test', hazard: 'hurricane', hour: 13, protections: [],
+    track: [[-90.3, 37.7, 125, 27, 1.9, 0], [-89.7, 38.3, 125, 27, 1.9, 4]] };
+  writeJson(f.input, hurricane);
+  for (const mode of ['expected', 'simulate']) {
+    const r = spawnSync(process.execPath, [join(simRoot, 'dist/cli.js'), '--scenario', f.input,
+      '--places', join(f.root, 'places'), '--params', f.candidate, '--mode', mode], { encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    const out = JSON.parse(r.stdout);
+    assert.equal(out.hazard, 'hurricane'); assert.equal(out.place_id, 'test');
+    assert.ok(out.displaced > 0 && out.destroyed > 0);
+    assert.equal(out.cells, undefined);
+  }
+  writeJson(f.input, { ...hurricane, track: [[-90.3, 37.7, 125, 27, 1.9, 4], [-89.7, 38.3, 125, 27, 1.9, 0]] });
+  const bad = cli(f);
+  assert.equal(bad.status, 1); assert.equal(bad.stdout, ''); assert.match(bad.stderr, /time_h/);
+});
