@@ -51,6 +51,7 @@ function Place({ place }: { place: PlaceData }) {
   return (
     <>
       <StartCamera frame={frame} />
+      <FillerGround frame={frame} />
       <Terrain place={place} frame={frame} />
       <Lines place={place} frame={frame} />
       <Buildings place={place} frame={frame} />
@@ -68,6 +69,24 @@ function Place({ place }: { place: PlaceData }) {
   );
 }
 
+/** A wide plane in the ground color around the town, fading into the fog, so the plot never floats in a void. */
+function FillerGround({ frame }: { frame: Frame }) {
+  const y = useMemo(() => {
+    let lo = Infinity;
+    for (let i = 0; i <= 20; i++) for (let k = 0; k <= 20; k++) {
+      lo = Math.min(lo, frame.groundY((i / 20 - 0.5) * frame.width, (k / 20 - 0.5) * frame.depth));
+    }
+    return lo - 3;
+  }, [frame]);
+  const size = Math.max(frame.width, frame.depth) * 8;
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, y, 0]} raycast={() => null}>
+      <planeGeometry args={[size, size]} />
+      <meshStandardMaterial color={PALETTE.ground} roughness={1} metalness={0} />
+    </mesh>
+  );
+}
+
 /** Oblique view from the south-southwest, whole town in frame. */
 function StartCamera({ frame }: { frame: Frame }) {
   const { camera, controls } = useThree(s => ({ camera: s.camera, controls: s.controls as unknown as { target: THREE.Vector3; update(): void } | null }));
@@ -82,5 +101,14 @@ function StartCamera({ frame }: { frame: Frame }) {
     camera.lookAt(target);
     controls.target.copy(target); controls.update();
   }, [frame, camera, controls]);
-  return <MapControls makeDefault maxPolarAngle={Math.PI * 0.46} minDistance={150} maxDistance={Math.max(frame.width, frame.depth) * 1.1} />;
+  // Keep the view on the city: the point the camera looks at can't leave the town rectangle.
+  const clamp = () => {
+    const c = controls as unknown as { target: THREE.Vector3; object: THREE.Camera } | null;
+    if (!c) return;
+    const hx = frame.width / 2, hz = frame.depth / 2;
+    const nx = Math.min(hx, Math.max(-hx, c.target.x)), nz = Math.min(hz, Math.max(-hz, c.target.z));
+    const dx = nx - c.target.x, dz = nz - c.target.z;
+    if (dx !== 0 || dz !== 0) { c.target.x = nx; c.target.z = nz; c.object.position.x += dx; c.object.position.z += dz; }
+  };
+  return <MapControls makeDefault onChange={clamp} maxPolarAngle={Math.PI * 0.46} minDistance={150} maxDistance={Math.max(frame.width, frame.depth) * 1.1} />;
 }

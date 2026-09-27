@@ -54,6 +54,12 @@ function Marker({ p, frame }: { p: Protection; frame: Frame }) {
           }}>
             <span style={{ transform: 'rotate(45deg)', color: '#0c1214', font: '700 12px system-ui, sans-serif' }}>S</span>
           </div>
+          {p.label && (
+            <div style={{
+              marginTop: 6, padding: '2px 7px', borderRadius: 999, whiteSpace: 'nowrap', background: 'rgba(12,18,20,0.85)',
+              border: `1px solid ${PALETTE.shelter}`, color: '#e3eae7', font: '600 11px "Public Sans", system-ui, sans-serif',
+            }}>{p.label}</div>
+          )}
         </div>
       </Html>
     </group>

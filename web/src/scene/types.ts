@@ -120,7 +120,8 @@ export interface SceneAPI {
   hideTornadoPath(): void;
   /** Moves the storm along the path shown by showTornadoPath; resolves when it ends. */
   playStorm(durationMs: number, onProgress?: (t: number) => void): Promise<void>;
-  placeProtection(type: ProtectionType, lon: number, lat: number): string;
+  /** `label` is shown under the pin (e.g. "School" or "3 shelters"). */
+  placeProtection(type: ProtectionType, lon: number, lat: number, label?: string): string;
   removeProtection(id: string): void;
   onBuildingClick(cb: ((b: BuildingRecord) => void) | null): void;
   onCellHover(cb: ((h3: string | null) => void) | null): void;

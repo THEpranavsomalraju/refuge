@@ -64,9 +64,9 @@ export const scene: SceneAPI = {
       requestAnimationFrame(tick);
     });
   },
-  placeProtection(type, lon, lat) {
+  placeProtection(type, lon, lat, label) {
     const id = `p_${++protectionSeq}`;
-    useSceneStore.setState(s => ({ protections: [...s.protections, { id, type, lon, lat }] }));
+    useSceneStore.setState(s => ({ protections: [...s.protections, { id, type, lon, lat, label }] }));
     return id;
   },
   removeProtection(id) {

@@ -6,7 +6,7 @@ import type { BuildingRecord, CandidateSite, LonLat, ProtectionType } from './ty
 /** Per-cell values compared by the difference view (tornado or hurricane result cells). */
 export type DiffCells = Record<string, { expected_deaths?: number; displaced?: number; people?: number; residents?: number }>;
 
-export interface Protection { id: string; type: ProtectionType; lon: number; lat: number }
+export interface Protection { id: string; type: ProtectionType; lon: number; lat: number; label?: string }
 
 /** A camera move: frame a circle of `radiusM` around `center` over `ms`. `seq` bumps per request. */
 export interface CameraGoal { center: LonLat; radiusM: number; ms: number; seq: number }

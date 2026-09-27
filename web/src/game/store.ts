@@ -131,9 +131,18 @@ export const useGame = create<GameState>((set, get) => {
   const showShelters = (ids: readonly string[]) => {
     for (const m of markers) scene.removeProtection(m);
     ext.hideReach?.();
-    markers = ids.map(id => {
-      const b = get().place!.buildings.find(x => x.id === id)!;
-      return scene.placeProtection('safe_room', b.lon, b.lat);
+    const pts = ids.map(id => get().place!.buildings.find(x => x.id === id)!).filter(Boolean);
+    const groups: (typeof pts)[] = [];
+    const near = (a: { lon: number; lat: number }, b: { lon: number; lat: number }) =>
+      Math.hypot((a.lon - b.lon) * 111_320 * Math.cos((a.lat * Math.PI) / 180), (a.lat - b.lat) * 110_540) < 300;
+    for (const b of pts) {
+      const g = groups.find(gr => gr.some(x => near(x, b)));
+      if (g) g.push(b); else groups.push([b]);
+    }
+    const WORDS: Record<string, string> = { SCHOOL: 'School', WORSHIP: 'Place of worship', COMMERCIAL: 'Business', BIGROOF: 'Big-box / warehouse' };
+    markers = groups.map(g => {
+      const lon = g.reduce((s, b) => s + b.lon, 0) / g.length, lat = g.reduce((s, b) => s + b.lat, 0) / g.length;
+      return scene.placeProtection('safe_room', lon, lat, g.length > 1 ? `${g.length} shelters` : WORDS[g[0]!.cls] ?? 'Shelter');
     });
   };
   /** Labeled pins over the top shelter options (and any selected ones); clicking a pin selects or removes it. */
