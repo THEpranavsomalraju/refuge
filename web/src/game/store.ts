@@ -357,8 +357,10 @@ export const useGame = create<GameState>((set, get) => {
         set({ busy: 'Finding the best plan for your budget…' });
         // The user's picks join the top candidates, so the scores are comparable.
         const optimal = await sim.optimize(scenarioOf(), get().budget, get().selected);
-        // Only mark the best combination; the player runs it themselves.
-        set({ optimal, busy: null, step: 'best_preview' });
+        // Only mark the best combination, on the plain city (no heat map, none of the player's pins);
+        // the player runs it themselves.
+        scene.hideRiskMap();
+        set({ optimal, busy: null, step: 'best_preview', mapHidden: true });
         showShelters(optimal.plan.building_ids);
         const picks = optimal.plan.building_ids.map(candidate).filter(Boolean).map(c => [c!.lon, c!.lat] as LonLat);
         if (picks.length) scene.frameCoords(picks, 1500, 400);
