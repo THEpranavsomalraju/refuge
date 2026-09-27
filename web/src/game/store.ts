@@ -61,6 +61,8 @@ interface GameState {
   play(): Promise<void>;
   plan(): Promise<void>;
   toggle(buildingId: string): void;
+  /** Fill the plan with the optimizer's best picks for this budget (the player can still change them). */
+  fillBest(): Promise<void>;
   replay(): Promise<void>;
   best(): Promise<void>;
   show(view: MapView): void;
@@ -179,6 +181,9 @@ export const useGame = create<GameState>((set, get) => {
       } catch (e) { fail(e); }
     },
     toggle(id) {
+      // Show the player where this building is.
+      const c = candidate(id);
+      if (c) scene.frameCoords([[c.lon, c.lat]], 1200, 350);
       const placed = new Map(get().placed);
       const marker = placed.get(id);
       if (marker !== undefined) { if (marker) scene.removeProtection(marker); placed.delete(id); }
@@ -187,6 +192,18 @@ export const useGame = create<GameState>((set, get) => {
         placed.set(id, mark(id));
       }
       set({ placed });
+    },
+    async fillBest() {
+      try {
+        set({ busy: 'Finding the best plan for this budget…' });
+        const optimal = await sim.optimize(scenarioOf(), get().budget, [...get().placed.keys()]);
+        for (const marker of get().placed.values()) if (marker) scene.removeProtection(marker);
+        const placed = new Map<string, string>();
+        for (const id of optimal.plan.building_ids) if (candidate(id)) placed.set(id, mark(id));
+        set({ placed, busy: null });
+        const picks = [...placed.keys()].map(candidate).filter(Boolean).map(c => [c!.lon, c!.lat] as LonLat);
+        if (picks.length) scene.frameCoords(picks, 1500, 400);
+      } catch (e) { fail(e); }
     },
     async replay() {
       try {

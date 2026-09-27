@@ -21,7 +21,7 @@ interface SceneState {
   stormT: number | null;
   protections: Protection[];
   /** Risk or displacement map: cells already converted to band/height/hatch. */
-  risk: { hazard: 'tornado' | 'hurricane'; cells: Record<string, RiskCell>; shownAt: number } | null;
+  risk: { hazard: 'tornado' | 'hurricane'; cells: Record<string, RiskCell>; shownAt: number; source: object } | null;
   diff: { before: DiffCells; after: DiffCells; shownAt: number } | null;
   sites: CandidateSite[];
   camera: CameraGoal | null;

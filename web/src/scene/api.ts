@@ -1,6 +1,6 @@
 import { cellToLatLng } from 'h3-js';
 import { buildCity, buildServerAvailable, listCities } from './places';
-import { hurricaneCells, tornadoCells } from './RiskMap';
+import { hurricaneCells, tornadoCells, type RiskCell } from './RiskMap';
 import type { TrackRow } from '../shared/contract';
 import { useSceneStore } from './store';
 import type { LonLat, SceneAPI } from './types';
@@ -13,6 +13,20 @@ export const CAMERA_MS = 1600;
 const MIN_FRAME_RADIUS_M = 450;
 
 let protectionSeq = 0;
+
+/**
+ * Shows a risk or displacement map. Showing the result that is already on screen (the
+ * game re-shows it when switching views) keeps it standing instead of replaying the rise.
+ */
+function showMap(hazard: 'tornado' | 'hurricane', source: object, convert: () => Record<string, RiskCell>): Promise<void> {
+  const cur = useSceneStore.getState().risk;
+  if (cur && cur.hazard === hazard && cur.source === source) {
+    useSceneStore.setState({ diff: null });
+    return Promise.resolve();
+  }
+  useSceneStore.setState({ risk: { hazard, cells: convert(), shownAt: performance.now(), source }, diff: null });
+  return new Promise(resolve => setTimeout(resolve, RISK_RISE_MS));
+}
 
 /**
  * The scene API the game calls (web/src/game). Import `scene` and call it from anywhere;
@@ -68,12 +82,10 @@ export const scene: SceneAPI = {
   showRiskMap(cells) {
     // Only cells present in the result are drawn (absent = unaffected). Band cutoffs
     // are applied by the sim; the legend (RiskLegend) shows them.
-    useSceneStore.setState({ risk: { hazard: 'tornado', cells: tornadoCells(cells), shownAt: performance.now() }, diff: null });
-    return new Promise(resolve => setTimeout(resolve, RISK_RISE_MS));
+    return showMap('tornado', cells, () => tornadoCells(cells));
   },
   showDisplacementMap(cells) {
-    useSceneStore.setState({ risk: { hazard: 'hurricane', cells: hurricaneCells(cells), shownAt: performance.now() }, diff: null });
-    return new Promise(resolve => setTimeout(resolve, RISK_RISE_MS));
+    return showMap('hurricane', cells, () => hurricaneCells(cells));
   },
   hideRiskMap() {
     useSceneStore.setState({ risk: null, diff: null });

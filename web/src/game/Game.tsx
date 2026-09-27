@@ -56,7 +56,9 @@ function Step() {
     );
     case 'choose_mode': return (
       <>
-        <button style={choice} onClick={() => g.chooseMode('past')}><b>Past disaster</b><span style={muted}>Replay a real storm on today's buildings and compare with what NOAA recorded.</span></button>
+        {PAST_EVENTS.some(e => built?.has(e.scenario.place_id)) && (
+          <button style={choice} onClick={() => g.chooseMode('past')}><b>Past disaster</b><span style={muted}>Replay a real storm on today's buildings and compare with what NOAA recorded.</span></button>
+        )}
         <button style={choice} onClick={() => g.chooseMode('future')}><b>Future storm</b><span style={muted}>Pick a town and design the storm yourself.</span></button>
       </>
     );
@@ -217,6 +219,9 @@ function Planning() {
         })}
         {shown.length === 0 && <div style={muted}>No eligible buildings: needs schools, churches or businesses with a known footprint (footprint_sqft).</div>}
       </div>
+      <button style={bestButton} onClick={() => void g.fillBest()}>
+        ★ Use the best plan for {usd(g.budget)}
+      </button>
       <button style={primary} onClick={() => void g.replay()}>
         Replay storm with {g.placed.size} shelter{g.placed.size === 1 ? '' : 's'}
       </button>
@@ -340,6 +345,7 @@ const bad: CSSProperties = { color: '#f08c73', fontSize: 12 };
 const mono: CSSProperties = { fontFamily: 'ui-monospace, Consolas, monospace', fontVariantNumeric: 'tabular-nums' };
 const input: CSSProperties = { background: '#101817', color: '#e3eae7', border: '1px solid #2c3a37', borderRadius: 4 };
 const primary: CSSProperties = { padding: '8px 10px', borderRadius: 6, border: 0, background: '#e3eae7', color: '#101817', fontWeight: 600, cursor: 'pointer' };
+const bestButton: CSSProperties = { ...primary, background: '#2f6f5e', border: '1px solid #5fe0c8', color: '#eafffa', fontWeight: 700 };
 const secondary: CSSProperties = { ...primary, background: 'transparent', color: '#e3eae7', border: '1px solid #2c3a37' };
 const choice: CSSProperties = { display: 'grid', gap: 3, padding: '8px 10px', borderRadius: 6, border: '1px solid #2c3a37', background: 'transparent', color: '#e3eae7', cursor: 'pointer', textAlign: 'left' };
 const site: CSSProperties = { ...row, padding: '6px 8px', borderRadius: 6, border: '1px solid', background: 'transparent', color: '#e3eae7', cursor: 'pointer', textAlign: 'left' };

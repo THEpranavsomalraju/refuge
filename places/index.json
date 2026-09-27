@@ -25,6 +25,31 @@
   "cells": "full"
  },
  {
+  "place_id": "estill_sc_2020",
+  "name": "Estill, South Carolina",
+  "county_fips": "45049",
+  "bbox": [
+   -81.31,
+   32.6844,
+   -80.8892,
+   32.849
+  ],
+  "center": [
+   -81.0996,
+   32.7667
+  ],
+  "buildings": 5835,
+  "crossings": 0,
+  "pop_night": 7834,
+  "kind": "past_event",
+  "flood_layers": false,
+  "cells": "buildings",
+  "area": null,
+  "trimmed": false,
+  "roads_pending": true,
+  "built": "2026-09-26 20:28"
+ },
+ {
   "place_id": "lumberton",
   "name": "Lumberton, North Carolina, USA",
   "county_fips": "37155",
