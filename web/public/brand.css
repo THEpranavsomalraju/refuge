@@ -1,0 +1,62 @@
+/* Refuge brand tokens. Shared by the site shell AND every standalone chart page:
+ *   <link rel="stylesheet" href="/brand.css">
+ * Change a value here and the whole site + all charts follow. Source: Refuge brand board.
+ * The in-game risk-map colors are NOT here on purpose (frozen by ml/INTEGRATION.md). */
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* palette */
+  --cream: #EEE4D7;
+  --coral: #FF4944;
+  --navy: #232E43;
+  --violet: #5248D7;
+  --indigo: #2D2DCA;
+  --blue: #086AED;
+  --cyan: #84F9FE;
+
+  /* roles: use these in components rather than raw palette names */
+  --bg: var(--navy);
+  --bg-deep: #1a2233;
+  --panel: #1d2638;
+  --fg: var(--cream);
+  --fg-muted: rgba(238, 228, 215, 0.68);
+  --border: rgba(238, 228, 215, 0.18);
+  --accent: var(--cyan);
+  --alert: var(--coral);
+  --link: var(--cyan);
+  --hero-gradient: linear-gradient(90deg, var(--indigo) 0%, var(--blue) 60%, #3FB6C8 100%);
+
+  /* chart series, in order */
+  --series-1: var(--cyan);
+  --series-2: var(--blue);
+  --series-3: var(--violet);
+  --series-4: var(--cream);
+  --series-5: var(--coral);
+
+  /* type */
+  --font-display: 'Chakra Petch', system-ui, sans-serif;
+  --font-body: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --radius: 6px;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; letter-spacing: 0.01em; }
+a { color: var(--link); }
+
+/* Dashboard card, as on the brand board: small label on top, big mono number below. */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.card .label { font-family: var(--font-display); font-size: 13px; color: var(--fg-muted); }
+.card .value { font-family: var(--font-body); font-size: 30px; line-height: 1.2; }
+.card .value small { font-size: 0.5em; margin-left: 4px; }

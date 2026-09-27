@@ -1,0 +1,65 @@
+<!doctype html>
+<!-- Sample chart: tornado deaths by local hour. Data: /data/deaths_by_hour.json (ml/exports). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/brand.css" />
+  <style>
+    body { margin: 0; background: transparent; }
+    svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .axis { fill: var(--fg-muted); font: 11px var(--font-body); }
+    .night { fill: rgba(82, 72, 215, 0.16); }
+    .bar { fill: var(--cyan); }
+    .bar:hover { fill: var(--cream); }
+    .foot { font-size: 12px; color: var(--fg-muted); margin: 8px 0 0; }
+  </style>
+</head>
+<body>
+  <svg id="chart" viewBox="0 0 560 280" role="img" aria-label="Tornado deaths by hour of day"></svg>
+  <p class="foot" id="foot"></p>
+
+  <script>
+    const W = 560, H = 280, L = 40, B = 24, T = 8;
+    const svg = document.getElementById('chart');
+    const el = (tag, attrs, text) => {
+      const n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      for (const k in attrs) n.setAttribute(k, attrs[k]);
+      if (text != null) n.textContent = text;
+      svg.appendChild(n);
+      return n;
+    };
+    const label = h => (h % 12 || 12) + (h < 12 ? 'a' : 'p');
+
+    fetch('/data/deaths_by_hour.json').then(r => r.json()).then(d => {
+      const rows = d.hour.Tornado;
+      const max = Math.max(...rows.map(r => r.deaths));
+      const bw = (W - L) / 24, y = v => H - B - (v / max) * (H - B - T);
+
+      // night band 8 PM–6 AM
+      el('rect', { class: 'night', x: L, y: T, width: bw * 6, height: H - B - T });
+      el('rect', { class: 'night', x: L + bw * 20, y: T, width: bw * 4, height: H - B - T });
+
+      for (let i = 0; i <= 4; i++) {
+        const v = Math.round((max * i) / 4);
+        el('text', { class: 'axis', x: L - 6, y: y(v) + 4, 'text-anchor': 'end' }, v);
+      }
+      rows.forEach(r => {
+        const bar = el('rect', { class: 'bar', x: L + r.hour * bw + 1.5, y: y(r.deaths), width: bw - 3, height: H - B - y(r.deaths), rx: 2 });
+        bar.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'title')).textContent =
+          `${label(r.hour)}: ${r.deaths} deaths (${(r.share_of_deaths * 100).toFixed(1)}%)`;
+        if (r.hour % 3 === 0) el('text', { class: 'axis', x: L + r.hour * bw + bw / 2, y: H - 6, 'text-anchor': 'middle' }, label(r.hour));
+      });
+
+      const n = d.tornado_night;
+      document.getElementById('foot').textContent =
+        `Shaded: night (${n.night_hours}). ${Math.round(n.share_of_tornadoes * 100)}% of tornadoes, ${Math.round(n.share_of_deaths * 100)}% of deaths.`;
+    });
+  </script>
+
+  <script>
+    new ResizeObserver(() => parent.postMessage({ type: 'refuge:height', height: document.body.getBoundingClientRect().height }, '*'))
+      .observe(document.body);
+  </script>
+</body>
+</html>

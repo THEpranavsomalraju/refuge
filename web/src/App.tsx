@@ -1,17 +1,7 @@
-import { useState } from 'react';
-import { Town, type LoadState } from './scene';
-import { Game } from './game/Game';
-import { useGame } from './game/store';
+import { Landing } from './landing/Landing';
 
-// App shell. The game UI (web/src/game, Simulation) mounts here next to the scene.
+// App shell. The page layout lives in web/src/landing (edit site.config.ts to change it);
+// the 3D town and game UI mount inside its game section.
 export function App() {
-  const [load, setLoad] = useState<LoadState>({ state: 'loading' });
-  // The game picks the town (past event or chosen city); Lumberton is the opening backdrop.
-  const placeId = useGame(s => s.placeId);
-  return (
-    <div style={{ position: 'relative', height: '100%' }}>
-      <Town placeId={placeId} onLoad={setLoad} />
-      <Game load={load} />
-    </div>
-  );
+  return <Landing />;
 }

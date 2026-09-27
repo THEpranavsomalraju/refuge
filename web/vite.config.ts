@@ -49,8 +49,29 @@ function placesPlugin(): Plugin {
   };
 }
 
+// ML exports (ml/exports, owned by the ML lead) are served at /data/... in dev and copied
+// into dist/data at build time, so chart pages can fetch('/data/deaths_by_hour.json').
+const EXPORTS_DIR = resolve(HERE, '..', 'ml', 'exports');
+
+function exportsPlugin(): Plugin {
+  return {
+    name: 'refuge-exports',
+    configureServer(server) {
+      server.middlewares.use('/data', (req, res, next) => {
+        const file = join(EXPORTS_DIR, normalize(decodeURIComponent((req.url ?? '').split('?')[0])));
+        if (!file.startsWith(EXPORTS_DIR) || !existsSync(file) || !statSync(file).isFile()) return next();
+        res.setHeader('Content-Type', file.endsWith('.json') ? 'application/json' : file.endsWith('.csv') ? 'text/csv' : 'text/plain');
+        createReadStream(file).pipe(res);
+      });
+    },
+    closeBundle() {
+      if (existsSync(EXPORTS_DIR)) cpSync(EXPORTS_DIR, resolve(HERE, 'dist', 'data'), { recursive: true });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), placesPlugin()],
+  plugins: [react(), placesPlugin(), exportsPlugin()],
   // Local build server (places/build_server.py): builds any U.S. city into places/<id>/.
   server: { proxy: { '/build-api': { target: 'http://127.0.0.1:8765', rewrite: p => p.replace(/^\/build-api/, '') } } },
 });
