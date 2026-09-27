@@ -1,7 +1,7 @@
 /* Refuge brand tokens. Shared by the site shell AND every standalone chart page:
  *   <link rel="stylesheet" href="/brand.css">
  * Change a value here and the whole site + all charts follow. Source: Refuge brand board.
- * The in-game risk-map colors are NOT here on purpose (frozen by ml/INTEGRATION.md). */
+ * The in-game risk-map colors are NOT here on purpose (they live in the 3D scene). */
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 :root {

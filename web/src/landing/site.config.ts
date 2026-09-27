@@ -6,7 +6,6 @@ import type { SectionConfig } from './types';
 //  - showTitle: false keeps the nav link but skips the heading (for charts with their own).
 //  - kind: 'placeholder' holds a spot for something still being built.
 //  - A chart `src` is a folder name in web/public/charts/, or a full URL (e.g. Flourish).
-// See README.md in this folder for recipes.
 export const SITE: { title: string; tagline: string; sections: SectionConfig[] } = {
   title: 'Refuge',
   tagline: 'Send a tornado or hurricane through a real town. See who is at risk and why. Turn existing buildings into shelters, then replay the storm.',
@@ -38,7 +37,7 @@ export const SITE: { title: string; tagline: string; sections: SectionConfig[] }
       charts: [{ src: 'national-animation', title: 'Tornado and hurricane deaths, 1996–2025', height: 620, wide: true, bare: true, clickToInteract: true }],
     },
     // Charts read live from ml/exports. The numbers written in the prose below are from
-    // ml/METHODS.md as of 2026-09-27; re-check them if the ML exports are regenerated.
+    // ml/exports as of 2026-09-27; re-check them if the ML exports are regenerated.
     {
       id: 'does-it-work',
       kind: 'charts',
@@ -83,7 +82,7 @@ export const SITE: { title: string; tagline: string; sections: SectionConfig[] }
         'Hurricane mode uses a separate wind model. Its wind field gives 162 mph at Mexico Beach for Hurricane Michael (2018) and 96 mph in Wilmington for Florence (2018), where the airport measured a 105 mph gust. Deaths from wind at home, fit to 44 US landfalls from 2004–2024, are rare (about 1 in 237,000 in a house at a 160 mph gust), so hurricane mode plans for the people displaced from damaged homes rather than for deaths.',
       ],
     },
-    // Numbers below are from ml/SHELTER_MODEL.md and ml/exports/shelter_candidates_lumberton.json as of 2026-09-27.
+    // Numbers below are from ml/exports/shelter_candidates_lumberton.json as of 2026-09-27.
     {
       id: 'shelters',
       kind: 'charts',

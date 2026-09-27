@@ -1,5 +1,5 @@
 {
- "note": "Tornadoes held out from parameter fitting; see METHODS.md for the post-test experiment disclosure. Legacy building_deaths/recorded_in_buildings keys mean NOAA direct deaths minus known VEHICLE, OUTDOOR, WATER and OTHER locations; unknown locations remain. all_recorded_deaths includes every direct death. National-model predictions target all direct deaths, so its comparison with the reduced target is not target-matched. Simulator p05-p95 comes from 500 conditional sampling runs and excludes parameter/exposure/geometry uncertainty; the national model uses a Poisson range.",
+ "note": "Tornadoes held out from parameter fitting; Legacy building_deaths/recorded_in_buildings keys mean NOAA direct deaths minus known VEHICLE, OUTDOOR, WATER and OTHER locations; unknown locations remain. all_recorded_deaths includes every direct death. National-model predictions target all direct deaths, so its comparison with the reduced target is not target-matched. Simulator p05-p95 comes from 500 conditional sampling runs and excludes parameter/exposure/geometry uncertainty; the national model uses a Poisson range.",
  "storms": [
   {
    "place_id": "bt_2018_743585",

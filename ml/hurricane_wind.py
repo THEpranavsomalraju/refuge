@@ -11,7 +11,7 @@ Model (one formula, used for past storms and user-drawn future tracks):
      0.5 Vt cos(angle from the right of the heading). The right side peaks at Vmax, as HURDAT records it.
   4. Surface conversion at a building: x LAND_FACTOR (over-water to over-land 1-min wind) x GUST_FACTOR
      (1-min sustained to 3-s gust, since the damage thresholds are gust speeds). Model constants from
-     WMO wind-averaging guidance (Harper et al. 2010); stated in METHODS.md.
+     WMO wind-averaging guidance (Harper et al. 2010).
   5. Each building keeps the maximum gust over the storm's passage.
 """
 import json

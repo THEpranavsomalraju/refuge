@@ -2,7 +2,7 @@
 
   python ml/shelter_candidates.py --place-dir /path/to/places/lumberton --scenario /path/to/lumberton_tornado.json
 
-Implements the rule in ml/SHELTER_MODEL.md with the calibrated params: capacity from footprint (FEMA P-361,
+Implements the shelter rule in sim/params/protections.json with the calibrated params: capacity from footprint (FEMA P-361,
 5 sq ft per person, 25% of the footprint hardened), $1,500 per person, mobile-home residents within walking
 reach go at 30% compliance, nearest first. "Lives saved alone" is each building converted on its own.
 Footprints come from the raw NSI frame until buildings.json carries footprint_sqft.

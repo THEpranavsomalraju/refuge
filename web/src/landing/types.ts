@@ -19,7 +19,7 @@ export interface ChartSpec {
   /** Folder in web/public/charts/ (e.g. 'deaths-by-hour') or a full URL. */
   src: string;
   title: string;
-  /** Pixel height. Charts can also report their own height (see README). */
+  /** Pixel height. Charts can also report their own height. */
   height?: number;
   /** Span both grid columns on wide screens. */
   wide?: boolean;

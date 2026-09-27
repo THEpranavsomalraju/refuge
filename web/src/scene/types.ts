@@ -2,7 +2,7 @@ import type { CityEntry, HurricaneCells, TrackRow } from '../shared/contract';
 import type { BuildStatus } from './places';
 import type { DiffCells, SwipeSide } from './store';
 
-// Shapes of the place files in places/<place_id>/ (see places/README.md) and of the
+// Shapes of the place files in places/<place_id>/ and of the
 // scene API the game calls. Result types mirror sim/core/types.ts on Mahil's branch.
 
 export const BUILDING_CLASSES = [

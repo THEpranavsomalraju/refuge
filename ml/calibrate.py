@@ -297,7 +297,7 @@ def backtest():
         mu = sum(oof.get(e, 0.0) for e in s["noaa_event_ids"])
         methods["national_model"][s["place_id"]] = (mu, stats.poisson.ppf(0.05, mu), stats.poisson.ppf(0.95, mu))
 
-    out = {"note": ("Tornadoes held out from parameter fitting; see METHODS.md for the post-test experiment disclosure. "
+    out = {"note": ("Tornadoes held out from parameter fitting; "
                     "Legacy building_deaths/recorded_in_buildings keys mean NOAA direct deaths minus known VEHICLE, "
                     "OUTDOOR, WATER and OTHER locations; unknown locations remain. all_recorded_deaths includes every "
                     "direct death. National-model predictions target all direct deaths, so its comparison with the reduced "

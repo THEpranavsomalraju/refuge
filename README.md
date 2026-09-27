@@ -1,37 +1,80 @@
 # Refuge
 
-Storm simulator for real American towns. Pick a place, send a tornado or flash flood through the real buildings, see who is at risk and why, then plan protections and replay the storm.
+Send a tornado or hurricane through a real American town. See who is at risk and why, turn existing schools, churches and businesses into shelters, then replay the storm and compare your plan with the best one.
 
 Carolina Data Challenge 2026, Natural Science track.
 
-## Who owns what
+## Run the site
 
-| Folder | Owner | What |
-|---|---|---|
-| `ml/` | ML lead (@THEpranavsomalraju) | risk + location models, calibration, backtest, landing page data |
-| `sim/params/sim_params.json` | ML lead | calibrated params (rest of `sim/` is Simulation) |
-| `places/` | Structures and 3D (@soham-patki) | Structure Inventory pipeline, roads, streams, terrain, crossings |
-| `web/src/scene/` | Structures and 3D | 3D town |
-| `web/src/landing/` | Structures and 3D | landing page |
-| `sim/` | Simulation (@mahilmanoharan) | engine, storm effects, protections, optimizer, CLI |
-| `web/src/game/` | Simulation | game UI and results panel |
-| `web/src/shared/` | everyone | agree before editing |
-| `story/` | Story lead | research, costs, copy, slides, DevPost |
-
-Only edit your own folders. `data/` is gitignored, so keep raw downloads there.
-
-## Getting started
+Needs Node 22.
 
 ```bash
-git clone https://github.com/THEpranavsomalraju/refuge.git
-cd refuge
-git checkout -b <your-folder>/<task>
+cd web
+npm ci
+npm run dev
 ```
 
-Read `REFUGE_overview.md` first, then your role file (`ROLE_ml.md`, `ROLE_structures_3d.md`, `ROLE_simulation.md`).
+Open http://localhost:5173. The page has the game plus the charts and methods. The game uses the towns that are already built in `places/`, so nothing else has to be running.
 
-## Rules
+`npm run build` writes a static site to `web/dist/`.
 
-- Small PRs, pull often
-- Nothing over 20 MB, no `.env` files
-- Shared file formats are in `REFUGE_overview.md`. Don't change them without telling the team.
+### Optional: build a new town
+
+Any U.S. city can be built on demand. With this server running, the game shows "Build a new city":
+
+```bash
+python3.12 -m venv places/.venv
+places/.venv/bin/pip install -r places/requirements.txt
+places/.venv/bin/python places/build_server.py
+```
+
+## Simulation engine tests
+
+```bash
+npm ci --prefix sim
+npm test --prefix sim
+```
+
+## ML pipeline
+
+The outputs are already in `ml/exports/` and `sim/params/sim_params.json`, so this is only needed to rebuild them.
+
+```bash
+python3.12 -m venv ml/.venv
+ml/.venv/bin/pip install -r ml/requirements.txt
+
+ml/.venv/bin/python ml/download.py          # NOAA, SVI, FHWA files -> data/raw/ (~320 MB)
+ml/.venv/bin/python ml/build_tables.py      # -> data/processed/
+ml/.venv/bin/python ml/patterns.py          # deaths by hour, month and location
+ml/.venv/bin/python ml/train_risk.py        # national risk model, SHAP, county map
+ml/.venv/bin/python ml/train_location.py    # where deaths happen
+ml/.venv/bin/python ml/traffic_curve.py     # hourly traffic for road crossings
+ml/.venv/bin/python ml/backtest_select.py   # historical tornadoes for calibration and backtest
+ml/.venv/bin/python ml/calibrate.py fit     # fit the simulator (needs `npm run build --prefix sim`)
+ml/.venv/bin/python ml/heatmap_bands.py     # risk map bands -> sim/params/sim_params.json
+ml/.venv/bin/python ml/calibrate.py backtest
+ml/.venv/bin/python ml/hurricane_wind.py    # hurricane wind model
+ml/.venv/bin/python ml/hurricane_calibrate.py
+ml/.venv/bin/python ml/hurricane_damage.py
+ml/.venv/bin/python ml/story_exports.py     # CSVs for the charts
+```
+
+## Layout
+
+| Folder | What |
+|---|---|
+| `web/` | Site, game UI and 3D town (React, React Three Fiber) |
+| `sim/` | Storm engine: tornado and hurricane effects, shelters, plan optimizer |
+| `places/` | Town builder (buildings, roads, streams, terrain) and the prebuilt towns |
+| `ml/` | Risk and location models, simulator calibration, backtest, chart data |
+
+## Data
+
+NOAA Storm Events Database (1996–2025), CDC/ATSDR Social Vulnerability Index 2022, USACE National Structure Inventory, USGS 3DEP elevation, OpenStreetMap, NOAA HURDAT2, FHWA travel survey and highway statistics.
+
+## Team
+
+- Pranav Somalraju: models and calibration
+- Mahil Manoharan: simulation
+- Soham Patki: town data and 3D
+- Ananya Anchlia: story and site

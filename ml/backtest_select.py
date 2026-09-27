@@ -31,10 +31,10 @@ MIN_DAMAGE_USD = 250_000
 MAX_LENGTH_KM = 80
 LINK_KM = 3.0          # segment end -> next segment start
 LINK_MINUTES = (-2, 10)
-# Placeholder until per-storm lead times from the IEM warning archive are wired in; stated in METHODS.md.
+# Placeholder until per-storm lead times from the IEM warning archive are wired in.
 WARNING_MIN_DEFAULT = 10
 
-# Storms kept in the list but left out of calibration/backtest scoring, with the reason (stated in METHODS.md).
+# Storms kept in the list but left out of calibration/backtest scoring, with the reason.
 EXCLUDE = {
     "bt_2021_996712": "All 6 deaths were in the Amazon DLI4 warehouse, which has no NSI record (Structures checked OSM).",
 }

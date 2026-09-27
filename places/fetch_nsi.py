@@ -63,7 +63,7 @@ NSI_FIELDS = [
     "ground_elv", "usastrucid", "novehprob", "vehperunit", "pctlowclr", "creprcnt", "crerank",
 ]
 
-# Key order of one record in buildings.json (REFUGE_overview.md, format 1).
+# Key order of one record in buildings.json.
 RECORD_KEYS = [
     "id", "lon", "lat", "h3", "cbfips", "footprint", "footprint_sqft", "occtype", "cls", "stories",
     "basement", "ground_elev_m", "first_floor_ht_m", "hand_m", "firmzone",

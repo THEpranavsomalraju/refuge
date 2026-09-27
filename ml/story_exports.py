@@ -150,7 +150,7 @@ Everything regenerates from `ml/story_exports.py`, so if a number changes it cha
   ({tn['deaths_per_100_tornadoes_night']:.1f} vs {tn['deaths_per_100_tornadoes_day']:.1f} deaths per 100 tornadoes).
 - The national model ranks storms well: on 2020-2025 storms it never saw, AUC **{ts['auc_fatal']:.2f}**
   (tornadoes {ts['by_event_type']['Tornado']['auc_fatal']:.2f}, flash floods {ts['by_event_type']['Flash Flood']['auc_fatal']:.2f}).
-- Backtest on {len(b['storms'])} tornadoes held out from parameter fitting (see the experiment disclosure in METHODS.md): the largest, {big['state'].title()} {big['year']}
+- Backtest on {len(b['storms'])} tornadoes held out from parameter fitting: the largest, {big['state'].title()} {big['year']}
   (EF{big['ef']}, {big['recorded']} deaths), simulated at **{big['calibrated']['expected']:.1f} (range {big['calibrated']['p05']:.0f}-{big['calibrated']['p95']:.0f})**.
   Across all {len(b['storms'])}, the simulator predicts {bs['calibrated']['predicted_deaths']:.0f} deaths vs {bs['calibrated']['recorded_deaths']} recorded
   in the comparison target, with rank correlation {bs['calibrated']['spearman']:.2f}.
