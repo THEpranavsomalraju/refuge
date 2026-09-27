@@ -69,8 +69,8 @@ export function Buildings({ place, frame }: { place: PlaceData; frame: Frame }) 
 
   // Fade to neutral under the risk map or difference view, back to class colors after.
   useFrame(() => {
-    const { risk, diff, swipe } = useSceneStore.getState();
-    const shown = risk ?? diff ?? swipe;   // risk map, difference view, or swipe comparison
+    const { risk, diff } = useSceneStore.getState();
+    const shown = risk ?? diff;   // risk map or difference view
     const target = shown ? Math.min(1, (performance.now() - shown.shownAt) / RISK_FADE_MS) : 0;
     const next = shown ? target : Math.max(0, neutral.current - 0.08);
     if (Math.abs(next - neutral.current) < 0.005 && !(next === 0 && neutral.current !== 0)) return;

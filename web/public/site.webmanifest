@@ -1,0 +1,13 @@
+{
+  "name": "Refuge",
+  "short_name": "Refuge",
+  "description": "Send a tornado or hurricane through a real town, see who is at risk, and plan shelters that save lives.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#232E43",
+  "theme_color": "#232E43",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

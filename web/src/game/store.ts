@@ -25,7 +25,7 @@ export type Step = 'intro' | 'choose_mode' | 'choose_event' | 'choose_city' | 'c
   | 'load_place' | 'storm_animation' | 'results_map' | 'plan' | 'replay' | 'best_preview' | 'optimal' | 'score';
 export type Hazard = 'tornado' | 'hurricane';
 /** Risk maps (before / your plan / best plan) and difference maps (what each plan changed). */
-export type MapView = 'before' | 'yours' | 'optimal' | 'yours_diff' | 'optimal_diff' | 'swipe';
+export type MapView = 'before' | 'yours' | 'optimal' | 'yours_diff' | 'optimal_diff';
 
 interface GameState {
   step: Step;
@@ -121,11 +121,6 @@ export const useGame = create<GameState>((set, get) => {
   };
   const candidate = (id: string) => get().candidates.find(c => c.building_id === id);
   const cost = (ids = get().selected) => ids.reduce((s, id) => s + (candidate(id)?.cost_usd ?? 0), 0);
-  const reachM = () => {
-    if (get().hazard === 'hurricane') return shelterRules.hurricane.reach_km * 1000;
-    const t = shelterRules.tornado, s = scenarioOf() as TornadoScenario;
-    return t.walk_speed_mps * Math.max(0, s.warning_min - t.mobilize_min) * 60;
-  };
   const fail = (error: unknown) => set({ error: error instanceof Error ? error.message : String(error), busy: null });
 
   // Scene markers for the shelters on screen (the player's picks, or the best plan's).
@@ -375,34 +370,11 @@ export const useGame = create<GameState>((set, get) => {
         set({ step: 'optimal', busy: null });
         await run(ids);
         set({ step: 'score' });
-        // Side by side with the player's plan when there is one.
-        get().show(get().yours ? 'swipe' : 'optimal');
+        get().show('optimal');
       } catch (e) { fail(e); }
     },
     show(view) {
       const { baseline, yours, optimal, selected } = get();
-      if (view === 'swipe') {
-        // Your plan (left) vs the best plan (right), one shared scale; each half draws its own shelters.
-        if (!baseline || !yours || !optimal) return;
-        showShelters([]);
-        set({ view, mapHidden: false });
-        const side = (ids: readonly string[], label: string) => ({
-          after: (label.startsWith('Your') ? yours : optimal.result).cells, label,
-          shelters: ids.map(id => {
-            const b = get().place!.buildings.find(x => x.id === id)!;
-            return { id, lon: b.lon, lat: b.lat, reachM: reachM() };
-          }),
-        });
-        const hurricane = isHurricane(baseline);
-        const yourValue = isHurricane(yours) ? (yours.need_served ?? 0)
-          : (baseline as { expected_deaths: number }).expected_deaths - yours.expected_deaths;
-        const unit = hurricane ? 'need served' : 'lives saved';
-        const fmt = (v: number) => hurricane ? Math.round(v).toLocaleString('en-US') : v.toFixed(1);
-        void scene.showSwipeCompare(baseline.cells,
-          side(selected, `Your plan · ${fmt(yourValue)} ${unit} · ${usd(cost())}`),
-          side(optimal.plan.building_ids, `${optimal.plan.label === 'best' ? 'Best' : 'Best found'} plan · ${fmt(optimal.plan.value)} ${unit} · ${usd(optimal.plan.cost_usd)}`));
-        return;
-      }
       const after = view.startsWith('yours') ? yours : view.startsWith('optimal') ? optimal?.result : baseline;
       if (!baseline || !after) return;
       showShelters(view === 'before' ? [] : view.startsWith('yours') ? selected : optimal!.plan.building_ids);

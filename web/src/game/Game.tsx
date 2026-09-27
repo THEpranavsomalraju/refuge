@@ -27,8 +27,7 @@ export function Game({ load }: { load: LoadState }) {
   const title = g.event ? g.event.title
     : g.place && !['intro', 'choose_mode', 'choose_city'].includes(g.step) ? g.place.meta.name : 'Refuge';
   // The blue "what your plan changed" view gets its own legend.
-  const base = g.view === 'swipe' ? differenceLegendFor(g.hazard, { swipe: true })
-    : g.view.endsWith('_diff') ? differenceLegendFor(g.hazard)
+  const base = g.view.endsWith('_diff') ? differenceLegendFor(g.hazard)
     : g.hazard === 'hurricane'
       ? legendFor('hurricane', hurricaneParams.cells.bands, hurricaneParams.cells.min_residents)
       : legendFor('tornado', riskBands, riskBands.min_cell_people);
@@ -544,8 +543,7 @@ function Compare() {
           ? ` Every affordable combination of the ${plan.candidates.length} top buildings (including yours) was checked: ${num(plan.evaluated)} plans within ${usd(g.budget)}.`
           : ` Greedy search with swaps over ${plan.candidates.length} buildings; not guaranteed optimal.`}
       </div>
-      <Views options={['swipe', 'yours_diff', 'optimal_diff', 'before', 'yours', 'optimal']} />
-      {g.view === 'swipe' && <div style={muted}>Drag the divider: your plan on the left, the best plan on the right. Pink outlines mark areas the best plan made much safer than yours did.</div>}
+      <Views options={['yours_diff', 'optimal_diff', 'before', 'yours', 'optimal']} />
       <button style={secondary} onClick={() => void g.plan()}>Try another plan</button>
       <button style={secondary} onClick={g.restart}>New storm</button>
     </>
@@ -553,7 +551,7 @@ function Compare() {
 }
 
 const VIEW_WORDS: Record<MapView, string> = {
-  swipe: 'Side by side: yours vs best', before: 'No shelters', yours: 'Your plan', optimal: 'Best plan', yours_diff: 'What your plan changed', optimal_diff: 'What the best plan changed',
+  before: 'No shelters', yours: 'Your plan', optimal: 'Best plan', yours_diff: 'What your plan changed', optimal_diff: 'What the best plan changed',
 };
 const HOME_NOTE = 'The map shows risk where people live: residents who reach a shelter still count in their home cell, with no risk.';
 function Views({ options }: { options: MapView[] }) {
@@ -584,16 +582,15 @@ function MapToggle() {
 
 function HoverCard() {
   const g = useGame();
-  const [hover, setHover] = useState<{ h3: string; side?: 'left' | 'right' } | null>(null);
+  const [hover, setHover] = useState<string | null>(null);
   useEffect(() => {
-    scene.onCellHover((h3, side) => setHover(h3 ? { h3, side } : null));
+    scene.onCellHover(setHover);
     return () => scene.onCellHover(null);
   }, []);
   if (!hover) return null;
-  const { h3, side } = hover;
-  // Difference and swipe views: what the plan under the cursor changed in this cell.
-  const diffPlan = g.view === 'swipe' ? (side === 'right' ? 'optimal' : side === 'left' ? 'yours' : null)
-    : g.view === 'yours_diff' ? 'yours' : g.view === 'optimal_diff' ? 'optimal' : null;
+  const h3 = hover;
+  // Difference views: what the plan changed in this cell.
+  const diffPlan = g.view === 'yours_diff' ? 'yours' : g.view === 'optimal_diff' ? 'optimal' : null;
   if (diffPlan && g.baseline) {
     const after = diffPlan === 'yours' ? g.yours : g.optimal?.result;
     if (!after) return null;

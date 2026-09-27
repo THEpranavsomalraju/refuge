@@ -8,4 +8,4 @@ export type {
   Band, BuildingClass, CandidateSite, BuildingRecord, CellRecord, CellResult, CrossingRecord, LonLat,
   PlaceData, ProtectionType, RiskBands, SceneAPI,
 } from './types';
-export type { DiffCells, SwipeShelter, SwipeSide } from './store';
+export type { DiffCells } from './store';

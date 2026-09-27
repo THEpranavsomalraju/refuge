@@ -27,7 +27,6 @@ export function GroundInput({ frame }: { frame: Frame }) {
     const ndc = new THREE.Vector2();
     const hit = new THREE.Vector3();
     let lastCell: string | null = null;
-    let lastSide: 'left' | 'right' | undefined;
     let down: { x: number; y: number; id: number } | null = null;
 
     /** Ground point (lon, lat) under the pointer, or null outside the town. */
@@ -52,10 +51,7 @@ export function GroundInput({ frame }: { frame: Frame }) {
       if (!cb) return;
       const p = groundAt(e.clientX, e.clientY);
       const cell = p ? latLngToCell(p[1], p[0], 10) : null;
-      const { swipe, swipeSplit } = useSceneStore.getState();
-      const r = gl.domElement.getBoundingClientRect();
-      const side = swipe ? ((e.clientX - r.left) / r.width < swipeSplit ? 'left' : 'right') : undefined;
-      if (cell !== lastCell || side !== lastSide) { lastCell = cell; lastSide = side; cb(cell, side); }
+      if (cell !== lastCell) { lastCell = cell; cb(cell); }
     };
     const leave = () => {
       const cb = useSceneStore.getState().onCellHover;

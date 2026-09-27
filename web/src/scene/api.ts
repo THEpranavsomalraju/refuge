@@ -3,7 +3,6 @@ import { buildCity, buildServerAvailable, listCities } from './places';
 import { hurricaneCells, tornadoCells, type RiskCell } from './RiskMap';
 import type { TrackRow } from '../shared/contract';
 import { useSceneStore } from './store';
-import { swipeChangedCells } from './SwipeCompare';
 import type { LonLat, SceneAPI } from './types';
 
 import { CAMERA_MS, RISK_RISE_MS } from './timing';
@@ -21,10 +20,10 @@ let protectionSeq = 0;
 function showMap(hazard: 'tornado' | 'hurricane', source: object, convert: () => Record<string, RiskCell>, before?: object): Promise<void> {
   const cur = useSceneStore.getState().risk;
   if (cur && cur.hazard === hazard && cur.source === source && cur.before === before) {
-    useSceneStore.setState({ diff: null, swipe: null });
+    useSceneStore.setState({ diff: null });
     return Promise.resolve();
   }
-  useSceneStore.setState({ risk: { hazard, cells: convert(), shownAt: performance.now(), source, before }, diff: null, swipe: null });
+  useSceneStore.setState({ risk: { hazard, cells: convert(), shownAt: performance.now(), source, before }, diff: null });
   return new Promise(resolve => setTimeout(resolve, RISK_RISE_MS));
 }
 
@@ -94,18 +93,11 @@ export const scene: SceneAPI = {
     useSceneStore.setState({ shelterIds: ids ? [...ids] : [] });
   },
   hideRiskMap() {
-    useSceneStore.setState({ risk: null, diff: null, swipe: null });
+    useSceneStore.setState({ risk: null, diff: null });
   },
   showDifference(before, after) {
-    useSceneStore.setState({ diff: { before, after, shownAt: performance.now() }, risk: null, swipe: null });
+    useSceneStore.setState({ diff: { before, after, shownAt: performance.now() }, risk: null });
     return new Promise(resolve => setTimeout(resolve, RISK_RISE_MS));
-  },
-  showSwipeCompare(before, left, right) {
-    useSceneStore.setState({ swipe: { before, left, right, shownAt: performance.now() }, swipeSplit: 0.5, risk: null, diff: null });
-    return new Promise(resolve => setTimeout(resolve, RISK_RISE_MS));
-  },
-  hideSwipeCompare() {
-    useSceneStore.setState({ swipe: null });
   },
   showCandidateSites(sites) {
     useSceneStore.setState({ sites: sites.map(s => ({ ...s })) });
@@ -179,10 +171,9 @@ export const scene: SceneAPI = {
     useSceneStore.setState({ camera: { center: [(minLon + maxLon) / 2, lat0], radiusM, ms, seq } });
   },
   frameRiskMap(ms = CAMERA_MS) {
-    const { risk, diff, swipe } = useSceneStore.getState();
+    const { risk, diff } = useSceneStore.getState();
     const ids = risk ? Object.keys(risk.cells)
-      : diff ? [...new Set([...Object.keys(diff.before), ...Object.keys(diff.after)])]
-      : swipe ? swipeChangedCells(swipe) : [];
+      : diff ? [...new Set([...Object.keys(diff.before), ...Object.keys(diff.after)])] : [];
     const pts: LonLat[] = [];
     for (const h of ids) { try { const [lat, lon] = cellToLatLng(h); pts.push([lon, lat]); } catch { /* not an H3 id */ } }
     scene.frameCoords(pts, ms, 300);

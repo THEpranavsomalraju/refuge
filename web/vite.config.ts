@@ -70,8 +70,19 @@ function exportsPlugin(): Plugin {
   };
 }
 
+// Link previews need absolute URLs. On Vercel the production domain is known at build
+// time; set SITE_URL to override (e.g. a custom domain). Locally it stays relative.
+function siteUrlPlugin(): Plugin {
+  const url = process.env.SITE_URL
+    ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '');
+  return {
+    name: 'refuge-site-url',
+    transformIndexHtml: { order: 'pre', handler: html => html.replaceAll('%SITE_URL%', url.replace(/\/$/, '')) },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), placesPlugin(), exportsPlugin()],
+  plugins: [react(), placesPlugin(), exportsPlugin(), siteUrlPlugin()],
   // Local build server (places/build_server.py): builds any U.S. city into places/<id>/.
   server: { proxy: { '/build-api': { target: 'http://127.0.0.1:8765', rewrite: p => p.replace(/^\/build-api/, '') } } },
 });

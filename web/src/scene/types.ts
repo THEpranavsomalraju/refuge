@@ -1,6 +1,6 @@
 import type { CityEntry, HurricaneCells, TrackRow } from '../shared/contract';
 import type { BuildStatus } from './places';
-import type { DiffCells, SwipeSide } from './store';
+import type { DiffCells } from './store';
 
 // Shapes of the place files in places/<place_id>/ and of the
 // scene API the game calls. Result types mirror sim/core/types.ts on Mahil's branch.
@@ -124,8 +124,8 @@ export interface SceneAPI {
   placeProtection(type: ProtectionType, lon: number, lat: number, label?: string): string;
   removeProtection(id: string): void;
   onBuildingClick(cb: ((b: BuildingRecord) => void) | null): void;
-  /** Hovered H3 cell; while the swipe comparison shows, `side` says which half the pointer is on. */
-  onCellHover(cb: ((h3: string | null, side?: 'left' | 'right') => void) | null): void;
+  /** Hovered H3 cell (null when the pointer leaves the ground). */
+  onCellHover(cb: ((h3: string | null) => void) | null): void;
   /** Tornado map. Only cells present in `cells` are drawn; absent cells were unaffected. */
   /** `before` (the no-shelter cells) makes areas the shelters protect show in blue. */
   showRiskMap(cells: Record<string, CellResult>, bands?: RiskBands, before?: Record<string, CellResult>): Promise<void>;
@@ -142,17 +142,6 @@ export interface SceneAPI {
    * saved; unchanged cells with people stay gray and flat. Replaces the risk map.
    */
   showDifference(before: DiffCells, after: DiffCells): Promise<void>;
-  /**
-   * Swipe comparison: two difference maps against one shared `before`, split by a draggable
-   * divider (starts at 50%; mouse, touch, arrow keys). Each half draws its own shelters and
-   * reach circles, and the placeProtection markers and showReach circles hide until it ends.
-   * Heights and colors share one absolute scale. On the right half, cells the right plan
-   * protected much better than the left get a pink "missed" outline. Replaces the risk map
-   * and difference view; hideRiskMap, showRiskMap and showDifference end it. Resolves when
-   * the bars finish rising. frameRiskMap frames every cell that changed on either half.
-   */
-  showSwipeCompare(before: DiffCells, left: SwipeSide, right: SwipeSide): Promise<void>;
-  hideSwipeCompare(): void;
 
   /** Clickable markers for protection sites; replaces any shown before. */
   showCandidateSites(sites: CandidateSite[]): void;
@@ -192,7 +181,7 @@ export interface SceneAPI {
   /** Camera: frame points (plus a margin), the current storm path, or a set of H3 cells. */
   frameCoords(coords: LonLat[], ms?: number, marginM?: number): void;
   frameStormPath(ms?: number): void;
-  /** Frame every cell on the current risk, displacement, difference, or swipe map. */
+  /** Frame every cell on the current risk, displacement, or difference map. */
   frameRiskMap(ms?: number): void;
   focusCells(h3s: string[], ms?: number): void;
 }
