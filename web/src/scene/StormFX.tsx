@@ -3,7 +3,6 @@ import type { JSX } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import type { Frame } from './geo';
-import { useSceneStore } from './store';
 
 // Distances are meters; speeds are visual animation rates, independent of run progress.
 const FADE_FRACTION = 0.08; // Smooth entrance/exit at either end of the simulation.
@@ -690,71 +689,6 @@ function StormMeshes({ r }: { r: Resources }): JSX.Element {
     <mesh geometry={r.bolt} material={r.boltMaterial}
       raycast={NO_RAYCAST} frustumCulled={false} renderOrder={7} dispose={null} />
   </>;
-}
-
-export function TornadoFX(props: {
-  center: THREE.CurvePath<THREE.Vector3>; widthM: number; frame: Frame;
-}): JSX.Element {
-  const { center, widthM, frame } = props;
-  const root = React.useRef<THREE.Group>(null);
-  const light = React.useRef<THREE.PointLight>(null);
-  const runtime = React.useRef<Playback>(playback(613));
-  const r = useResources(false);
-  const point = React.useMemo(() => new THREE.Vector3(), []);
-  const tangent = React.useMemo(() => new THREE.Vector3(), []);
-
-  useFrame((_, delta) => {
-    const group = root.current;
-    if (!group) return;
-    const rawT = useSceneStore.getState().stormT;
-    const p = runtime.current;
-    if (rawT == null || !Number.isFinite(rawT) || center.curves.length === 0) {
-      group.visible = false;
-      p.active = false;
-      if (light.current) light.current.intensity = 0;
-      return;
-    }
-    const t = clamp01(rawT);
-    advance(p, t, delta);
-    const u = r.uniforms;
-    u.uFade.value = fadeAt(t);
-    group.visible = u.uFade.value > 0;
-    center.getPointAt(t, point);
-    const ground = finite(frame.groundY(point.x, point.z), 0);
-    group.position.set(point.x, ground, point.z);
-    u.uOrigin.value.copy(group.position);
-    center.getTangentAt(t, tangent);
-    if (Number.isFinite(tangent.x) && Number.isFinite(tangent.z)
-      && tangent.x * tangent.x + tangent.z * tangent.z > 1e-8) {
-      u.uTravel.value.set(tangent.x, tangent.z).normalize();
-    }
-    const width = THREE.MathUtils.clamp(finite(widthM, TORNADO.minWidth), TORNADO.minWidth, 3500);
-    u.uRadius.value = width * 0.5;
-    u.uHeight.value = Math.min(TORNADO.maxHeight, TORNADO.height + width * 0.12);
-    u.uCloudRadius.value = Math.max(1250, width * 1.5);
-    u.uTime.value = p.time;
-    const extent = Math.max(u.uCloudRadius.value * 2.6, u.uRadius.value * 12);
-    const tile = u.uTerrainInfo.value;
-    const moved = Math.hypot(point.x - tile.x, point.z - tile.y);
-    if (p.terrainFrame !== frame || Math.abs(tile.z - extent) > 1
-      || p.terrainTime < 0 || moved > extent * 0.12
-      || (p.time - p.terrainTime >= TORNADO.terrainInterval && moved > extent / TORNADO.terrainSamples)) {
-      sampleTerrain(r, frame, point.x, point.z, extent);
-      p.terrainTime = p.time;
-      p.terrainFrame = frame;
-    }
-    const flash = lightning(r, p, false, frame);
-    if (light.current) {
-      light.current.position.copy(u.uFlashPos.value);
-      light.current.distance = u.uCloudRadius.value * 4;
-      light.current.intensity = flash * u.uFade.value * 2.8e7;
-    }
-  });
-
-  return <group ref={root} visible={false} dispose={null}>
-    <StormMeshes r={r} />
-    <pointLight ref={light} color="#c4d8eb" intensity={0} distance={7000} decay={2} castShadow={false} />
-  </group>;
 }
 
 export function HurricaneFX(props: {

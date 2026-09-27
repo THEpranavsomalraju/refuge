@@ -4,7 +4,8 @@ import * as THREE from 'three';
 import type { Frame } from './geo';
 import { PALETTE } from './palette';
 import { useSceneStore } from './store';
-import { TornadoFX } from './StormFX';
+import { TornadoFX } from './TornadoFX';
+import { TornadoWind } from './WeatherFX';
 import type { LonLat } from './types';
 
 const LIFT_M = 2;
@@ -25,6 +26,7 @@ export function TornadoPath({ frame }: { frame: Frame }) {
         <lineBasicMaterial color={PALETTE.path} transparent opacity={0.55} />
       </lineSegments>
       <TornadoFX center={built.center} widthM={tornado.widthM} frame={frame} />
+      <TornadoWind center={built.center} widthM={tornado.widthM} frame={frame} />
     </group>
   );
 }

@@ -7,6 +7,7 @@ import { scene } from './api';
 import type { Frame } from './geo';
 import { useSceneStore } from './store';
 import { HurricaneFX, type HurricaneFXState } from './StormFX';
+import { HurricaneRain } from './WeatherFX';
 
 const CLIP_M = 60_000;          // track drawn within this distance of the town center
 const TRACK_LIFT_M = 60;
@@ -87,6 +88,7 @@ export function HurricaneTrack({ frame }: { frame: Frame }) {
     <group>
       <primitive object={built.line} />
       <Eye at={built.at} closest={built.closest} window={built.window} frame={frame} category={hurricane.category} />
+      <HurricaneRain frame={frame} at={built.at} window={built.window} />
     </group>
   );
 }
