@@ -139,6 +139,8 @@ export interface SceneAPI {
   showCandidateSites(sites: CandidateSite[]): void;
   hideCandidateSites(): void;
   onSiteClick(cb: ((id: string) => void) | null): void;
+  /** Ground clicks for drawing a tornado path or hurricane track; drags still pan. null stops. */
+  onGroundClick(cb: ((lon: number, lat: number) => void) | null): void;
 
   /** Camera: frame points (plus a margin), the current storm path, or a set of H3 cells. */
   frameCoords(coords: LonLat[], ms?: number, marginM?: number): void;

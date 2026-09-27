@@ -27,6 +27,9 @@ interface SceneState {
   onBuildingClick: ((b: BuildingRecord) => void) | null;
   onCellHover: ((h3: string | null) => void) | null;
   onSiteClick: ((id: string) => void) | null;
+  /** While set, clicks on the ground (not drags) are reported here and marked in groundClicks. */
+  onGroundClick: ((lon: number, lat: number) => void) | null;
+  groundClicks: LonLat[];
 }
 
 export const useSceneStore = create<SceneState>(() => ({
@@ -43,4 +46,6 @@ export const useSceneStore = create<SceneState>(() => ({
   onBuildingClick: null,
   onCellHover: null,
   onSiteClick: null,
+  onGroundClick: null,
+  groundClicks: [],
 }));

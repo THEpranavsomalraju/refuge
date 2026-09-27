@@ -1,12 +1,12 @@
 import { MapControls } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
-import { latLngToCell } from 'h3-js';
 import { useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { Buildings } from './Buildings';
 import { CameraRig } from './CameraRig';
 import { CandidateSites } from './CandidateSites';
 import { loadPlace } from './data';
+import { GroundInput } from './GroundInput';
 import { DifferenceMap } from './DifferenceMap';
 import type { PlaceSource } from './places';
 import { makeFrame, type Frame } from './geo';
@@ -59,7 +59,7 @@ function Place({ place }: { place: PlaceData }) {
       <DifferenceMap place={place} frame={frame} />
       <CandidateSites frame={frame} />
       <CameraRig frame={frame} />
-      <CellHover frame={frame} />
+      <GroundInput frame={frame} />
     </>
   );
 }
@@ -75,40 +75,4 @@ function StartCamera({ frame }: { frame: Frame }) {
     if (controls) { controls.target.copy(target); controls.update(); }
   }, [frame, camera, controls]);
   return <MapControls makeDefault maxPolarAngle={Math.PI * 0.46} minDistance={150} maxDistance={Math.max(frame.width, frame.depth) * 2} />;
-}
-
-/** Reports the H3 cell under the pointer to scene.onCellHover (ray hits the ground). */
-function CellHover({ frame }: { frame: Frame }) {
-  const { camera, gl } = useThree(s => ({ camera: s.camera, gl: s.gl }));
-  useEffect(() => {
-    const el = gl.domElement;
-    const ray = new THREE.Raycaster();
-    const ndc = new THREE.Vector2();
-    const hit = new THREE.Vector3();
-    let last: string | null = null;
-    const move = (e: PointerEvent) => {
-      const cb = useSceneStore.getState().onCellHover;
-      if (!cb) return;
-      const r = el.getBoundingClientRect();
-      ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
-      ray.setFromCamera(ndc, camera);
-      // Intersect a horizontal plane, then refine twice with the ground height there.
-      let y = frame.groundY(0, 0);
-      let cell: string | null = null;
-      for (let k = 0; k < 3; k++) {
-        if (!ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -y), hit)) break;
-        y = frame.groundY(hit.x, hit.z);
-      }
-      if (Math.abs(hit.x) <= frame.width / 2 && Math.abs(hit.z) <= frame.depth / 2) {
-        const [lon, lat] = frame.toLonLat(hit.x, hit.z);
-        cell = latLngToCell(lat, lon, 10);
-      }
-      if (cell !== last) { last = cell; cb(cell); }
-    };
-    const leave = () => { const cb = useSceneStore.getState().onCellHover; if (last !== null) { last = null; cb?.(null); } };
-    el.addEventListener('pointermove', move);
-    el.addEventListener('pointerleave', leave);
-    return () => { el.removeEventListener('pointermove', move); el.removeEventListener('pointerleave', leave); };
-  }, [camera, gl, frame]);
-  return null;
 }

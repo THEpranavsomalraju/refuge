@@ -89,6 +89,10 @@ export const scene: SceneAPI = {
   onSiteClick(cb) {
     useSceneStore.setState({ onSiteClick: cb });
   },
+  onGroundClick(cb) {
+    // A new callback (or null) starts a fresh set of point markers.
+    useSceneStore.setState({ onGroundClick: cb, groundClicks: [] });
+  },
   frameCoords(coords, ms = CAMERA_MS, marginM = 300) {
     if (!coords.length) return;
     let minLon = Infinity, minLat = Infinity, maxLon = -Infinity, maxLat = -Infinity;
