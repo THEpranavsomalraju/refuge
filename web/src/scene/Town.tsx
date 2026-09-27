@@ -9,6 +9,7 @@ import { loadPlace } from './data';
 import { GroundInput } from './GroundInput';
 import { HurricaneTrack } from './HurricaneTrack';
 import { DifferenceMap } from './DifferenceMap';
+import { SwipeCompare } from './SwipeCompare';
 import { makeFrame, type Frame } from './geo';
 import { Lines } from './Lines';
 import { PALETTE } from './palette';
@@ -63,6 +64,7 @@ function Place({ place }: { place: PlaceData }) {
       <HeatVoxels frame={frame} />
       <HeatDiff frame={frame} />
       <DifferenceMap place={place} frame={frame} />
+      <SwipeCompare place={place} frame={frame} />
       <CandidateSites frame={frame} />
       <CameraRig frame={frame} />
       <GroundInput frame={frame} />

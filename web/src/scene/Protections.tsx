@@ -13,6 +13,8 @@ const REACH_SEGMENTS = 128;
 export function Protections({ frame }: { frame: Frame }) {
   const protections = useSceneStore(s => s.protections);
   const reach = useSceneStore(s => s.reach);
+  const swiping = useSceneStore(s => s.swipe !== null);
+  if (swiping) return null;   // the swipe comparison draws each plan's shelters on its own half
   return (
     <group>
       {protections.map((p, i) => <Marker key={p.id} p={p} frame={frame} lift={liftFor(protections, i, frame)} />)}
@@ -23,7 +25,8 @@ export function Protections({ frame }: { frame: Frame }) {
 
 /**
  * A safe room readable at town zoom: a glowing beam, a small shelter block, and a pin
- * that keeps the same size on screen however far the camera is.
+ * that keeps the same size on screen however far the camera is (`pin` false drops the pin,
+ * which is page HTML and cannot be clipped to one half of the swipe comparison).
  */
 /**
  * Pins stand on their own building. When shelters are close together, their pins are raised to
@@ -36,7 +39,7 @@ function liftFor(all: Protection[], i: number, frame: Frame): number {
   return close.indexOf(i) * 170;
 }
 
-function Marker({ p, frame, lift }: { p: Protection; frame: Frame; lift: number }) {
+export function Marker({ p, frame, pin = true, lift = 0 }: { p: Protection; frame: Frame; pin?: boolean; lift?: number }) {
   const [x, z] = frame.toXZ(p.lon, p.lat);
   const y = frame.groundY(x, z);
   const beam = useRef<THREE.Mesh>(null);
@@ -56,7 +59,7 @@ function Marker({ p, frame, lift }: { p: Protection; frame: Frame; lift: number 
         <cylinderGeometry args={[16, 26, BEAM_M + lift, 16, 1, true]} />
         <meshBasicMaterial color={PALETTE.shelter} transparent opacity={0.35} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
-      <Html position={[0, BEAM_M + lift + 20, 0]} center zIndexRange={[15, 0]} style={{ pointerEvents: 'none' }}>
+      {pin && <Html position={[0, BEAM_M + lift + 20, 0]} center zIndexRange={[15, 0]} style={{ pointerEvents: 'none' }}>
         <div aria-label={p.type === 'safe_room' ? 'Shelter' : p.type} style={{ display: 'grid', justifyItems: 'center' }}>
           <div style={{
             width: 22, height: 22, borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)',
@@ -72,13 +75,13 @@ function Marker({ p, frame, lift }: { p: Protection; frame: Frame; lift: number 
             }}>{p.label}</div>
           )}
         </div>
-      </Html>
+      </Html>}
     </group>
   );
 }
 
 /** Translucent ground circle with an outline, following the terrain. */
-function Reach({ lon, lat, radiusM, frame }: { lon: number; lat: number; radiusM: number; frame: Frame }) {
+export function Reach({ lon, lat, radiusM, frame }: { lon: number; lat: number; radiusM: number; frame: Frame }) {
   const { fill, ring } = useMemo(() => {
     const [cx, cz] = frame.toXZ(lon, lat);
     const ringPos: number[] = [];

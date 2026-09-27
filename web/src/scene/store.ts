@@ -8,6 +8,11 @@ export type DiffCells = Record<string, { expected_deaths?: number; displaced?: n
 
 export interface Protection { id: string; type: ProtectionType; lon: number; lat: number; label?: string }
 
+/** A shelter drawn on one half of the swipe comparison; `reachM` adds its reach circle. */
+export interface SwipeShelter { id: string; lon: number; lat: number; reachM?: number }
+/** One half of the swipe comparison: its result cells, a label, and its shelters. */
+export interface SwipeSide { after: DiffCells; label: string; shelters: SwipeShelter[] }
+
 /** A camera move: frame a circle of `radiusM` around `center` over `ms`. `seq` bumps per request. */
 export interface CameraGoal { center: LonLat; radiusM: number; ms: number; seq: number }
 
@@ -25,10 +30,14 @@ interface SceneState {
   /** How the risk map is drawn: smooth translucent heat columns, or the exact per-block hexagons. */
   mapStyle: 'heat' | 'blocks';
   diff: { before: DiffCells; after: DiffCells; shownAt: number } | null;
+  /** Swipe comparison: two difference maps against one `before`, split by a divider. */
+  swipe: { before: DiffCells; left: SwipeSide; right: SwipeSide; shownAt: number } | null;
+  /** Divider position as a share of the canvas width, 0..1 (kept apart so dragging never rebuilds the maps). */
+  swipeSplit: number;
   sites: CandidateSite[];
   camera: CameraGoal | null;
   onBuildingClick: ((b: BuildingRecord) => void) | null;
-  onCellHover: ((h3: string | null) => void) | null;
+  onCellHover: ((h3: string | null, side?: 'left' | 'right') => void) | null;
   onSiteClick: ((id: string) => void) | null;
   /** While set, clicks on the ground (not drags) are reported here and marked in groundClicks. */
   onGroundClick: ((lon: number, lat: number) => void) | null;
@@ -59,6 +68,8 @@ export const useSceneStore = create<SceneState>(() => ({
   risk: null,
   mapStyle: 'heat',
   diff: null,
+  swipe: null,
+  swipeSplit: 0.5,
   sites: [],
   camera: null,
   onBuildingClick: null,

@@ -25,7 +25,7 @@ export type Step = 'intro' | 'choose_mode' | 'choose_event' | 'choose_city' | 'c
   | 'load_place' | 'storm_animation' | 'results_map' | 'plan' | 'replay' | 'best_preview' | 'optimal' | 'score';
 export type Hazard = 'tornado' | 'hurricane';
 /** Risk maps (before / your plan / best plan) and difference maps (what each plan changed). */
-export type MapView = 'before' | 'yours' | 'optimal' | 'yours_diff' | 'optimal_diff';
+export type MapView = 'before' | 'yours' | 'optimal' | 'yours_diff' | 'optimal_diff' | 'swipe';
 
 interface GameState {
   step: Step;
@@ -375,11 +375,34 @@ export const useGame = create<GameState>((set, get) => {
         set({ step: 'optimal', busy: null });
         await run(ids);
         set({ step: 'score' });
-        get().show('optimal');
+        // Side by side with the player's plan when there is one.
+        get().show(get().yours ? 'swipe' : 'optimal');
       } catch (e) { fail(e); }
     },
     show(view) {
       const { baseline, yours, optimal, selected } = get();
+      if (view === 'swipe') {
+        // Your plan (left) vs the best plan (right), one shared scale; each half draws its own shelters.
+        if (!baseline || !yours || !optimal) return;
+        showShelters([]);
+        set({ view, mapHidden: false });
+        const side = (ids: readonly string[], label: string) => ({
+          after: (label.startsWith('Your') ? yours : optimal.result).cells, label,
+          shelters: ids.map(id => {
+            const b = get().place!.buildings.find(x => x.id === id)!;
+            return { id, lon: b.lon, lat: b.lat, reachM: reachM() };
+          }),
+        });
+        const hurricane = isHurricane(baseline);
+        const yourValue = isHurricane(yours) ? (yours.need_served ?? 0)
+          : (baseline as { expected_deaths: number }).expected_deaths - yours.expected_deaths;
+        const unit = hurricane ? 'need served' : 'lives saved';
+        const fmt = (v: number) => hurricane ? Math.round(v).toLocaleString('en-US') : v.toFixed(1);
+        void scene.showSwipeCompare(baseline.cells,
+          side(selected, `Your plan · ${fmt(yourValue)} ${unit} · ${usd(cost())}`),
+          side(optimal.plan.building_ids, `${optimal.plan.label === 'best' ? 'Best' : 'Best found'} plan · ${fmt(optimal.plan.value)} ${unit} · ${usd(optimal.plan.cost_usd)}`));
+        return;
+      }
       const after = view.startsWith('yours') ? yours : view.startsWith('optimal') ? optimal?.result : baseline;
       if (!baseline || !after) return;
       showShelters(view === 'before' ? [] : view.startsWith('yours') ? selected : optimal!.plan.building_ids);
@@ -388,11 +411,10 @@ export const useGame = create<GameState>((set, get) => {
       else void showMap(after, view === 'before' ? undefined : baseline);
     },
     toggleMap() {
-      if (get().mapHidden) {
-        // While planning, bring the map back without touching the player's shelter markers or pins.
-        if (get().step === 'plan' && get().baseline) { set({ mapHidden: false }); void showMap(get().baseline!); return; }
-        get().show(get().view); return;
-      }
+      const { mapHidden, step, baseline } = get();
+      // In the plan step only the map comes back: show() would reset the shelter markers.
+      if (mapHidden && step === 'plan' && baseline) { set({ mapHidden: false }); void showMap(baseline); return; }
+      if (mapHidden) { get().show(get().view); return; }
       scene.hideRiskMap();
       set({ mapHidden: true });
     },
