@@ -12,7 +12,8 @@ export function Game({ load }: { load: LoadState }) {
   useEffect(() => {
     if (load.state === 'ready' && load.place.meta.place_id === g.placeId) void g.placeLoaded(load.place);
     if (load.state === 'error') g.placeFailed(load.message);
-  }, [load, g.placeId]); // eslint-disable-line react-hooks/exhaustive-deps
+    // g.step: picking the town that is already loaded (the Lumberton backdrop) must not wait for a new load.
+  }, [load, g.placeId, g.step]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
@@ -31,8 +32,21 @@ export function Game({ load }: { load: LoadState }) {
 /** Scenario hour for display: the event's own hour in past mode. */
 const hourOf = (g: ReturnType<typeof useGame.getState>) => g.event ? Number(g.event.scenario.hour) : g.hour;
 
+/** place_ids listed in places/index.json (towns that are built and loadable). */
+function useBuiltPlaces(): Set<string> | null {
+  const [built, setBuilt] = useState<Set<string> | null>(null);
+  useEffect(() => {
+    fetch(`${import.meta.env.BASE_URL}places/index.json`)
+      .then(r => (r.ok ? r.json() : []))
+      .then((index: { place_id: string }[]) => setBuilt(new Set(index.map(e => e.place_id))))
+      .catch(() => setBuilt(new Set()));
+  }, []);
+  return built;
+}
+
 function Step() {
   const g = useGame();
+  const built = useBuiltPlaces();
   switch (g.step) {
     case 'intro': return (
       <>
@@ -49,11 +63,14 @@ function Step() {
     case 'choose_event': return (
       <>
         {PAST_EVENTS.map(e => {
-          const ready = e.hazard === 'tornado' || HURRICANE_READY;
+          const townBuilt = built?.has(e.scenario.place_id) ?? false;
+          const ready = townBuilt && (e.hazard === 'tornado' || HURRICANE_READY);
+          const note = !townBuilt ? (built ? 'Town not built yet' : 'Checking…')
+            : ready ? `${e.recorded.deaths_direct} direct deaths recorded` : 'Hurricane mode is coming next';
           return (
             <button key={e.id} style={{ ...choice, opacity: ready ? 1 : 0.45 }} disabled={!ready} onClick={() => g.chooseEvent(e.id)}>
               <b>{e.title}</b><span style={muted}>{e.subtitle}</span>
-              <span style={muted}>{ready ? `${e.recorded.deaths_direct} direct deaths recorded` : 'Hurricane mode is coming next'}</span>
+              <span style={muted}>{note}</span>
             </button>
           );
         })}
