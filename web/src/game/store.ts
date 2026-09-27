@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { scene, type BuildStatus, type LonLat, type PlaceData } from '../scene';
 import type { CityEntry, SceneExtensions, TrackRow } from '../shared/contract';
 import showcase from '../../../sim/scenarios/lumberton_tornado.json';
-import { trackFromDrawing } from '../../../sim/core/hurricane.js';
+import { extendDrawnLine, trackFromDrawing } from '../../../sim/core/hurricane.js';
 import { defaultBudget, hurricaneParams, isHurricane, riskBands, shelterRules, sim, type AnyScenario, type Result,
   type ShelterCandidate, type ShelterPlan, type TornadoScenario } from './simClient';
 import { PAST_EVENTS, type PastEvent } from './events';
@@ -82,7 +82,7 @@ interface GameState {
 function defaultPath(place: PlaceData, hazard: Hazard): LonLat[] {
   if (hazard === 'tornado' && place.meta.place_id === showcase.place_id) return showcase.path as LonLat[];
   const [lon, lat] = place.meta.center;
-  const km = hazard === 'hurricane' ? 60 : 4;
+  const km = 4;
   const dLon = km * 1000 / (111_320 * Math.cos(lat * Math.PI / 180)), dLat = km * 1000 / 110_574;
   return [[lon - dLon, lat - dLat], [lon + dLon, lat + dLat]];
 }
@@ -94,7 +94,8 @@ export const useGame = create<GameState>((set, get) => {
     if (event) return { ...(event.scenario as unknown as AnyScenario), protections };
     if (hazard === 'hurricane') {
       return { place_id: placeId, hazard: 'hurricane', hour, protections,
-        track: trackFromDrawing(path as [number, number][], category, hurricaneParams) };
+        track: trackFromDrawing(extendDrawnLine(path as [number, number][], hurricaneParams.drawn_track_extension_km),
+          category, hurricaneParams) };
     }
     return { ...(showcase as unknown as TornadoScenario), place_id: placeId, ef, hour, warning_min: warning, path,
       width_m: WIDTH_BY_EF[ef]!, protections };
@@ -129,9 +130,15 @@ export const useGame = create<GameState>((set, get) => {
     view: 'before' as MapView, error: null, drawing: false, build: null };
 
   const showMap = (r: Result) => isHurricane(r) ? scene.showDisplacementMap(r.cells) : scene.showRiskMap(r.cells, riskBands);
-  /** Cells to end the camera on: deep red (tornado) or extreme (hurricane). */
-  const hotCells = (r: Result) => Object.entries(r.cells)
-    .filter(([, c]) => c.band === (isHurricane(r) ? 'extreme' : 'deep_red')).map(([h3]) => h3);
+  /** Cells to end the camera on: the worst band present (deep red, or extreme then severe for hurricanes). */
+  const hotCells = (r: Result) => {
+    const order = isHurricane(r) ? ['extreme', 'severe'] : ['deep_red', 'red'];
+    for (const band of order) {
+      const hits = Object.entries(r.cells).filter(([, c]) => c.band === band).map(([h3]) => h3);
+      if (hits.length) return hits;
+    }
+    return [];
+  };
 
   /** Simulate, animate the storm, then raise the map and end on the worst cells. */
   async function run(shelters: string[]): Promise<Result> {

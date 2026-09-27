@@ -72,3 +72,15 @@ test('drawn tracks get category defaults and time from 20 km/h forward speed', (
   assert.deepEqual(t[0], [-79, 34, 89, 37, 1.6, 0]);
   assert.ok(Math.abs(t[1][5] - 111.195 / 20) < 0.01);
 });
+
+test('a short drawn track is extended so the eyewall crosses the town', () => {
+  const drawn = [[-79.06, 34.62], [-79.00, 34.67]];
+  const calm = core.maxGustMph(core.trackFromDrawing(drawn, 2, hp), [-79.03], [34.645], hp)[0];
+  const line = core.extendDrawnLine(drawn, hp.drawn_track_extension_km);
+  assert.equal(line.length, 4);
+  assert.deepEqual(line.slice(1, 3), drawn);
+  const track = core.trackFromDrawing(line, 2, hp);
+  assert.ok(Math.abs(track[1][5] - 150 / 20) < 0.05, `time at the drawn start ${track[1][5]}`);
+  const gust = core.maxGustMph(track, [-79.03], [34.645], hp)[0];
+  assert.ok(calm < 1 && gust > 90, `calm ${calm}, extended ${gust}`);
+});
