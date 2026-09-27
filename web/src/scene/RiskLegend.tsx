@@ -58,14 +58,13 @@ export function differenceLegendFor(hazard: LegendHazard): Legend {
     title: 'What the shelters changed',
     rows: [
       { label: tornado ? 'Lives saved' : 'Sheltered', range: tornado
-          ? 'blocks where people reach a shelter and risk drops; darker blue = more lives saved'
-          : 'blocks whose displaced residents now have a shelter bed; darker blue = more people sheltered',
+          ? 'blue rises where people reached a shelter; taller, darker = more lives saved there'
+          : 'blue rises where displaced people now have a shelter bed; taller, darker = more people helped there',
         color: `linear-gradient(90deg, ${DIFF_COLOR.savedLow}, ${DIFF_COLOR.savedHigh})`, hatched: false },
-      { label: 'No change', range: tornado ? 'nobody here reaches a shelter' : 'nobody displaced here reaches a shelter', color: DIFF_COLOR.unchanged, hatched: false },
-      { label: 'Worse', range: tornado ? 'more deaths expected' : 'more people displaced', color: DIFF_COLOR.worse, hatched: false },
+      { label: 'Nothing', range: tornado ? 'no blue: nobody there reached a shelter' : 'no blue: nobody displaced there got a bed', color: 'transparent', hatched: false },
     ],
     outline: null,
-    height: hazard === 'tornado' ? 'Height: lives saved in that area' : 'Height: people kept in their homes',
+    height: hazard === 'tornado' ? 'Compare with “No shelters” to see what was at risk.' : 'Compare with “No shelters” to see where people were displaced.',
   };
 }
 

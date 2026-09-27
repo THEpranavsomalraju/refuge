@@ -132,7 +132,6 @@ export const useGame = create<GameState>((set, get) => {
     ext.hideReach?.();
     markers = ids.map(id => {
       const b = get().place!.buildings.find(x => x.id === id)!;
-      ext.showReach?.(id, b.lon, b.lat, reachM());
       return scene.placeProtection('safe_room', b.lon, b.lat);
     });
   };

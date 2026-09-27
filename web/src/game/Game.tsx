@@ -42,7 +42,7 @@ export function Game({ load }: { load: LoadState }) {
       {g.step === 'plan' && g.inspected && <ShelterCard />}
       {g.step === 'plan' && <ShelterHoverCard />}
       {g.baseline && !g.mapHidden && <HoverCard />}
-      {g.baseline && !g.mapHidden && <div style={legendBox}><RiskLegend legend={legend} /><MapStyleSwitch /></div>}
+      {g.baseline && !g.mapHidden && <div style={legendBox}><RiskLegend legend={legend} /></div>}
     </>
   );
 }
@@ -416,8 +416,17 @@ function ShelterHoverCard() {
     return () => window.removeEventListener('mousemove', move);
   }, []);
   const i = hoverId ? g.candidates.findIndex(c => c.building_id === hoverId) : -1;
-  if (i < 0 || !pos) return null;
-  const c = g.candidates[i]!;
+  const hc = i >= 0 ? g.candidates[i] : null;
+  const t = shelterRules.tornado;
+  const reachM = g.hazard === 'hurricane' ? shelterRules.hurricane.reach_km * 1000 : t.walk_speed_mps * Math.max(0, warningOf(g) - t.mobilize_min) * 60;
+  // The ring = who this shelter can serve. Drawn only while hovering, so the map stays clean.
+  useEffect(() => {
+    if (!hc) return;
+    scene.showReach('hover', hc.lon, hc.lat, reachM);
+    return () => scene.hideReach('hover');
+  }, [hc, reachM]);
+  if (!hc || !pos) return null;
+  const c = hc;
   const b = g.place?.buildings.find(x => x.id === c.building_id);
   const hurricane = g.hazard === 'hurricane';
   const on = g.selected.includes(c.building_id);
@@ -428,6 +437,7 @@ function ShelterHoverCard() {
       <div style={row}><span>Capacity</span><span style={mono}>{num(c.capacity)} people</span></div>
       <div style={row}><span>Cost</span><span style={mono}>{usd(c.cost_usd)}</span></div>
       <div style={row}><span>{hurricane ? 'Displaced people in reach' : 'People in reach'}</span><span style={mono}>{num(c.people_in_reach)}</span></div>
+      <div style={muted}>Serves {hurricane ? `displaced people within ${shelterRules.hurricane.reach_km} km (the ring)` : `people within a ${Math.round(reachM)} m walk (the ring)`}</div>
       <div style={muted}>{on ? 'Selected: click to remove' : 'Click to add to your plan'}</div>
     </div>
   );
@@ -586,22 +596,6 @@ function HoverCard() {
       <div style={row}><span>People at {hourWords(hourOf(g))}</span><span style={mono}>{Math.round(c.people)}</span></div>
       {c.expected_deaths > 0 && <div style={row}><span>Expected deaths</span><span style={mono}>{c.expected_deaths.toFixed(2)} ({c.p05}–{c.p95})</span></div>}
       {c.drivers.length > 0 && <div style={muted}>{driverWords(c.drivers, hourOf(g))}{c.uncertain ? ' · uncertain' : ''}</div>}
-    </div>
-  );
-}
-
-/** Smooth heat columns (default) or the exact per-block hexagons. */
-function MapStyleSwitch() {
-  const style = useSceneStore(s => s.mapStyle);
-  const pick = (v: 'heat' | 'blocks') => useSceneStore.setState({ mapStyle: v });
-  return (
-    <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
-      {(['heat', 'blocks'] as const).map(v => (
-        <button key={v} onClick={() => pick(v)} aria-pressed={style === v}
-          style={{ ...tab, flex: 1, background: style === v ? '#e3eae7' : 'transparent', color: style === v ? '#101817' : '#e3eae7' }}>
-          {v === 'heat' ? 'Heat map' : 'Blocks'}
-        </button>
-      ))}
     </div>
   );
 }

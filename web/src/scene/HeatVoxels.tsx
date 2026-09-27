@@ -124,3 +124,84 @@ export function HeatVoxels({ frame }: { frame: Frame }) {
   if (!risk || style !== 'heat' || columns.length === 0) return null;
   return <instancedMesh key={columns.length} ref={mesh} args={[geometry, material, columns.length]} raycast={() => null} renderOrder={2} />;
 }
+
+/**
+ * What the shelters changed, as a heat map: blue columns rise where the helped people live.
+ * Value per column = Gaussian-weighted sum of (before - after) nearby: displaced people who now have a
+ * shelter bed (hurricane) or expected deaths prevented (tornado). Taller and darker = more help there.
+ */
+const SAVED_LOW = new THREE.Color('#9cc9ef'), SAVED_HIGH = new THREE.Color('#1f5fb8');
+
+function buildDiffColumns(frame: Frame, before: Record<string, SourceCell>, after: Record<string, SourceCell>): Column[] {
+  const nx = Math.ceil(frame.width / GRID_M), nz = Math.ceil(frame.depth / GRID_M);
+  const x0 = -frame.width / 2, z0 = -frame.depth / 2;
+  const sum = new Float64Array(nx * nz);
+  const r = Math.ceil((REACH * SIGMA_M) / GRID_M), inv2s2 = 1 / (2 * SIGMA_M * SIGMA_M);
+  for (const h3 of new Set([...Object.keys(before), ...Object.keys(after)])) {
+    const b = before[h3], a = after[h3];
+    const hurricane = (b?.displaced ?? a?.displaced) !== undefined;
+    const helped = hurricane ? (b?.displaced ?? 0) - (a?.displaced ?? 0) : (b?.expected_deaths ?? 0) - (a?.expected_deaths ?? 0);
+    if (helped <= 1e-9) continue;
+    let lat: number, lon: number;
+    try { [lat, lon] = cellToLatLng(h3); } catch { continue; }
+    const [cx, cz] = frame.toXZ(lon, lat);
+    const gi = Math.floor((cx - x0) / GRID_M), gk = Math.floor((cz - z0) / GRID_M);
+    for (let i = Math.max(0, gi - r); i <= Math.min(nx - 1, gi + r); i++) {
+      for (let k = Math.max(0, gk - r); k <= Math.min(nz - 1, gk + r); k++) {
+        const dx = x0 + (i + 0.5) * GRID_M - cx, dz = z0 + (k + 0.5) * GRID_M - cz;
+        sum[i * nz + k] += helped * Math.exp(-(dx * dx + dz * dz) * inv2s2);
+      }
+    }
+  }
+  let max = 0;
+  for (const v of sum) max = Math.max(max, v);
+  if (max <= 0) return [];
+  const out: Column[] = [];
+  for (let i = 0; i < nx; i++) {
+    for (let k = 0; k < nz; k++) {
+      const t = sum[i * nz + k]! / max;
+      if (t < 0.02) continue;                       // nothing meaningful changed here: no column
+      const x = x0 + (i + 0.5) * GRID_M, z = z0 + (k + 0.5) * GRID_M;
+      out.push({ x, z, y: frame.groundY(x, z), h: MIN_H + Math.sqrt(t) * (MAX_H - MIN_H), color: SAVED_LOW.clone().lerp(SAVED_HIGH, Math.sqrt(t)) });
+    }
+  }
+  return out;
+}
+
+export function HeatDiff({ frame }: { frame: Frame }) {
+  const diff = useSceneStore(s => s.diff);
+  const style = useSceneStore(s => s.mapStyle);
+  const columns = useMemo(
+    () => (diff && style === 'heat' ? buildDiffColumns(frame, diff.before as Record<string, SourceCell>, diff.after as Record<string, SourceCell>) : []),
+    [diff, style, frame]);
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  const geometry = useMemo(() => new THREE.BoxGeometry(GRID_M * 0.94, 1, GRID_M * 0.94).translate(0, 0.5, 0), []);
+  const material = useMemo(() => new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.7, depthWrite: false, roughness: 0.55, metalness: 0 }), []);
+  const done = useRef(false);
+  const tmp = useMemo(() => new THREE.Object3D(), []);
+  useEffect(() => () => { geometry.dispose(); material.dispose(); }, [geometry, material]);
+  useEffect(() => {
+    const m = mesh.current;
+    if (!m) return;
+    columns.forEach((c, i) => m.setColorAt(i, c.color));
+    if (m.instanceColor) m.instanceColor.needsUpdate = true;
+    material.needsUpdate = true;
+    done.current = false;
+  }, [columns, material]);
+  useFrame(() => {
+    const m = mesh.current;
+    if (!m || !diff || columns.length === 0 || done.current) return;
+    const k = Math.min(1, (performance.now() - diff.shownAt) / RISK_RISE_MS);
+    const ease = 1 - Math.pow(1 - k, 3);
+    columns.forEach((c, i) => {
+      tmp.position.set(c.x, c.y, c.z);
+      tmp.scale.set(1, Math.max(0.01, c.h * ease), 1);
+      tmp.updateMatrix();
+      m.setMatrixAt(i, tmp.matrix);
+    });
+    m.instanceMatrix.needsUpdate = true;
+    if (k >= 1) done.current = true;
+  });
+  if (!diff || style !== 'heat' || columns.length === 0) return null;
+  return <instancedMesh key={columns.length} ref={mesh} args={[geometry, material, columns.length]} raycast={() => null} renderOrder={2} />;
+}

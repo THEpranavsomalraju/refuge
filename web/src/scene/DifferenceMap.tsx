@@ -24,7 +24,8 @@ const peopleIn = (c: DiffCell | undefined) => (c ? c.people ?? c.residents ?? 0 
  */
 export function DifferenceMap({ place, frame }: { place: PlaceData; frame: Frame }) {
   const diff = useSceneStore(s => s.diff);
-  const built = useMemo(() => (diff ? buildDiff(place, frame, diff.before, diff.after) : null), [diff, place, frame]);
+  const style = useSceneStore(s => s.mapStyle);
+  const built = useMemo(() => (diff && style === 'blocks' ? buildDiff(place, frame, diff.before, diff.after) : null), [diff, style, place, frame]);
   const riseRef = useRef(-1);
 
   useEffect(() => { riseRef.current = -1; }, [built]);
