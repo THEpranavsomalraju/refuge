@@ -1,0 +1,177 @@
+[
+ {
+  "place_id": "chapel_hill",
+  "name": "Chapel Hill, North Carolina, USA",
+  "county_fips": "37135",
+  "bbox": [
+   -79.083142,
+   35.869407,
+   -78.99539,
+   35.976142
+  ],
+  "center": [
+   -79.039266,
+   35.922775
+  ],
+  "buildings": 21065,
+  "crossings": 0,
+  "pop_night": 95189,
+  "area": "urban",
+  "trimmed": false,
+  "roads_pending": true,
+  "built": "2026-09-26 18:48",
+  "kind": "featured",
+  "flood_layers": true,
+  "cells": "full"
+ },
+ {
+  "place_id": "estill_sc_2020",
+  "name": "Estill, South Carolina",
+  "county_fips": "45049",
+  "bbox": [
+   -81.31,
+   32.6844,
+   -80.8892,
+   32.849
+  ],
+  "center": [
+   -81.0996,
+   32.7667
+  ],
+  "buildings": 5835,
+  "crossings": 0,
+  "pop_night": 7834,
+  "kind": "past_event",
+  "flood_layers": false,
+  "cells": "buildings",
+  "area": null,
+  "trimmed": false,
+  "roads_pending": true,
+  "built": "2026-09-26 20:28"
+ },
+ {
+  "place_id": "florence_wilmington_2018",
+  "name": "Wilmington, North Carolina",
+  "county_fips": "37129",
+  "bbox": [
+   -77.975,
+   34.19,
+   -77.885,
+   34.26
+  ],
+  "center": [
+   -77.93,
+   34.225
+  ],
+  "buildings": 18817,
+  "crossings": 0,
+  "pop_night": 53407,
+  "kind": "past_event",
+  "flood_layers": false,
+  "cells": "full",
+  "area": null,
+  "trimmed": false,
+  "roads_pending": true,
+  "built": "2026-09-26 21:41"
+ },
+ {
+  "place_id": "lumberton",
+  "name": "Lumberton, North Carolina, USA",
+  "county_fips": "37155",
+  "bbox": [
+   -79.107392,
+   34.579363,
+   -78.962313,
+   34.703428
+  ],
+  "center": [
+   -79.034852,
+   34.641396
+  ],
+  "buildings": 14551,
+  "crossings": 79,
+  "pop_night": 31629,
+  "area": "rural",
+  "trimmed": false,
+  "roads_pending": false,
+  "built": "2026-09-26 18:42",
+  "kind": "featured",
+  "flood_layers": true,
+  "cells": "full"
+ },
+ {
+  "place_id": "michael_mexico_beach_2018",
+  "name": "Mexico Beach, Florida",
+  "county_fips": "12005",
+  "bbox": [
+   -85.47,
+   29.9,
+   -85.33,
+   29.99
+  ],
+  "center": [
+   -85.4,
+   29.945
+  ],
+  "buildings": 2888,
+  "crossings": 0,
+  "pop_night": 2194,
+  "kind": "past_event",
+  "flood_layers": false,
+  "cells": "full",
+  "area": null,
+  "trimmed": false,
+  "roads_pending": true,
+  "built": "2026-09-26 20:58"
+ },
+ {
+  "place_id": "morganton",
+  "name": "Morganton, North Carolina, USA",
+  "county_fips": "37023",
+  "bbox": [
+   -81.800307,
+   35.695877,
+   -81.645536,
+   35.783861
+  ],
+  "center": [
+   -81.722922,
+   35.739869
+  ],
+  "buildings": 13595,
+  "crossings": 48,
+  "pop_night": 27739,
+  "area": "rural",
+  "trimmed": false,
+  "roads_pending": false,
+  "built": "2026-09-26 18:42",
+  "kind": "featured",
+  "flood_layers": true,
+  "cells": "full"
+ },
+ {
+  "place_id": "valley_view_tx_2024",
+  "name": "Valley View, Texas",
+  "county_fips": "48097",
+  "bbox": [
+   -97.7639,
+   33.3904,
+   -96.9397,
+   33.5472
+  ],
+  "center": [
+   -97.3518,
+   33.4688
+  ],
+  "buildings": 13040,
+  "crossings": 0,
+  "pop_night": 21837,
+  "kind": "past_event",
+  "flood_layers": false,
+  "cells": "buildings",
+  "area": null,
+  "trimmed": false,
+  "roads_pending": true,
+  "built": "2026-09-26 20:45"
+ }
+]

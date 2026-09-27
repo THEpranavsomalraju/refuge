@@ -1,0 +1,20 @@
+{
+  "name": "@refuge/sim",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.6.0 <23" },
+  "exports": { ".": "./dist/core/index.js" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check:browser": "tsc -p tsconfig.browser.json",
+    "test": "npm run build && npm run check:browser && node --test tests/*.test.mjs",
+    "smoke": "node scripts/make-smoke-place.mjs",
+    "benchmark": "node scripts/benchmark.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "22.18.6",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
+  }
+}

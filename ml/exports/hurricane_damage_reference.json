@@ -1,0 +1,1524 @@
+{
+ "note": "Reference for hurricane mode. Definitions are in ml/hurricane_damage.py; the engine must reproduce these to rounding.",
+ "constants": {
+  "BETA": 0.15,
+  "residential_classes": [
+   "MH",
+   "RES_WOOD",
+   "RES_MASONRY",
+   "MULTI"
+  ],
+  "bands": {
+   "moderate": 0.1,
+   "severe": 0.4,
+   "extreme": 0.7
+  },
+  "min_share_drawn": 0.01,
+  "min_residents": 5,
+  "shelter": {
+   "eligible": [
+    "SCHOOL",
+    "WORSHIP",
+    "COMMERCIAL",
+    "BIGROOF"
+   ],
+   "hardened_share": 0.25,
+   "sqft_per_person": 20,
+   "cost_per_sqft": 300,
+   "capacity_min_max": [
+    25,
+    1000
+   ],
+   "reach_km": 3.0,
+   "major_damage_weight": 0.5
+  }
+ },
+ "cases": [
+  {
+   "name": "Lumberton, Category 1, eye through town",
+   "track": [
+    [
+     -79.35,
+     34.35,
+     73,
+     37.0,
+     1.65,
+     0.0
+    ],
+    [
+     -78.75,
+     34.95,
+     73,
+     37.0,
+     1.65,
+     4.0
+    ]
+   ],
+   "residents": 30474,
+   "gust_mph_p10_p50_p90": [
+    80.0,
+    81.1,
+    81.7
+   ],
+   "displaced": 2370.3,
+   "destroyed": 151.1,
+   "expected_deaths": 0.0074,
+   "cells_drawn": 2600,
+   "band_counts": {
+    "low": 898,
+    "moderate": 659,
+    "severe": 0,
+    "extreme": 0,
+    "sparse": 1043
+   },
+   "by_class": {
+    "MH": {
+     "residents": 3752,
+     "displaced": 969.1,
+     "destroyed": 151.0
+    },
+    "RES_WOOD": {
+     "residents": 11758,
+     "displaced": 1356.7,
+     "destroyed": 0.0
+    },
+    "RES_MASONRY": {
+     "residents": 6855,
+     "displaced": 25.4,
+     "destroyed": 0.0
+    },
+    "MULTI": {
+     "residents": 8109,
+     "displaced": 19.1,
+     "destroyed": 0.0
+    }
+   },
+   "sample_buildings": [
+    {
+     "id": "nsi_56643671",
+     "cls": "OTHER",
+     "gust_mph": 80.478,
+     "p_level_ge": [
+      0.92277,
+      0.10659,
+      0.0,
+      0.0
+     ],
+     "displaced": 0.0
+    },
+    {
+     "id": "nsi_56667084",
+     "cls": "RES_WOOD",
+     "gust_mph": 80.241,
+     "p_level_ge": [
+      0.91989,
+      0.10303,
+      0.0,
+      0.0
+     ],
+     "displaced": 0.20606
+    },
+    {
+     "id": "nsi_56677611",
+     "cls": "COMMERCIAL",
+     "gust_mph": 81.139,
+     "p_level_ge": [
+      0.93037,
+      0.00235,
+      7e-05,
+      1e-05
+     ],
+     "displaced": 0.0
+    },
+    {
+     "id": "nsi_56671292",
+     "cls": "RES_MASONRY",
+     "gust_mph": 80.997,
+     "p_level_ge": [
+      0.92879,
+      0.00373,
+      1e-05,
+      0.0
+     ],
+     "displaced": 0.01118
+    },
+    {
+     "id": "nsi_56689246",
+     "cls": "RES_WOOD",
+     "gust_mph": 81.14,
+     "p_level_ge": [
+      0.93038,
+      0.11699,
+      0.0,
+      0.0
+     ],
+     "displaced": 0.23397
+    },
+    {
+     "id": "nsi_56653506",
+     "cls": "MH",
+     "gust_mph": 80.009,
+     "p_level_ge": [
+      0.96473,
+      0.23887,
+      0.03499,
+      0.00103
+     ],
+     "displaced": 0.47774
+    },
+    {
+     "id": "nsi_56652857",
+     "cls": "RES_WOOD",
+     "gust_mph": 81.54,
+     "p_level_ge": [
+      0.93465,
+      0.12354,
+      0.0,
+      0.0
+     ],
+     "displaced": 0.24709
+    },
+    {
+     "id": "nsi_56670885",
+     "cls": "COMMERCIAL",
+     "gust_mph": 81.309,
+     "p_level_ge": [
+      0.93221,
+      0.00245,
+      7e-05,
+      1e-05
+     ],
+     "displaced": 0.0
+    }
+   ],
+   "shelter_candidates": [
+    {
+     "id": "nsi_56670787",
+     "cls": "BIGROOF",
+     "lon": -78.992541,
+     "lat": 34.630339,
+     "footprint_sqft": 96642,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 949.8,
+     "need_served_alone": 490.04
+    },
+    {
+     "id": "nsi_56684396",
+     "cls": "BIGROOF",
+     "lon": -78.998581,
+     "lat": 34.630898,
+     "footprint_sqft": 88213,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 915.8,
+     "need_served_alone": 468.31
+    },
+    {
+     "id": "nsi_56695649",
+     "cls": "BIGROOF",
+     "lon": -79.002027,
+     "lat": 34.634924,
+     "footprint_sqft": 177273,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 889.2,
+     "need_served_alone": 454.76
+    },
+    {
+     "id": "nsi_56695650",
+     "cls": "BIGROOF",
+     "lon": -79.002027,
+     "lat": 34.634924,
+     "footprint_sqft": 177273,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 889.2,
+     "need_served_alone": 454.76
+    },
+    {
+     "id": "nsi_56690082",
+     "cls": "BIGROOF",
+     "lon": -79.002158,
+     "lat": 34.616674,
+     "footprint_sqft": 69341,
+     "capacity": 866,
+     "cost_usd": 5196000,
+     "people_sheltered_alone": 866.0,
+     "need_served_alone": 442.1
+    },
+    {
+     "id": "nsi_56639569",
+     "cls": "BIGROOF",
+     "lon": -78.998776,
+     "lat": 34.626644,
+     "footprint_sqft": 68969,
+     "capacity": 862,
+     "cost_usd": 5172000,
+     "people_sheltered_alone": 862.0,
+     "need_served_alone": 441.05
+    },
+    {
+     "id": "nsi_56679223",
+     "cls": "BIGROOF",
+     "lon": -79.000855,
+     "lat": 34.612708,
+     "footprint_sqft": 75564,
+     "capacity": 944,
+     "cost_usd": 5664000,
+     "people_sheltered_alone": 856.6,
+     "need_served_alone": 440.66
+    },
+    {
+     "id": "nsi_56677607",
+     "cls": "BIGROOF",
+     "lon": -79.006374,
+     "lat": 34.635245,
+     "footprint_sqft": 70574,
+     "capacity": 882,
+     "cost_usd": 5292000,
+     "people_sheltered_alone": 855.9,
+     "need_served_alone": 436.79
+    },
+    {
+     "id": "nsi_56677608",
+     "cls": "BIGROOF",
+     "lon": -79.006374,
+     "lat": 34.635245,
+     "footprint_sqft": 70574,
+     "capacity": 882,
+     "cost_usd": 5292000,
+     "people_sheltered_alone": 855.9,
+     "need_served_alone": 436.79
+    },
+    {
+     "id": "nsi_56677609",
+     "cls": "BIGROOF",
+     "lon": -79.006374,
+     "lat": 34.635245,
+     "footprint_sqft": 70574,
+     "capacity": 882,
+     "cost_usd": 5292000,
+     "people_sheltered_alone": 855.9,
+     "need_served_alone": 436.79
+    },
+    {
+     "id": "nsi_56693206",
+     "cls": "BIGROOF",
+     "lon": -78.998673,
+     "lat": 34.611373,
+     "footprint_sqft": 136398,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 829.0,
+     "need_served_alone": 426.49
+    },
+    {
+     "id": "nsi_56677590",
+     "cls": "BIGROOF",
+     "lon": -79.006305,
+     "lat": 34.637284,
+     "footprint_sqft": 221124,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 834.2,
+     "need_served_alone": 425.64
+    },
+    {
+     "id": "nsi_56677591",
+     "cls": "BIGROOF",
+     "lon": -79.006305,
+     "lat": 34.637284,
+     "footprint_sqft": 221124,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 834.2,
+     "need_served_alone": 425.64
+    },
+    {
+     "id": "nsi_56677592",
+     "cls": "BIGROOF",
+     "lon": -79.006305,
+     "lat": 34.637284,
+     "footprint_sqft": 221124,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 834.2,
+     "need_served_alone": 425.64
+    },
+    {
+     "id": "nsi_56677593",
+     "cls": "BIGROOF",
+     "lon": -79.006305,
+     "lat": 34.637284,
+     "footprint_sqft": 221124,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 834.2,
+     "need_served_alone": 425.64
+    }
+   ],
+   "eligible_shelters": 2643
+  },
+  {
+   "name": "Lumberton, Category 2, eye through town",
+   "track": [
+    [
+     -79.35,
+     34.35,
+     89,
+     37.0,
+     1.6,
+     0.0
+    ],
+    [
+     -78.75,
+     34.95,
+     89,
+     37.0,
+     1.6,
+     4.0
+    ]
+   ],
+   "residents": 30474,
+   "gust_mph_p10_p50_p90": [
+    99.2,
+    100.3,
+    100.8
+   ],
+   "displaced": 11140.9,
+   "destroyed": 1409.7,
+   "expected_deaths": 0.0162,
+   "cells_drawn": 3244,
+   "band_counts": {
+    "low": 217,
+    "moderate": 740,
+    "severe": 728,
+    "extreme": 181,
+    "sparse": 1378
+   },
+   "by_class": {
+    "MH": {
+     "residents": 3752,
+     "displaced": 2921.1,
+     "destroyed": 1386.6
+    },
+    "RES_WOOD": {
+     "residents": 11758,
+     "displaced": 6876.5,
+     "destroyed": 2.5
+    },
+    "RES_MASONRY": {
+     "residents": 6855,
+     "displaced": 707.0,
+     "destroyed": 10.7
+    },
+    "MULTI": {
+     "residents": 8109,
+     "displaced": 636.3,
+     "destroyed": 9.9
+    }
+   },
+   "sample_buildings": [
+    {
+     "id": "nsi_56643671",
+     "cls": "OTHER",
+     "gust_mph": 99.623,
+     "p_level_ge": [
+      0.99779,
+      0.57059,
+      0.00018,
+      0.0
+     ],
+     "displaced": 0.0
+    },
+    {
+     "id": "nsi_56667084",
+     "cls": "RES_WOOD",
+     "gust_mph": 99.385,
+     "p_level_ge": [
+      0.99768,
+      0.56432,
+      0.00017,
+      0.0
+     ],
+     "displaced": 1.12864
+    },
+    {
+     "id": "nsi_56677611",
+     "cls": "COMMERCIAL",
+     "gust_mph": 100.287,
+     "p_level_ge": [
+      0.99808,
+      0.07854,
+      0.00794,
+      0.0014
+     ],
+     "displaced": 0.0
+    },
+    {
+     "id": "nsi_56671292",
+     "cls": "RES_MASONRY",
+     "gust_mph": 100.146,
+     "p_level_ge": [
+      0.99802,
+      0.10364,
+      0.00156,
+      5e-05
+     ],
+     "displaced": 0.31091
+    },
+    {
+     "id": "nsi_56689246",
+     "cls": "RES_WOOD",
+     "gust_mph": 100.288,
+     "p_level_ge": [
+      0.99808,
+      0.58795,
+      0.00022,
+      0.0
+     ],
+     "displaced": 1.17589
+    },
+    {
+     "id": "nsi_56653506",
+     "cls": "MH",
+     "gust_mph": 99.158,
+     "p_level_ge": [
+      0.9994,
+      0.76439,
+      0.35136,
+      0.04949
+     ],
+     "displaced": 1.52878
+    },
+    {
+     "id": "nsi_56652857",
+     "cls": "RES_WOOD",
+     "gust_mph": 100.688,
+     "p_level_ge": [
+      0.99824,
+      0.59822,
+      0.00024,
+      0.0
+     ],
+     "displaced": 1.19644
+    },
+    {
+     "id": "nsi_56670885",
+     "cls": "COMMERCIAL",
+     "gust_mph": 100.457,
+     "p_level_ge": [
+      0.99815,
+      0.08021,
+      0.00819,
+      0.00146
+     ],
+     "displaced": 0.0
+    }
+   ],
+   "shelter_candidates": [
+    {
+     "id": "nsi_56688329",
+     "cls": "BIGROOF",
+     "lon": -79.040811,
+     "lat": 34.672705,
+     "footprint_sqft": 83591,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 618.88
+    },
+    {
+     "id": "nsi_56694928",
+     "cls": "BIGROOF",
+     "lon": -79.042479,
+     "lat": 34.607313,
+     "footprint_sqft": 308521,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 617.8
+    },
+    {
+     "id": "nsi_56694632",
+     "cls": "BIGROOF",
+     "lon": -79.045124,
+     "lat": 34.609901,
+     "footprint_sqft": 434172,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 610.45
+    },
+    {
+     "id": "nsi_56693909",
+     "cls": "BIGROOF",
+     "lon": -79.073593,
+     "lat": 34.642315,
+     "footprint_sqft": 151530,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 595.34
+    },
+    {
+     "id": "nsi_56651889",
+     "cls": "BIGROOF",
+     "lon": -78.975942,
+     "lat": 34.6062,
+     "footprint_sqft": 122108,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 592.62
+    },
+    {
+     "id": "nsi_56693742",
+     "cls": "BIGROOF",
+     "lon": -79.075034,
+     "lat": 34.641068,
+     "footprint_sqft": 163582,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 592.1
+    },
+    {
+     "id": "nsi_56695208",
+     "cls": "BIGROOF",
+     "lon": -78.980327,
+     "lat": 34.596973,
+     "footprint_sqft": 82077,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 591.18
+    },
+    {
+     "id": "nsi_56693907",
+     "cls": "BIGROOF",
+     "lon": -79.071834,
+     "lat": 34.640448,
+     "footprint_sqft": 202634,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 590.01
+    },
+    {
+     "id": "nsi_56687912",
+     "cls": "BIGROOF",
+     "lon": -79.036554,
+     "lat": 34.6095,
+     "footprint_sqft": 277859,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 589.18
+    },
+    {
+     "id": "nsi_56695703",
+     "cls": "BIGROOF",
+     "lon": -78.970318,
+     "lat": 34.63932,
+     "footprint_sqft": 112814,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 585.88
+    },
+    {
+     "id": "nsi_56694271",
+     "cls": "BIGROOF",
+     "lon": -79.05174,
+     "lat": 34.61339,
+     "footprint_sqft": 77059,
+     "capacity": 963,
+     "cost_usd": 5778000,
+     "people_sheltered_alone": 963.0,
+     "need_served_alone": 585.57
+    },
+    {
+     "id": "nsi_56652663",
+     "cls": "BIGROOF",
+     "lon": -79.005142,
+     "lat": 34.589185,
+     "footprint_sqft": 376824,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 568.12
+    },
+    {
+     "id": "nsi_56687287",
+     "cls": "BIGROOF",
+     "lon": -79.027228,
+     "lat": 34.658542,
+     "footprint_sqft": 79594,
+     "capacity": 994,
+     "cost_usd": 5964000,
+     "people_sheltered_alone": 994.0,
+     "need_served_alone": 538.22
+    },
+    {
+     "id": "nsi_56691843",
+     "cls": "BIGROOF",
+     "lon": -79.044656,
+     "lat": 34.622534,
+     "footprint_sqft": 79829,
+     "capacity": 997,
+     "cost_usd": 5982000,
+     "people_sheltered_alone": 997.0,
+     "need_served_alone": 526.97
+    },
+    {
+     "id": "nsi_56691844",
+     "cls": "BIGROOF",
+     "lon": -79.044656,
+     "lat": 34.622534,
+     "footprint_sqft": 79829,
+     "capacity": 997,
+     "cost_usd": 5982000,
+     "people_sheltered_alone": 997.0,
+     "need_served_alone": 526.97
+    }
+   ],
+   "eligible_shelters": 2643
+  },
+  {
+   "name": "Lumberton, Category 3, eye through town",
+   "track": [
+    [
+     -79.35,
+     34.35,
+     104,
+     37.0,
+     1.5,
+     0.0
+    ],
+    [
+     -78.75,
+     34.95,
+     104,
+     37.0,
+     1.5,
+     4.0
+    ]
+   ],
+   "residents": 30474,
+   "gust_mph_p10_p50_p90": [
+    117.1,
+    118.2,
+    118.7
+   ],
+   "displaced": 20303.0,
+   "destroyed": 3443.6,
+   "expected_deaths": 0.0341,
+   "cells_drawn": 3244,
+   "band_counts": {
+    "low": 0,
+    "moderate": 156,
+    "severe": 740,
+    "extreme": 970,
+    "sparse": 1378
+   },
+   "by_class": {
+    "MH": {
+     "residents": 3752,
+     "displaced": 3636.2,
+     "destroyed": 2921.3
+    },
+    "RES_WOOD": {
+     "residents": 11758,
+     "displaced": 10645.1,
+     "destroyed": 89.8
+    },
+    "RES_MASONRY": {
+     "residents": 6855,
+     "displaced": 2978.7,
+     "destroyed": 216.6
+    },
+    "MULTI": {
+     "residents": 8109,
+     "displaced": 3043.0,
+     "destroyed": 215.9
+    }
+   },
+   "sample_buildings": [
+    {
+     "id": "nsi_56643671",
+     "cls": "OTHER",
+     "gust_mph": 117.574,
+     "p_level_ge": [
+      0.99996,
+      0.90015,
+      0.00698,
+      0.0002
+     ],
+     "displaced": 0.0
+    },
+    {
+     "id": "nsi_56667084",
+     "cls": "RES_WOOD",
+     "gust_mph": 117.336,
+     "p_level_ge": [
+      0.99996,
+      0.89775,
+      0.00672,
+      0.00019
+     ],
+     "displaced": 1.79551
+    },
+    {
+     "id": "nsi_56677611",
+     "cls": "COMMERCIAL",
+     "gust_mph": 118.239,
+     "p_level_ge": [
+      0.99997,
+      0.37556,
+      0.09442,
+      0.02936
+     ],
+     "displaced": 0.0
+    },
+    {
+     "id": "nsi_56671292",
+     "cls": "RES_MASONRY",
+     "gust_mph": 118.098,
+     "p_level_ge": [
+      0.99997,
+      0.43571,
+      0.03175,
+      0.00248
+     ],
+     "displaced": 1.30713
+    },
+    {
+     "id": "nsi_56689246",
+     "cls": "RES_WOOD",
+     "gust_mph": 118.24,
+     "p_level_ge": [
+      0.99997,
+      0.90659,
+      0.00775,
+      0.00023
+     ],
+     "displaced": 1.81318
+    },
+    {
+     "id": "nsi_56653506",
+     "cls": "MH",
+     "gust_mph": 117.11,
+     "p_level_ge": [
+      0.99999,
+      0.96636,
+      0.76659,
+      0.29442
+     ],
+     "displaced": 1.93272
+    },
+    {
+     "id": "nsi_56652857",
+     "cls": "RES_WOOD",
+     "gust_mph": 118.639,
+     "p_level_ge": [
+      0.99997,
+      0.91029,
+      0.00824,
+      0.00025
+     ],
+     "displaced": 1.82057
+    },
+    {
+     "id": "nsi_56670885",
+     "cls": "COMMERCIAL",
+     "gust_mph": 118.41,
+     "p_level_ge": [
+      0.99997,
+      0.37921,
+      0.09604,
+      0.03001
+     ],
+     "displaced": 0.0
+    }
+   ],
+   "shelter_candidates": [
+    {
+     "id": "nsi_56676419",
+     "cls": "BIGROOF",
+     "lon": -79.107023,
+     "lat": 34.659891,
+     "footprint_sqft": 205002,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 707.22
+    },
+    {
+     "id": "nsi_56676418",
+     "cls": "BIGROOF",
+     "lon": -79.103311,
+     "lat": 34.658037,
+     "footprint_sqft": 344494,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 695.8
+    },
+    {
+     "id": "nsi_56694928",
+     "cls": "BIGROOF",
+     "lon": -79.042479,
+     "lat": 34.607313,
+     "footprint_sqft": 308521,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 695.12
+    },
+    {
+     "id": "nsi_56695703",
+     "cls": "BIGROOF",
+     "lon": -78.970318,
+     "lat": 34.63932,
+     "footprint_sqft": 112814,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 681.22
+    },
+    {
+     "id": "nsi_56688329",
+     "cls": "BIGROOF",
+     "lon": -79.040811,
+     "lat": 34.672705,
+     "footprint_sqft": 83591,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 678.68
+    },
+    {
+     "id": "nsi_56651889",
+     "cls": "BIGROOF",
+     "lon": -78.975942,
+     "lat": 34.6062,
+     "footprint_sqft": 122108,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 661.74
+    },
+    {
+     "id": "nsi_56695208",
+     "cls": "BIGROOF",
+     "lon": -78.980327,
+     "lat": 34.596973,
+     "footprint_sqft": 82077,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 644.7
+    },
+    {
+     "id": "nsi_56693742",
+     "cls": "BIGROOF",
+     "lon": -79.075034,
+     "lat": 34.641068,
+     "footprint_sqft": 163582,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 630.6
+    },
+    {
+     "id": "nsi_56694632",
+     "cls": "BIGROOF",
+     "lon": -79.045124,
+     "lat": 34.609901,
+     "footprint_sqft": 434172,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 629.49
+    },
+    {
+     "id": "nsi_56693909",
+     "cls": "BIGROOF",
+     "lon": -79.073593,
+     "lat": 34.642315,
+     "footprint_sqft": 151530,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 624.9
+    },
+    {
+     "id": "nsi_56693907",
+     "cls": "BIGROOF",
+     "lon": -79.071834,
+     "lat": 34.640448,
+     "footprint_sqft": 202634,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 619.29
+    },
+    {
+     "id": "nsi_56652663",
+     "cls": "BIGROOF",
+     "lon": -79.005142,
+     "lat": 34.589185,
+     "footprint_sqft": 376824,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 598.21
+    },
+    {
+     "id": "nsi_56695698",
+     "cls": "WORSHIP",
+     "lon": -78.969437,
+     "lat": 34.638274,
+     "footprint_sqft": 65647,
+     "capacity": 820,
+     "cost_usd": 4920000,
+     "people_sheltered_alone": 820.0,
+     "need_served_alone": 583.42
+    },
+    {
+     "id": "nsi_56695699",
+     "cls": "BIGROOF",
+     "lon": -78.969437,
+     "lat": 34.638274,
+     "footprint_sqft": 65647,
+     "capacity": 820,
+     "cost_usd": 4920000,
+     "people_sheltered_alone": 820.0,
+     "need_served_alone": 583.42
+    },
+    {
+     "id": "nsi_56695700",
+     "cls": "BIGROOF",
+     "lon": -78.969437,
+     "lat": 34.638274,
+     "footprint_sqft": 65647,
+     "capacity": 820,
+     "cost_usd": 4920000,
+     "people_sheltered_alone": 820.0,
+     "need_served_alone": 583.42
+    }
+   ],
+   "eligible_shelters": 2643
+  },
+  {
+   "name": "Lumberton, Category 4, eye through town",
+   "track": [
+    [
+     -79.35,
+     34.35,
+     124,
+     27.8,
+     1.7,
+     0.0
+    ],
+    [
+     -78.75,
+     34.95,
+     124,
+     27.8,
+     1.7,
+     4.0
+    ]
+   ],
+   "residents": 30474,
+   "gust_mph_p10_p50_p90": [
+    140.9,
+    142.4,
+    143.1
+   ],
+   "displaced": 27987.3,
+   "destroyed": 8856.4,
+   "expected_deaths": 0.0922,
+   "cells_drawn": 3244,
+   "band_counts": {
+    "low": 0,
+    "moderate": 0,
+    "severe": 0,
+    "extreme": 1866,
+    "sparse": 1378
+   },
+   "by_class": {
+    "MH": {
+     "residents": 3752,
+     "displaced": 3748.4,
+     "destroyed": 3666.8
+    },
+    "RES_WOOD": {
+     "residents": 11758,
+     "displaced": 11694.5,
+     "destroyed": 1378.2
+    },
+    "RES_MASONRY": {
+     "residents": 6855,
+     "displaced": 5883.5,
+     "destroyed": 1834.2
+    },
+    "MULTI": {
+     "residents": 8109,
+     "displaced": 6660.9,
+     "destroyed": 1977.3
+    }
+   },
+   "sample_buildings": [
+    {
+     "id": "nsi_56643671",
+     "cls": "OTHER",
+     "gust_mph": 141.504,
+     "p_level_ge": [
+      1.0,
+      0.99409,
+      0.11064,
+      0.01054
+     ],
+     "displaced": 0.0
+    },
+    {
+     "id": "nsi_56667084",
+     "cls": "RES_WOOD",
+     "gust_mph": 141.182,
+     "p_level_ge": [
+      1.0,
+      0.99383,
+      0.10779,
+      0.01012
+     ],
+     "displaced": 1.98766
+    },
+    {
+     "id": "nsi_56677611",
+     "cls": "COMMERCIAL",
+     "gust_mph": 142.442,
+     "p_level_ge": [
+      1.0,
+      0.82234,
+      0.47109,
+      0.25825
+     ],
+     "displaced": 0.0
+    },
+    {
+     "id": "nsi_56671292",
+     "cls": "RES_MASONRY",
+     "gust_mph": 142.232,
+     "p_level_ge": [
+      1.0,
+      0.85944,
+      0.26895,
+      0.05821
+     ],
+     "displaced": 2.57831
+    },
+    {
+     "id": "nsi_56689246",
+     "cls": "RES_WOOD",
+     "gust_mph": 142.298,
+     "p_level_ge": [
+      1.0,
+      0.99469,
+      0.11784,
+      0.01162
+     ],
+     "displaced": 1.98937
+    },
+    {
+     "id": "nsi_56653506",
+     "cls": "MH",
+     "gust_mph": 140.913,
+     "p_level_ge": [
+      1.0,
+      0.99891,
+      0.97507,
+      0.75585
+     ],
+     "displaced": 1.99781
+    },
+    {
+     "id": "nsi_56652857",
+     "cls": "RES_WOOD",
+     "gust_mph": 142.565,
+     "p_level_ge": [
+      1.0,
+      0.99487,
+      0.12033,
+      0.01201
+     ],
+     "displaced": 1.98975
+    },
+    {
+     "id": "nsi_56670885",
+     "cls": "COMMERCIAL",
+     "gust_mph": 142.581,
+     "p_level_ge": [
+      1.0,
+      0.82403,
+      0.47368,
+      0.26036
+     ],
+     "displaced": 0.0
+    }
+   ],
+   "shelter_candidates": [
+    {
+     "id": "nsi_56676419",
+     "cls": "BIGROOF",
+     "lon": -79.107023,
+     "lat": 34.659891,
+     "footprint_sqft": 205002,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 776.27
+    },
+    {
+     "id": "nsi_56695703",
+     "cls": "BIGROOF",
+     "lon": -78.970318,
+     "lat": 34.63932,
+     "footprint_sqft": 112814,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 767.24
+    },
+    {
+     "id": "nsi_56676418",
+     "cls": "BIGROOF",
+     "lon": -79.103311,
+     "lat": 34.658037,
+     "footprint_sqft": 344494,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 765.01
+    },
+    {
+     "id": "nsi_56651889",
+     "cls": "BIGROOF",
+     "lon": -78.975942,
+     "lat": 34.6062,
+     "footprint_sqft": 122108,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 743.9
+    },
+    {
+     "id": "nsi_56688329",
+     "cls": "BIGROOF",
+     "lon": -79.040811,
+     "lat": 34.672705,
+     "footprint_sqft": 83591,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 735.45
+    },
+    {
+     "id": "nsi_56694928",
+     "cls": "BIGROOF",
+     "lon": -79.042479,
+     "lat": 34.607313,
+     "footprint_sqft": 308521,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 724.4
+    },
+    {
+     "id": "nsi_56695208",
+     "cls": "BIGROOF",
+     "lon": -78.980327,
+     "lat": 34.596973,
+     "footprint_sqft": 82077,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 710.79
+    },
+    {
+     "id": "nsi_56693909",
+     "cls": "BIGROOF",
+     "lon": -79.073593,
+     "lat": 34.642315,
+     "footprint_sqft": 151530,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 691.8
+    },
+    {
+     "id": "nsi_56652663",
+     "cls": "BIGROOF",
+     "lon": -79.005142,
+     "lat": 34.589185,
+     "footprint_sqft": 376824,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 687.55
+    },
+    {
+     "id": "nsi_56693742",
+     "cls": "BIGROOF",
+     "lon": -79.075034,
+     "lat": 34.641068,
+     "footprint_sqft": 163582,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 682.93
+    },
+    {
+     "id": "nsi_56693907",
+     "cls": "BIGROOF",
+     "lon": -79.071834,
+     "lat": 34.640448,
+     "footprint_sqft": 202634,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 675.21
+    },
+    {
+     "id": "nsi_56654844",
+     "cls": "BIGROOF",
+     "lon": -79.086018,
+     "lat": 34.62825,
+     "footprint_sqft": 110905,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 665.02
+    },
+    {
+     "id": "nsi_56687912",
+     "cls": "BIGROOF",
+     "lon": -79.036554,
+     "lat": 34.6095,
+     "footprint_sqft": 277859,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 664.87
+    },
+    {
+     "id": "nsi_56694632",
+     "cls": "BIGROOF",
+     "lon": -79.045124,
+     "lat": 34.609901,
+     "footprint_sqft": 434172,
+     "capacity": 1000,
+     "cost_usd": 6000000,
+     "people_sheltered_alone": 1000.0,
+     "need_served_alone": 662.18
+    },
+    {
+     "id": "nsi_56691843",
+     "cls": "BIGROOF",
+     "lon": -79.044656,
+     "lat": 34.622534,
+     "footprint_sqft": 79829,
+     "capacity": 997,
+     "cost_usd": 5982000,
+     "people_sheltered_alone": 997.0,
+     "need_served_alone": 656.36
+    }
+   ],
+   "eligible_shelters": 2643
+  },
+  {
+   "name": "Michael 2018, Mexico Beach",
+   "track": [
+    [
+     -86.3,
+     29.0,
+     125,
+     27.1,
+     1.9,
+     0.0
+    ],
+    [
+     -85.5,
+     30.0,
+     140,
+     18.5,
+     1.75,
+     5.5
+    ],
+    [
+     -85.4,
+     30.2,
+     135,
+     25.7,
+     2.1,
+     6.0
+    ],
+    [
+     -84.5,
+     31.5,
+     80,
+     44.9,
+     2.5,
+     12.0
+    ],
+    [
+     -83.2,
+     32.8,
+     50,
+     62.1,
+     1.8,
+     18.0
+    ]
+   ],
+   "residents": 2172,
+   "gust_mph_p10_p50_p90": [
+    161.0,
+    162.2,
+    165.7
+   ],
+   "displaced": 2146.2,
+   "destroyed": 1173.8,
+   "expected_deaths": 0.0148,
+   "cells_drawn": 385,
+   "band_counts": {
+    "low": 0,
+    "moderate": 0,
+    "severe": 0,
+    "extreme": 185,
+    "sparse": 200
+   },
+   "by_class": {
+    "MH": {
+     "residents": 210,
+     "displaced": 210.0,
+     "destroyed": 209.7
+    },
+    "RES_WOOD": {
+     "residents": 1058,
+     "displaced": 1057.7,
+     "destroyed": 421.7
+    },
+    "RES_MASONRY": {
+     "residents": 567,
+     "displaced": 553.5,
+     "destroyed": 348.3
+    },
+    "MULTI": {
+     "residents": 337,
+     "displaced": 325.0,
+     "destroyed": 194.1
+    }
+   },
+   "sample_buildings": [
+    {
+     "id": "nsi_95581548",
+     "cls": "BIGROOF",
+     "gust_mph": 158.727,
+     "p_level_ge": [
+      1.0,
+      0.97899,
+      0.8368,
+      0.51221
+     ],
+     "displaced": 0.0
+    },
+    {
+     "id": "nsi_95579923",
+     "cls": "RES_MASONRY",
+     "gust_mph": 161.863,
+     "p_level_ge": [
+      1.0,
+      0.97379,
+      0.59715,
+      0.23946
+     ],
+     "displaced": 0.0
+    },
+    {
+     "id": "nsi_95580066",
+     "cls": "RES_WOOD",
+     "gust_mph": 161.159,
+     "p_level_ge": [
+      1.0,
+      0.99964,
+      0.3609,
+      0.075
+     ],
+     "displaced": 0.0
+    },
+    {
+     "id": "nsi_97604160",
+     "cls": "RES_MASONRY",
+     "gust_mph": 164.574,
+     "p_level_ge": [
+      1.0,
+      0.97984,
+      0.63934,
+      0.27515
+     ],
+     "displaced": 1.95968
+    },
+    {
+     "id": "nsi_95604141",
+     "cls": "RES_MASONRY",
+     "gust_mph": 161.817,
+     "p_level_ge": [
+      1.0,
+      0.97368,
+      0.59641,
+      0.23887
+     ],
+     "displaced": 0.0
+    },
+    {
+     "id": "nsi_95585560",
+     "cls": "RES_WOOD",
+     "gust_mph": 162.211,
+     "p_level_ge": [
+      1.0,
+      0.9997,
+      0.37726,
+      0.08133
+     ],
+     "displaced": 0.0
+    },
+    {
+     "id": "nsi_95573254",
+     "cls": "COMMERCIAL",
+     "gust_mph": 162.071,
+     "p_level_ge": [
+      1.0,
+      0.96287,
+      0.78469,
+      0.58391
+     ],
+     "displaced": 0.0
+    },
+    {
+     "id": "nsi_97599068",
+     "cls": "RES_MASONRY",
+     "gust_mph": 164.269,
+     "p_level_ge": [
+      1.0,
+      0.97923,
+      0.6347,
+      0.27104
+     ],
+     "displaced": 0.97923
+    }
+   ]
+  }
+ ]
+}

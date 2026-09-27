@@ -1,0 +1,248 @@
+{
+ "note": "Per-person risk of dying at home from hurricane winds (structure, trees, debris), fit on NOAA-recorded home deaths in wind-type events for US landfalls 2004-2024 (Katrina excluded). Already reflects typical real evacuation. Engine use: see `engine`: risk per person at home = exp(a + b_per_mph * gust_mph) * class_factor.",
+ "engine": {
+  "a": -18.472844842294702,
+  "b_per_mph": 0.041354013591607064,
+  "class_factor": {
+   "MH": 3.0350623784812334,
+   "other": 0.5946827674815869
+  },
+  "population": "night (at home)",
+  "gust": "max 3-s gust from ml/hurricane_wind.py"
+ },
+ "coef": {
+  "b0": -19.64926141207109,
+  "b1_per_mph": 0.041354013591607064,
+  "b2_mh_share": 7.083101286087115
+ },
+ "median_mh_share": 0.1660877802336596,
+ "rr_mh": 5.103666264510023,
+ "norm": 1.6815688206922237,
+ "validation": {
+  "method": "GroupKFold by storm (5 folds)",
+  "deviance_explained_vs_constant_rate": 0.1649,
+  "folds": [
+   {
+    "fold": 1,
+    "storms": [
+     "DENNIS 2005",
+     "FRANCINE 2024",
+     "HELENE 2024",
+     "HERMINE 2016",
+     "MATTHEW 2016",
+     "NATE 2017",
+     "NICOLE 2022",
+     "RITA 2005"
+    ],
+    "deaths": 46,
+    "predicted": 8.6,
+    "baseline_constant_rate": 10.8,
+    "deviance": 422.0,
+    "deviance_baseline": 511.9
+   },
+   {
+    "fold": 2,
+    "storms": [
+     "ARTHUR 2014",
+     "BARRY 2019",
+     "DELTA 2020",
+     "EMILY 2005",
+     "IAN 2022",
+     "IKE 2008",
+     "ISAIAS 2020",
+     "MILTON 2024",
+     "SALLY 2020"
+    ],
+    "deaths": 8,
+    "predicted": 26.1,
+    "baseline_constant_rate": 20.9,
+    "deviance": 112.1,
+    "deviance_baseline": 101.9
+   },
+   {
+    "fold": 3,
+    "storms": [
+     "CINDY 2005",
+     "DORIAN 2019",
+     "IDA 2021",
+     "IRENE 2011",
+     "IRMA 2017",
+     "ISAAC 2012",
+     "LAURA 2020",
+     "WILMA 2005"
+    ],
+    "deaths": 12,
+    "predicted": 18.9,
+    "baseline_constant_rate": 21.7,
+    "deviance": 102.6,
+    "deviance_baseline": 139.4
+   },
+   {
+    "fold": 4,
+    "storms": [
+     "ALEX 2010",
+     "BERYL 2024",
+     "DEBBY 2024",
+     "GASTON 2004",
+     "GUSTAV 2008",
+     "HUMBERTO 2007",
+     "IVAN 2004",
+     "NICHOLAS 2021",
+     "ZETA 2020"
+    ],
+    "deaths": 12,
+    "predicted": 13.4,
+    "baseline_constant_rate": 19.4,
+    "deviance": 99.3,
+    "deviance_baseline": 130.2
+   },
+   {
+    "fold": 5,
+    "storms": [
+     "CHARLEY 2004",
+     "DOLLY 2008",
+     "FLORENCE 2018",
+     "FRANCES 2004",
+     "HANNA 2020",
+     "HARVEY 2017",
+     "IDALIA 2023",
+     "JEANNE 2004",
+     "KYLE 2008",
+     "MICHAEL 2018"
+    ],
+    "deaths": 11,
+    "predicted": 26.8,
+    "baseline_constant_rate": 16.4,
+    "deviance": 91.4,
+    "deviance_baseline": 107.5
+   }
+  ]
+ },
+ "curve": [
+  {
+   "gust_mph": 40,
+   "risk_per_person": 4.962930760263689e-08
+  },
+  {
+   "gust_mph": 50,
+   "risk_per_person": 7.504753210782925e-08
+  },
+  {
+   "gust_mph": 60,
+   "risk_per_person": 1.1348399458984991e-07
+  },
+  {
+   "gust_mph": 70,
+   "risk_per_person": 1.7160613635588873e-07
+  },
+  {
+   "gust_mph": 80,
+   "risk_per_person": 2.594962059753745e-07
+  },
+  {
+   "gust_mph": 90,
+   "risk_per_person": 3.9240019235654227e-07
+  },
+  {
+   "gust_mph": 100,
+   "risk_per_person": 5.933724941476177e-07
+  },
+  {
+   "gust_mph": 110,
+   "risk_per_person": 8.972750871922276e-07
+  },
+  {
+   "gust_mph": 120,
+   "risk_per_person": 1.356824911900165e-06
+  },
+  {
+   "gust_mph": 130,
+   "risk_per_person": 2.051738500077717e-06
+  },
+  {
+   "gust_mph": 140,
+   "risk_per_person": 3.1025601282672494e-06
+  },
+  {
+   "gust_mph": 150,
+   "risk_per_person": 4.691572219924245e-06
+  },
+  {
+   "gust_mph": 160,
+   "risk_per_person": 7.094415252173644e-06
+  },
+  {
+   "gust_mph": 170,
+   "risk_per_person": 1.072790216391181e-05
+  },
+  {
+   "gust_mph": 180,
+   "risk_per_person": 1.622232146662159e-05
+  }
+ ],
+ "observed_by_gust_bin": [
+  {
+   "bin": 20,
+   "deaths": 4,
+   "pop": 760619341,
+   "n": 7427,
+   "observed_rate": 5.258872322048934e-09
+  },
+  {
+   "bin": 40,
+   "deaths": 31,
+   "pop": 434103108,
+   "n": 3678,
+   "observed_rate": 7.141160574229292e-08
+  },
+  {
+   "bin": 60,
+   "deaths": 27,
+   "pop": 132730009,
+   "n": 716,
+   "observed_rate": 2.0342046386812194e-07
+  },
+  {
+   "bin": 80,
+   "deaths": 12,
+   "pop": 48585474,
+   "n": 220,
+   "observed_rate": 2.46987402037078e-07
+  },
+  {
+   "bin": 100,
+   "deaths": 9,
+   "pop": 17412764,
+   "n": 78,
+   "observed_rate": 5.168622281907685e-07
+  },
+  {
+   "bin": 120,
+   "deaths": 6,
+   "pop": 1807625,
+   "n": 21,
+   "observed_rate": 3.319272526104695e-06
+  },
+  {
+   "bin": 140,
+   "deaths": 0,
+   "pop": 1366909,
+   "n": 7,
+   "observed_rate": 0.0
+  },
+  {
+   "bin": 160,
+   "deaths": 0,
+   "pop": 14192,
+   "n": 1,
+   "observed_rate": 0.0
+  }
+ ],
+ "data": {
+  "storm_county_rows": 12148,
+  "storms": 44,
+  "home_deaths": 89,
+  "min_gust_mph": 30,
+  "max_km": 500
+ }
+}

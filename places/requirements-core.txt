@@ -1,0 +1,9 @@
+# python 3.12
+# Needed by fetch_nsi.py (fetch_buildings, to_building_records, write_place_lite).
+# The ML lead installs this file to import those functions.
+requests==2.34.2
+geopandas==1.1.4
+shapely==2.1.2
+pyproj==3.8.0
+numpy==2.5.3
+h3==4.5.0

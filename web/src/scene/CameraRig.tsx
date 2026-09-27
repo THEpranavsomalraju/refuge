@@ -1,0 +1,52 @@
+import { useFrame, useThree } from '@react-three/fiber';
+import { useRef } from 'react';
+import * as THREE from 'three';
+import type { Frame } from './geo';
+import { useSceneStore } from './store';
+
+interface Move { seq: number; start: number; ms: number; p0: THREE.Vector3; t0: THREE.Vector3; p1: THREE.Vector3; t1: THREE.Vector3 }
+
+const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+/**
+ * Animates the camera to the goals set by scene.frameCoords / frameStormPath / focusCells.
+ * Keeps the current viewing direction and only changes where it looks and how far away.
+ */
+export function CameraRig({ frame }: { frame: Frame }) {
+  const { camera, controls, size } = useThree(s => ({ camera: s.camera as THREE.PerspectiveCamera, controls: s.controls as unknown as { target: THREE.Vector3; update(): void } | null, size: s.size }));
+  const move = useRef<Move | null>(null);
+  const lastSeq = useRef(0);
+
+  useFrame(() => {
+    const goal = useSceneStore.getState().camera;
+    if (goal && goal.seq !== lastSeq.current && controls) {
+      lastSeq.current = goal.seq;
+      // Stay on the town: center inside the town rectangle, radius at most the town's size.
+      let [x, z] = frame.toXZ(goal.center[0], goal.center[1]);
+      x = Math.min(frame.width / 2, Math.max(-frame.width / 2, x));
+      z = Math.min(frame.depth / 2, Math.max(-frame.depth / 2, z));
+      // Never pull back past the town: the widest view fits the town edge to edge (half its size, plus a small margin).
+      const radiusM = Math.min(goal.radiusM, 0.55 * Math.max(frame.width, frame.depth));
+      const t1 = new THREE.Vector3(x, frame.groundY(x, z), z);
+      const dir = camera.position.clone().sub(controls.target).normalize();
+      // Distance that fits a circle of radiusM in the narrower field of view.
+      const vFov = THREE.MathUtils.degToRad(camera.fov);
+      const hFov = 2 * Math.atan(Math.tan(vFov / 2) * (size.width / Math.max(1, size.height)));
+      // ...but never farther than the opening view of the whole town (StartCamera sits at ~0.85 x the town size).
+      const dist = Math.min((radiusM / Math.tan(Math.min(vFov, hFov) / 2)) * 1.1, 0.9 * Math.max(frame.width, frame.depth));
+      move.current = {
+        seq: goal.seq, start: performance.now(), ms: Math.max(1, goal.ms),
+        p0: camera.position.clone(), t0: controls.target.clone(),
+        p1: t1.clone().addScaledVector(dir, dist), t1,
+      };
+    }
+    const m = move.current;
+    if (!m || !controls) return;
+    const k = ease(Math.min(1, (performance.now() - m.start) / m.ms));
+    camera.position.lerpVectors(m.p0, m.p1, k);
+    controls.target.lerpVectors(m.t0, m.t1, k);
+    controls.update();
+    if (k >= 1) move.current = null;
+  });
+  return null;
+}

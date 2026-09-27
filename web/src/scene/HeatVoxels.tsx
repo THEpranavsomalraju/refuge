@@ -1,0 +1,222 @@
+import { useFrame } from '@react-three/fiber';
+import { cellToLatLng } from 'h3-js';
+import { useEffect, useMemo, useRef } from 'react';
+import * as THREE from 'three';
+import type { Frame } from './geo';
+import { RISK_COLOR } from './palette';
+import { useSceneStore } from './store';
+import { RISK_RISE_MS } from './timing';
+
+/**
+ * Smooth 3D heat map: a regular grid of translucent columns over the town. Each column's value is a
+ * Gaussian-weighted average of the nearby H3 results (people-weighted), so the surface is continuous
+ * instead of a patchwork of block colors. Color follows the same band cutoffs as the legend,
+ * interpolated between them; height is the value. Columns only appear where people live.
+ */
+const GRID_M = 150;          // column footprint
+const SIGMA_M = 220;         // smoothing radius (about 1.5 H3 res-10 cells)
+const REACH = 3;             // kernel cut-off in sigmas
+const MIN_PEOPLE = 4;        // weighted people needed before a column is drawn
+const MAX_H = 380;           // tallest column, meters
+const MIN_H = 12;
+
+type Stop = [number, string];
+// Tornado: log10 risk per person; anchors at the band cutoffs (1e-5 yellow, 1e-3 red, 1e-2 deep red).
+const TORNADO_STOPS: Stop[] = [[-6.5, RISK_COLOR.green], [-5, RISK_COLOR.yellow], [-3, RISK_COLOR.red], [-2, RISK_COLOR.deep_red], [-1, '#5c0f16']];
+// Hurricane: share of residents displaced; anchors at 10% / 40% / 70%.
+const HURRICANE_STOPS: Stop[] = [[0, RISK_COLOR.green], [0.1, RISK_COLOR.yellow], [0.4, RISK_COLOR.red], [0.7, RISK_COLOR.deep_red], [1, '#5c0f16']];
+
+function colorAt(stops: Stop[], v: number, out: THREE.Color) {
+  if (v <= stops[0]![0]) return out.set(stops[0]![1]);
+  for (let i = 1; i < stops.length; i++) {
+    const [x1, c1] = stops[i]!;
+    if (v <= x1) {
+      const [x0, c0] = stops[i - 1]!;
+      return out.set(c0).lerp(new THREE.Color(c1), (v - x0) / (x1 - x0));
+    }
+  }
+  return out.set(stops[stops.length - 1]![1]);
+}
+
+interface Column { x: number; z: number; y: number; h: number; color: THREE.Color }
+
+type SourceCell = { expected_deaths?: number; people?: number; displaced?: number; residents?: number };
+
+const PROTECTED_LOW = new THREE.Color('#9cc9ef'), PROTECTED_HIGH = new THREE.Color('#1f5fb8');
+
+/** With `before` (the no-shelter result), columns where shelters took care of most of the risk turn blue. */
+function buildColumns(frame: Frame, hazard: 'tornado' | 'hurricane', source: Record<string, SourceCell>, before?: Record<string, SourceCell>): Column[] {
+  const nx = Math.ceil(frame.width / GRID_M), nz = Math.ceil(frame.depth / GRID_M);
+  const x0 = -frame.width / 2, z0 = -frame.depth / 2;
+  const num = new Float64Array(nx * nz), den = new Float64Array(nx * nz), saved = new Float64Array(nx * nz);
+  const r = Math.ceil((REACH * SIGMA_M) / GRID_M), inv2s2 = 1 / (2 * SIGMA_M * SIGMA_M);
+  const keys = before ? new Set([...Object.keys(source), ...Object.keys(before)]) : Object.keys(source);
+  for (const h3 of keys) {
+    const c = source[h3], b = before?.[h3];
+    let lat: number, lon: number;
+    try { [lat, lon] = cellToLatLng(h3); } catch { continue; }
+    const [cx, cz] = frame.toXZ(lon, lat);
+    const pick = (x?: SourceCell) => hazard === 'tornado' ? x?.people ?? 0 : x?.residents ?? 0;
+    const people = Math.max(pick(c), pick(b));
+    const hit = hazard === 'tornado' ? c?.expected_deaths ?? 0 : c?.displaced ?? 0;
+    const was = hazard === 'tornado' ? b?.expected_deaths ?? 0 : b?.displaced ?? 0;
+    const help = before ? Math.max(0, was - hit) : 0;
+    if (people <= 0) continue;
+    const gi = Math.floor((cx - x0) / GRID_M), gk = Math.floor((cz - z0) / GRID_M);
+    for (let i = Math.max(0, gi - r); i <= Math.min(nx - 1, gi + r); i++) {
+      for (let k = Math.max(0, gk - r); k <= Math.min(nz - 1, gk + r); k++) {
+        const dx = x0 + (i + 0.5) * GRID_M - cx, dz = z0 + (k + 0.5) * GRID_M - cz;
+        const w = Math.exp(-(dx * dx + dz * dz) * inv2s2);
+        num[i * nz + k] += w * hit; den[i * nz + k] += w * people; saved[i * nz + k] += w * help;
+      }
+    }
+  }
+  const stops = hazard === 'tornado' ? TORNADO_STOPS : HURRICANE_STOPS;
+  const lo = stops[0]![0], hi = stops[stops.length - 1]![0];
+  const out: Column[] = [];
+  for (let i = 0; i < nx; i++) {
+    for (let k = 0; k < nz; k++) {
+      const d = den[i * nz + k]!;
+      if (d < MIN_PEOPLE) continue;
+      const x = x0 + (i + 0.5) * GRID_M, z = z0 + (k + 0.5) * GRID_M;
+      const sv = saved[i * nz + k]!, left = num[i * nz + k]!;
+      if (before && sv > left && sv > 0) {
+        // Shelters took care of most of the risk here: blue, taller where more people are protected.
+        const share = Math.min(1, hazard === 'tornado' ? sv / (sv + left) : sv / d);
+        out.push({ x, z, y: frame.groundY(x, z), h: MIN_H + Math.sqrt(share) * (MAX_H - MIN_H) * 0.6, color: PROTECTED_LOW.clone().lerp(PROTECTED_HIGH, Math.sqrt(share)) });
+        continue;
+      }
+      const ratio = left / d;
+      const v = hazard === 'tornado' ? Math.log10(Math.max(ratio, 1e-9)) : ratio;
+      const t = Math.min(1, Math.max(0, (v - lo) / (hi - lo)));
+      out.push({ x, z, y: frame.groundY(x, z), h: MIN_H + t * (MAX_H - MIN_H), color: colorAt(stops, v, new THREE.Color()) });
+    }
+  }
+  return out;
+}
+
+export function HeatVoxels({ frame }: { frame: Frame }) {
+  const risk = useSceneStore(s => s.risk);
+  const style = useSceneStore(s => s.mapStyle);
+  const lowered = useSceneStore(s => s.highlight !== null);
+  const columns = useMemo(
+    () => (risk && style === 'heat' ? buildColumns(frame, risk.hazard, risk.source as Record<string, SourceCell>, risk.before as Record<string, SourceCell> | undefined) : []),
+    [risk, style, frame]);
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  const geometry = useMemo(() => new THREE.BoxGeometry(GRID_M * 0.94, 1, GRID_M * 0.94).translate(0, 0.5, 0), []);
+  const material = useMemo(() => new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.6, depthWrite: false, roughness: 0.55, metalness: 0 }), []);
+  const done = useRef(false);
+  useEffect(() => () => { geometry.dispose(); material.dispose(); }, [geometry, material]);
+
+  useEffect(() => {
+    const m = mesh.current;
+    if (!m) return;
+    columns.forEach((c, i) => m.setColorAt(i, c.color));
+    if (m.instanceColor) m.instanceColor.needsUpdate = true;
+    material.needsUpdate = true;   // compile with per-instance colors
+    done.current = false;
+  }, [columns]);
+
+  const tmp = useMemo(() => new THREE.Object3D(), []);
+  useFrame(() => {
+    const m = mesh.current;
+    if (!m || !risk || columns.length === 0) return;
+    material.opacity = lowered ? 0.32 : 0.6;
+    if (done.current) return;
+    // Columns rise together over the same time as the block map.
+    const k = Math.min(1, (performance.now() - risk.shownAt) / RISK_RISE_MS);
+    const ease = 1 - Math.pow(1 - k, 3);
+    columns.forEach((c, i) => {
+      tmp.position.set(c.x, c.y, c.z);
+      tmp.scale.set(1, Math.max(0.01, c.h * ease), 1);
+      tmp.updateMatrix();
+      m.setMatrixAt(i, tmp.matrix);
+    });
+    m.instanceMatrix.needsUpdate = true;
+    if (k >= 1) done.current = true;
+  });
+
+  if (!risk || style !== 'heat' || columns.length === 0) return null;
+  return <instancedMesh key={columns.length} ref={mesh} args={[geometry, material, columns.length]} raycast={() => null} renderOrder={2} />;
+}
+
+/**
+ * What the shelters changed, as a heat map: blue columns rise where the helped people live.
+ * Value per column = Gaussian-weighted sum of (before - after) nearby: displaced people who now have a
+ * shelter bed (hurricane) or expected deaths prevented (tornado). Taller and darker = more help there.
+ */
+const SAVED_LOW = new THREE.Color('#9cc9ef'), SAVED_HIGH = new THREE.Color('#1f5fb8');
+
+function buildDiffColumns(frame: Frame, before: Record<string, SourceCell>, after: Record<string, SourceCell>): Column[] {
+  const nx = Math.ceil(frame.width / GRID_M), nz = Math.ceil(frame.depth / GRID_M);
+  const x0 = -frame.width / 2, z0 = -frame.depth / 2;
+  const sum = new Float64Array(nx * nz);
+  const r = Math.ceil((REACH * SIGMA_M) / GRID_M), inv2s2 = 1 / (2 * SIGMA_M * SIGMA_M);
+  for (const h3 of new Set([...Object.keys(before), ...Object.keys(after)])) {
+    const b = before[h3], a = after[h3];
+    const hurricane = (b?.displaced ?? a?.displaced) !== undefined;
+    const helped = hurricane ? (b?.displaced ?? 0) - (a?.displaced ?? 0) : (b?.expected_deaths ?? 0) - (a?.expected_deaths ?? 0);
+    if (helped <= 1e-9) continue;
+    let lat: number, lon: number;
+    try { [lat, lon] = cellToLatLng(h3); } catch { continue; }
+    const [cx, cz] = frame.toXZ(lon, lat);
+    const gi = Math.floor((cx - x0) / GRID_M), gk = Math.floor((cz - z0) / GRID_M);
+    for (let i = Math.max(0, gi - r); i <= Math.min(nx - 1, gi + r); i++) {
+      for (let k = Math.max(0, gk - r); k <= Math.min(nz - 1, gk + r); k++) {
+        const dx = x0 + (i + 0.5) * GRID_M - cx, dz = z0 + (k + 0.5) * GRID_M - cz;
+        sum[i * nz + k] += helped * Math.exp(-(dx * dx + dz * dz) * inv2s2);
+      }
+    }
+  }
+  let max = 0;
+  for (const v of sum) max = Math.max(max, v);
+  if (max <= 0) return [];
+  const out: Column[] = [];
+  for (let i = 0; i < nx; i++) {
+    for (let k = 0; k < nz; k++) {
+      const t = sum[i * nz + k]! / max;
+      if (t < 0.02) continue;                       // nothing meaningful changed here: no column
+      const x = x0 + (i + 0.5) * GRID_M, z = z0 + (k + 0.5) * GRID_M;
+      out.push({ x, z, y: frame.groundY(x, z), h: MIN_H + Math.sqrt(t) * (MAX_H - MIN_H), color: SAVED_LOW.clone().lerp(SAVED_HIGH, Math.sqrt(t)) });
+    }
+  }
+  return out;
+}
+
+export function HeatDiff({ frame }: { frame: Frame }) {
+  const diff = useSceneStore(s => s.diff);
+  const style = useSceneStore(s => s.mapStyle);
+  const columns = useMemo(
+    () => (diff && style === 'heat' ? buildDiffColumns(frame, diff.before as Record<string, SourceCell>, diff.after as Record<string, SourceCell>) : []),
+    [diff, style, frame]);
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  const geometry = useMemo(() => new THREE.BoxGeometry(GRID_M * 0.94, 1, GRID_M * 0.94).translate(0, 0.5, 0), []);
+  const material = useMemo(() => new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.7, depthWrite: false, roughness: 0.55, metalness: 0 }), []);
+  const done = useRef(false);
+  const tmp = useMemo(() => new THREE.Object3D(), []);
+  useEffect(() => () => { geometry.dispose(); material.dispose(); }, [geometry, material]);
+  useEffect(() => {
+    const m = mesh.current;
+    if (!m) return;
+    columns.forEach((c, i) => m.setColorAt(i, c.color));
+    if (m.instanceColor) m.instanceColor.needsUpdate = true;
+    material.needsUpdate = true;
+    done.current = false;
+  }, [columns, material]);
+  useFrame(() => {
+    const m = mesh.current;
+    if (!m || !diff || columns.length === 0 || done.current) return;
+    const k = Math.min(1, (performance.now() - diff.shownAt) / RISK_RISE_MS);
+    const ease = 1 - Math.pow(1 - k, 3);
+    columns.forEach((c, i) => {
+      tmp.position.set(c.x, c.y, c.z);
+      tmp.scale.set(1, Math.max(0.01, c.h * ease), 1);
+      tmp.updateMatrix();
+      m.setMatrixAt(i, tmp.matrix);
+    });
+    m.instanceMatrix.needsUpdate = true;
+    if (k >= 1) done.current = true;
+  });
+  if (!diff || style !== 'heat' || columns.length === 0) return null;
+  return <instancedMesh key={columns.length} ref={mesh} args={[geometry, material, columns.length]} raycast={() => null} renderOrder={2} />;
+}
