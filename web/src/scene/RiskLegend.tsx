@@ -9,8 +9,11 @@ export type LegendHazard = 'tornado' | 'hurricane';
 export interface TornadoCutoffs { yellow: number; red: number; deep_red: number }
 export interface HurricaneCutoffs { moderate: number; severe: number; extreme: number }
 
-/** `color` may be a CSS color or a CSS gradient (used for the difference view's blue scale). */
-export interface LegendRow { label: string; range: string; color: string; hatched: boolean }
+/**
+ * `color` may be a CSS color or a CSS gradient (used for the difference view's blue scale).
+ * `outlined` draws the swatch as an outline only (the swipe comparison's missed cells).
+ */
+export interface LegendRow { label: string; range: string; color: string; hatched: boolean; outlined?: boolean }
 export interface Legend { title: string; rows: LegendRow[]; outline: string | null; height: string }
 
 const oneIn = (p: number) => `1 in ${Math.round(1 / p).toLocaleString('en-US')}`;
@@ -51,9 +54,13 @@ export function legendFor(hazard: LegendHazard, cutoffs: TornadoCutoffs | Hurric
 /**
  * Legend for the difference view (scene.showDifference): what the plan changed compared
  * with no shelters. Blue = fewer deaths (tornado) or fewer displaced (hurricane).
+ * `swipe: true` adds the swipe comparison's "missed" outline row.
  */
-export function differenceLegendFor(hazard: LegendHazard): Legend {
+export function differenceLegendFor(hazard: LegendHazard, opts: { swipe?: boolean } = {}): Legend {
   const what = hazard === 'tornado' ? 'deaths' : 'people displaced';
+  const missed: LegendRow[] = opts.swipe
+    ? [{ label: 'Missed', range: 'the best plan made this area much safer than yours did', color: DIFF_COLOR.missed, hatched: false, outlined: true }]
+    : [];
   return {
     title: 'What your plan changed',
     rows: [
@@ -61,6 +68,7 @@ export function differenceLegendFor(hazard: LegendHazard): Legend {
         color: `linear-gradient(90deg, ${DIFF_COLOR.savedLow}, ${DIFF_COLOR.savedHigh})`, hatched: false },
       { label: 'No change', range: 'same as without shelters', color: DIFF_COLOR.unchanged, hatched: false },
       { label: 'Worse', range: `more ${what} expected`, color: DIFF_COLOR.worse, hatched: false },
+      ...missed,
     ],
     outline: null,
     height: hazard === 'tornado' ? 'Height: lives saved in that area' : 'Height: people kept in their homes',
@@ -74,7 +82,9 @@ export function RiskLegend({ legend }: { legend: Legend }) {
       <div style={{ fontWeight: 700, fontSize: 13 }}>{legend.title}</div>
       {legend.rows.map(r => (
         <div key={r.label} style={row}>
-          <span aria-hidden style={{
+          <span aria-hidden style={r.outlined ? {
+            width: 11, height: 11, borderRadius: 2, flex: 'none', border: `2px solid ${r.color}`, minWidth: 11,
+          } : {
             width: 14, height: 14, borderRadius: 3, flex: 'none', background: r.color, minWidth: 14,
             backgroundImage: r.hatched ? 'repeating-linear-gradient(135deg, rgba(12,16,18,0.75) 0 3px, transparent 3px 7px)' : undefined,
           }} />

@@ -25,6 +25,8 @@ export const DIFF_COLOR = {
   savedHigh: '#1f5fb8',
   unchanged: '#5d6663',
   worse: '#e0a030',
+  /** Swipe comparison: outline on cells the other plan protected much better. */
+  missed: '#ff5fa2',
 };
 
 /**

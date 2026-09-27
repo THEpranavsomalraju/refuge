@@ -9,11 +9,11 @@ import { useSceneStore, type DiffCells } from './store';
 import type { PlaceData } from './types';
 
 /** Changes smaller than this (expected deaths or displaced people) count as unchanged. */
-const EPS = 0.001;
+export const EPS = 0.001;
 
 type DiffCell = DiffCells[string];
 /** The compared value: expected deaths (tornado) or displaced people (hurricane). Absent = 0. */
-const value = (c: DiffCell | undefined) => (c ? c.expected_deaths ?? c.displaced ?? 0 : 0);
+export const value = (c: DiffCell | undefined) => (c ? c.expected_deaths ?? c.displaced ?? 0 : 0);
 const peopleIn = (c: DiffCell | undefined) => (c ? c.people ?? c.residents ?? 0 : 0);
 
 /**
