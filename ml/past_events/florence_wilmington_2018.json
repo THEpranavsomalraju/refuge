@@ -111,6 +111,12 @@
   -77.885,
   34.26
  ],
+ "build_bbox": [
+  -77.975,
+  34.19,
+  -77.885,
+  34.26
+ ],
  "reference_result": {
   "residents": 50349,
   "gust_mph_p10_p50_p90": [
@@ -212,11 +218,5 @@
   "Hurricane mode shows wind damage and displacement. Storm surge, rain flooding and falling trees are not modeled.",
   "Recorded deaths and property damage are NOAA totals for the forecast zones listed, which are larger than the town box.",
   "Buildings and populations are today's NSI records."
- ],
- "build_bbox": [
-  -77.975,
-  34.19,
-  -77.885,
-  34.26
  ]
 }
