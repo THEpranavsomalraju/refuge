@@ -26,7 +26,8 @@ export function Game({ load }: { load: LoadState }) {
   const title = g.event ? g.event.title
     : g.place && !['intro', 'choose_mode', 'choose_city'].includes(g.step) ? g.place.meta.name : 'Refuge';
   // The blue "what your plan changed" view gets its own legend.
-  const legend = g.view.endsWith('_diff') ? differenceLegendFor(g.hazard)
+  const legend = g.view === 'swipe' ? differenceLegendFor(g.hazard, { swipe: true })
+    : g.view.endsWith('_diff') ? differenceLegendFor(g.hazard)
     : g.hazard === 'hurricane'
       ? legendFor('hurricane', hurricaneParams.cells.bands, hurricaneParams.cells.min_residents)
       : legendFor('tornado', riskBands, riskBands.min_cell_people);
@@ -480,7 +481,8 @@ function Compare() {
           ? ` Every affordable combination of the ${plan.candidates.length} top buildings (including yours) was checked: ${num(plan.evaluated)} plans within ${usd(g.budget)}.`
           : ` Greedy search with swaps over ${plan.candidates.length} buildings; not guaranteed optimal.`}
       </div>
-      <Views options={['yours_diff', 'optimal_diff', 'before', 'yours', 'optimal']} />
+      <Views options={['swipe', 'yours_diff', 'optimal_diff', 'before', 'yours', 'optimal']} />
+      {g.view === 'swipe' && <div style={muted}>Drag the divider: your plan on the left, the best plan on the right. Pink outlines mark areas the best plan made much safer than yours did.</div>}
       <button style={secondary} onClick={() => void g.plan()}>Try another plan</button>
       <button style={secondary} onClick={g.restart}>New storm</button>
     </>
@@ -488,7 +490,7 @@ function Compare() {
 }
 
 const VIEW_WORDS: Record<MapView, string> = {
-  before: 'No shelters', yours: 'Your plan', optimal: 'Best plan', yours_diff: 'What your plan changed', optimal_diff: 'What the best plan changed',
+  swipe: 'Side by side: yours vs best', before: 'No shelters', yours: 'Your plan', optimal: 'Best plan', yours_diff: 'What your plan changed', optimal_diff: 'What the best plan changed',
 };
 const HOME_NOTE = 'The map shows risk where people live: residents who reach a shelter still count in their home cell, with no risk.';
 function Views({ options }: { options: MapView[] }) {
@@ -519,10 +521,24 @@ function MapToggle() {
 
 function HoverCard() {
   const g = useGame();
-  const [h3, setH3] = useState<string | null>(null);
-  useEffect(() => { scene.onCellHover(setH3); return () => scene.onCellHover(null); }, []);
+  const [hover, setHover] = useState<{ h3: string; side?: 'left' | 'right' } | null>(null);
+  useEffect(() => {
+    scene.onCellHover((h3, side) => setHover(h3 ? { h3, side } : null));
+    return () => scene.onCellHover(null);
+  }, []);
+  if (!hover) return null;
+  const { h3, side } = hover;
+  // Difference and swipe views: what the plan under the cursor changed in this cell.
+  const diffPlan = g.view === 'swipe' ? (side === 'right' ? 'optimal' : side === 'left' ? 'yours' : null)
+    : g.view === 'yours_diff' ? 'yours' : g.view === 'optimal_diff' ? 'optimal' : null;
+  if (diffPlan && g.baseline) {
+    const after = diffPlan === 'yours' ? g.yours : g.optimal?.result;
+    if (!after) return null;
+    return <DiffHover h3={h3} before={g.baseline} after={after}
+      title={diffPlan === 'yours' ? 'Your plan' : `${g.optimal?.plan.label === 'best found' ? 'Best found' : 'Best'} plan`} />;
+  }
   const result: Result | null | undefined = g.view.startsWith('yours') ? g.yours : g.view.startsWith('optimal') ? g.optimal?.result : g.baseline;
-  if (!h3 || !result) return null;
+  if (!result) return null;
   if (isHurricane(result)) {
     const c = result.cells[h3];
     if (!c) return null;
@@ -543,6 +559,32 @@ function HoverCard() {
       <div style={row}><span>People at {hourWords(hourOf(g))}</span><span style={mono}>{Math.round(c.people)}</span></div>
       {c.expected_deaths > 0 && <div style={row}><span>Expected deaths</span><span style={mono}>{c.expected_deaths.toFixed(2)} ({c.p05}–{c.p95})</span></div>}
       {c.drivers.length > 0 && <div style={muted}>{driverWords(c.drivers, hourOf(g))}{c.uncertain ? ' · uncertain' : ''}</div>}
+    </div>
+  );
+}
+
+/** Before -> after for one cell under one plan (absent cells count as 0). */
+function DiffHover({ h3, before, after, title }: { h3: string; before: Result; after: Result; title: string }) {
+  if (isHurricane(before) && isHurricane(after)) {
+    const b = before.cells[h3], a = after.cells[h3];
+    if (!b && !a) return null;
+    const was = b?.displaced ?? 0, now = a?.displaced ?? 0;
+    return (
+      <div style={{ ...panel, top: 'auto', bottom: 12, width: 300 }}>
+        <div style={{ fontWeight: 600 }}>{title}: {num(Math.max(0, was - now))} people sheltered from here</div>
+        <div style={row}><span>Displaced without shelter</span><span style={mono}>{num(was)} → {num(now)}</span></div>
+        <div style={row}><span>Residents</span><span style={mono}>{num(b?.residents ?? a?.residents ?? 0)}</span></div>
+      </div>
+    );
+  }
+  const b = (before as DetailedResult).cells[h3], a = (after as DetailedResult).cells[h3];
+  if (!b && !a) return null;
+  const was = b?.expected_deaths ?? 0, now = a?.expected_deaths ?? 0;
+  return (
+    <div style={{ ...panel, top: 'auto', bottom: 12, width: 300 }}>
+      <div style={{ fontWeight: 600 }}>{title}: {Math.max(0, was - now).toFixed(2)} lives saved here</div>
+      <div style={row}><span>Expected deaths</span><span style={mono}>{was.toFixed(2)} → {now.toFixed(2)}</span></div>
+      <div style={row}><span>People here</span><span style={mono}>{Math.round(b?.people ?? a?.people ?? 0)}</span></div>
     </div>
   );
 }
