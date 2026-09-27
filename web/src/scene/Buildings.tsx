@@ -114,11 +114,40 @@ export function Buildings({ place, frame }: { place: PlaceData; frame: Frame }) 
         </mesh>
       </Bvh>
       <HoverOutline place={place} frame={frame} indexById={indexById} />
+      <ShelterOutlines place={place} frame={frame} indexById={indexById} />
     </>
   );
 }
 
 /** White outline (roof ring, base ring, corners) around the hovered shelter candidate. */
+/** Teal outlines around every building in the plan on screen, so each chosen shelter is visible. */
+function ShelterOutlines({ place, frame, indexById }: { place: PlaceData; frame: Frame; indexById: Map<string, number> }) {
+  const ids = useSceneStore(s => s.shelterIds);
+  const geometry = useMemo(() => {
+    const pos: number[] = [];
+    for (const id of ids) {
+      const i = indexById.get(id);
+      if (i === undefined) continue;
+      const { ring, y0, y1 } = buildingShape(place.buildings[i], frame);
+      for (let k = 0; k < ring.length; k++) {
+        const [ax, az] = ring[k], [bx, bz] = ring[(k + 1) % ring.length];
+        pos.push(ax, y1 + 0.6, az, bx, y1 + 0.6, bz, ax, y0 + 0.8, az, bx, y0 + 0.8, bz, ax, y0 + 0.8, az, ax, y1 + 0.6, az);
+      }
+    }
+    if (!pos.length) return null;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    return g;
+  }, [ids, indexById, place, frame]);
+  useEffect(() => () => geometry?.dispose(), [geometry]);
+  if (!geometry) return null;
+  return (
+    <lineSegments geometry={geometry} raycast={() => null} renderOrder={5}>
+      <lineBasicMaterial color="#5fe0c8" depthTest={false} transparent opacity={1} />
+    </lineSegments>
+  );
+}
+
 function HoverOutline({ place, frame, indexById }: { place: PlaceData; frame: Frame; indexById: Map<string, number> }) {
   const hoverId = useSceneStore(s => s.hoverId);
   const geometry = useMemo(() => {

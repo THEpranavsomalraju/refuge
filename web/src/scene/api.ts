@@ -89,6 +89,9 @@ export const scene: SceneAPI = {
   setMapStyle(style: 'heat' | 'blocks') {
     useSceneStore.setState({ mapStyle: style });
   },
+  markShelters(ids) {
+    useSceneStore.setState({ shelterIds: ids ? [...ids] : [] });
+  },
   hideRiskMap() {
     useSceneStore.setState({ risk: null, diff: null });
   },

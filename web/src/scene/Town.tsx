@@ -16,6 +16,7 @@ import { Protections } from './Protections';
 import { RiskMap } from './RiskMap';
 import { HeatDiff, HeatVoxels } from './HeatVoxels';
 import { useSceneStore } from './store';
+import { Surroundings } from './Surroundings';
 import { Terrain } from './Terrain';
 import { TornadoPath } from './TornadoPath';
 import type { PlaceData } from './types';
@@ -51,7 +52,7 @@ function Place({ place }: { place: PlaceData }) {
   return (
     <>
       <StartCamera frame={frame} />
-      <FillerGround frame={frame} />
+      <Surroundings frame={frame} name={(place.meta.name ?? place.meta.place_id ?? 'Town').split(',')[0]!} />
       <Terrain place={place} frame={frame} />
       <Lines place={place} frame={frame} />
       <Buildings place={place} frame={frame} />
@@ -66,24 +67,6 @@ function Place({ place }: { place: PlaceData }) {
       <CameraRig frame={frame} />
       <GroundInput frame={frame} />
     </>
-  );
-}
-
-/** A wide plane in the ground color around the town, fading into the fog, so the plot never floats in a void. */
-function FillerGround({ frame }: { frame: Frame }) {
-  const y = useMemo(() => {
-    let lo = Infinity;
-    for (let i = 0; i <= 20; i++) for (let k = 0; k <= 20; k++) {
-      lo = Math.min(lo, frame.groundY((i / 20 - 0.5) * frame.width, (k / 20 - 0.5) * frame.depth));
-    }
-    return lo - 3;
-  }, [frame]);
-  const size = Math.max(frame.width, frame.depth) * 8;
-  return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, y, 0]} raycast={() => null}>
-      <planeGeometry args={[size, size]} />
-      <meshStandardMaterial color={PALETTE.ground} roughness={1} metalness={0} />
-    </mesh>
   );
 }
 

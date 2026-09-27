@@ -15,7 +15,7 @@ export function Protections({ frame }: { frame: Frame }) {
   const reach = useSceneStore(s => s.reach);
   return (
     <group>
-      {protections.map(p => <Marker key={p.id} p={p} frame={frame} />)}
+      {protections.map((p, i) => <Marker key={p.id} p={p} frame={frame} fan={fanOffset(protections, i, frame)} />)}
       {Object.entries(reach).map(([id, r]) => <Reach key={id} lon={r.lon} lat={r.lat} radiusM={r.radiusM} frame={frame} />)}
     </group>
   );
@@ -25,7 +25,16 @@ export function Protections({ frame }: { frame: Frame }) {
  * A safe room readable at town zoom: a glowing beam, a small shelter block, and a pin
  * that keeps the same size on screen however far the camera is.
  */
-function Marker({ p, frame }: { p: Protection; frame: Frame }) {
+/** Horizontal screen offset (px) for pins within 400 m of each other, so none hide behind another. */
+function fanOffset(all: Protection[], i: number, frame: Frame): number {
+  const [x, z] = frame.toXZ(all[i]!.lon, all[i]!.lat);
+  const group = all.map((p, j) => ({ j, d: Math.hypot(...(frame.toXZ(p.lon, p.lat).map((v, k) => v - (k ? z : x)) as [number, number])) }))
+    .filter(g => g.d < 400).map(g => g.j).sort((a, b) => a - b);
+  const idx = group.indexOf(i);
+  return (idx - (group.length - 1) / 2) * 92;
+}
+
+function Marker({ p, frame, fan }: { p: Protection; frame: Frame; fan: number }) {
   const [x, z] = frame.toXZ(p.lon, p.lat);
   const y = frame.groundY(x, z);
   const beam = useRef<THREE.Mesh>(null);
@@ -46,7 +55,7 @@ function Marker({ p, frame }: { p: Protection; frame: Frame }) {
         <meshBasicMaterial color={PALETTE.shelter} transparent opacity={0.35} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
       <Html position={[0, BEAM_M + 20, 0]} center zIndexRange={[15, 0]} style={{ pointerEvents: 'none' }}>
-        <div aria-label={p.type === 'safe_room' ? 'Shelter' : p.type} style={{ display: 'grid', justifyItems: 'center' }}>
+        <div aria-label={p.type === 'safe_room' ? 'Shelter' : p.type} style={{ display: 'grid', justifyItems: 'center', transform: `translateX(${fan}px)` }}>
           <div style={{
             width: 22, height: 22, borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)',
             background: PALETTE.shelter, border: '2px solid #ffffff', boxShadow: '0 0 10px rgba(95, 224, 200, 0.8)',

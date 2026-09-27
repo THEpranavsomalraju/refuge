@@ -43,6 +43,8 @@ interface SceneState {
   highlight: Map<string, number> | null;
   /** Building id under the pointer when it is a highlighted candidate. */
   hoverId: string | null;
+  /** Buildings used as shelters in the plan on screen: outlined on the map. */
+  shelterIds: string[];
   /** Reach circles around selected shelters, by id. */
   reach: Record<string, { lon: number; lat: number; radiusM: number }>;
 }
@@ -69,5 +71,6 @@ export const useSceneStore = create<SceneState>(() => ({
   hurricaneT: null,
   highlight: null,
   hoverId: null,
+  shelterIds: [],
   reach: {},
 }));

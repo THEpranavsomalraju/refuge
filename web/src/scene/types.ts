@@ -133,6 +133,8 @@ export interface SceneAPI {
   /** Hides the risk map and the difference map. */
   /** Draw the risk map as smooth heat columns ('heat', default) or exact per-block hexagons ('blocks'). */
   setMapStyle(style: 'heat' | 'blocks'): void;
+  /** Outline these buildings as the plan's shelters (null clears). */
+  markShelters(ids: readonly string[] | null): void;
   hideRiskMap(): void;
   /**
    * Difference view: cells where expected deaths dropped rise in blue, height = lives
