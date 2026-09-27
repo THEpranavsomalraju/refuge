@@ -1,6 +1,7 @@
 import { cellToLatLng } from 'h3-js';
 import { buildCity, buildServerAvailable, listCities } from './places';
 import { hurricaneCells, tornadoCells } from './RiskMap';
+import type { TrackRow } from '../shared/contract';
 import { useSceneStore } from './store';
 import type { LonLat, SceneAPI } from './types';
 
@@ -93,6 +94,27 @@ export const scene: SceneAPI = {
   listCities,
   buildServerAvailable,
   buildCity,
+  showHurricaneTrack(track, category) {
+    useSceneStore.setState({ hurricane: { track: track.map(r => [...r] as TrackRow), category }, hurricaneT: null });
+  },
+  hideHurricaneTrack() {
+    useSceneStore.setState({ hurricane: null, hurricaneT: null });
+  },
+  playHurricane(durationMs, onProgress) {
+    return new Promise(resolve => {
+      const h = useSceneStore.getState().hurricane;
+      if (!h) { resolve(); return; }
+      const start = performance.now();
+      const tick = (now: number) => {
+        const t = Math.min(1, (now - start) / durationMs);
+        useSceneStore.setState({ hurricaneT: t });
+        onProgress?.(t);
+        if (t < 1) requestAnimationFrame(tick);
+        else { useSceneStore.setState({ hurricaneT: null }); resolve(); }
+      };
+      requestAnimationFrame(tick);
+    });
+  },
   onGroundClick(cb) {
     // A new callback (or null) starts a fresh set of point markers.
     useSceneStore.setState({ onGroundClick: cb, groundClicks: [] });

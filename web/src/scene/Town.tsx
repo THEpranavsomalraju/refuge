@@ -7,6 +7,7 @@ import { CameraRig } from './CameraRig';
 import { CandidateSites } from './CandidateSites';
 import { loadPlace } from './data';
 import { GroundInput } from './GroundInput';
+import { HurricaneTrack } from './HurricaneTrack';
 import { DifferenceMap } from './DifferenceMap';
 import { makeFrame, type Frame } from './geo';
 import { Lines } from './Lines';
@@ -53,6 +54,7 @@ function Place({ place }: { place: PlaceData }) {
       <Lines place={place} frame={frame} />
       <Buildings place={place} frame={frame} />
       <TornadoPath frame={frame} />
+      <HurricaneTrack frame={frame} />
       <Protections frame={frame} />
       <RiskMap place={place} frame={frame} />
       <DifferenceMap place={place} frame={frame} />

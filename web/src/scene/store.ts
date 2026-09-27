@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { TrackRow } from '../shared/contract';
 import type { RiskCell } from './RiskMap';
 import type { BuildingRecord, CandidateSite, LonLat, ProtectionType } from './types';
 
@@ -30,6 +31,10 @@ interface SceneState {
   /** While set, clicks on the ground (not drags) are reported here and marked in groundClicks. */
   onGroundClick: ((lon: number, lat: number) => void) | null;
   groundClicks: LonLat[];
+  /** Hurricane track rows [lon, lat, vmax_kt, rmw_km, B, time_h] and the category label. */
+  hurricane: { track: TrackRow[]; category: number } | null;
+  /** Eye progress along the track by time, 0..1, or null when not playing. */
+  hurricaneT: number | null;
 }
 
 export const useSceneStore = create<SceneState>(() => ({
@@ -48,4 +53,6 @@ export const useSceneStore = create<SceneState>(() => ({
   onSiteClick: null,
   onGroundClick: null,
   groundClicks: [],
+  hurricane: null,
+  hurricaneT: null,
 }));

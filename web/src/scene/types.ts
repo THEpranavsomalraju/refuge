@@ -1,4 +1,4 @@
-import type { CityEntry, HurricaneCells } from '../shared/contract';
+import type { CityEntry, HurricaneCells, TrackRow } from '../shared/contract';
 import type { BuildStatus } from './places';
 import type { DiffCells } from './store';
 
@@ -146,6 +146,11 @@ export interface SceneAPI {
   buildServerAvailable(): Promise<boolean>;
   /** Builds a new city with the local build server; resolves with its place_id when done. */
   buildCity(city: string, state: string, onUpdate?: (s: BuildStatus) => void): Promise<string>;
+  /** Hurricane track rows [lon, lat, vmax_kt, rmw_km, B, time_h]; draws the track and category. */
+  showHurricaneTrack(track: TrackRow[], category: number): void;
+  /** Moves the eye along the track by time_h (cloud band, eyewall ring, rain); resolves at the end. */
+  playHurricane(durationMs: number, onProgress?: (t: number) => void): Promise<void>;
+  hideHurricaneTrack(): void;
   /** Ground clicks for drawing a tornado path or hurricane track; drags still pan. null stops. */
   onGroundClick(cb: ((lon: number, lat: number) => void) | null): void;
 
