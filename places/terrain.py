@@ -51,12 +51,13 @@ class Terrain:
     utm: object
 
 
-def load_terrain(rect: Polygon) -> Terrain:
-    """3DEP DEM and NHDPlus MR streams for `rect` plus STREAM_MARGIN_M (cached by HyRiver)."""
+def load_terrain(rect: Polygon, streams: bool = True) -> Terrain:
+    """3DEP DEM and (unless streams=False) NHDPlus MR streams for `rect` plus
+    STREAM_MARGIN_M, cached by HyRiver. Without streams, hand_m stays null."""
     utm = gpd.GeoSeries([rect], crs="EPSG:4326").estimate_utm_crs()
     fetch_area = gpd.GeoSeries([rect], crs=4326).to_crs(utm).buffer(STREAM_MARGIN_M).to_crs(4326).iloc[0]
     dem = py3dep.get_dem(fetch_area.bounds, resolution=DEM_RES_M)
-    streams = fetch_streams(fetch_area.bounds)
+    streams = fetch_streams(fetch_area.bounds) if streams else gpd.GeoDataFrame(geometry=[], crs=4326)
     return Terrain(dem=dem, streams=streams, utm=utm)
 
 
@@ -94,7 +95,7 @@ def add_terrain(records: list[dict], cells: list[dict], rect: Polygon, folder: P
             r["hand_m"] = _round(h)
         log.info("hand_m: median %.1f m, nearest stream median %.0f m", np.nanmedian(hand), np.median(dist))
     else:
-        log.warning("no streams near this place; hand_m stays null")
+        log.info("no streams for this place; hand_m stays null")
 
     terrain = bake_terrain(dem, rect, folder / "terrain.bin")
     return {"terrain_source": terrain, "streams": stream_lines(streams, rect, utm)}

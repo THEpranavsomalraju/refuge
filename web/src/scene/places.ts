@@ -1,99 +1,68 @@
-// Place list and on-demand city builds. Featured towns ship with the app (places/);
-// any other U.S. city is built by the local build service (places/server.py) into
-// data/places/ and served at /generated/. Game UI (web/src/game) can reuse these helpers.
+// City list and on-demand city builds (plan section 3). Featured towns and cities built
+// by the local build server (places/build_server.py, port 8765) all live in places/<id>/.
+// The demo never depends on the server: when it isn't running, the city list falls back
+// to the featured towns and the game hides "Build a new city".
 
-export type PlaceSource = 'featured' | 'generated';
-
-export interface PlaceEntry {
-  place_id: string;
-  name: string | null;
-  source: PlaceSource;
-  bbox: [number, number, number, number];
-  center: [number, number];
-  buildings: number;
-  crossings: number;
-  pop_night: number;
-  area: 'rural' | 'urban' | null;
-  trimmed: boolean;
-  built: string;
-}
-
-export interface Suggestion {
-  query: string;
-  place_id: string;
-  display_name: string | null;
-  area_km2: number;
-  buildings: number;
-  pop_night: number;
-  density_per_km2: number;
-  suggested_area: 'rural' | 'urban';
-  will_trim_to: number | null;
-}
-
-export interface BuildJob {
-  job_id: string | null;
-  place_id: string;
-  status: 'queued' | 'running' | 'done' | 'error';
-  source?: PlaceSource;
-  step?: string | null;
-  step_index?: number;
-  steps?: string[];
-  error?: string | null;
-  elapsed_s?: number;
-}
+import type { CityEntry } from '../shared/contract';
 
 const BASE = import.meta.env.BASE_URL;
+/** Dev server proxies this to http://127.0.0.1:8765 (web/vite.config.ts). */
+const SERVER = `${BASE}build-api`;
+
+export interface BuildStatus {
+  state: 'queued' | 'running' | 'done' | 'error';
+  progress: number;
+  place_id: string | null;
+  message: string;
+}
 
 /** Folder URL for a place's files. */
-export const placeUrl = (id: string, source: PlaceSource) =>
-  `${BASE}${source === 'featured' ? 'places' : 'generated'}/${id}`;
+export const placeUrl = (id: string) => `${BASE}places/${id}`;
 
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  let res: Response;
+async function server<T>(path: string, init?: RequestInit, timeoutMs = 8000): Promise<T> {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
-    res = await fetch(`${BASE}api/${path}`, init);
-  } catch {
-    throw new Error('The build service is not running. Start it with: places/.venv/Scripts/python -m places.server');
+    const res = await fetch(`${SERVER}${path}`, { ...init, signal: ctl.signal });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.message ?? `Build server error (HTTP ${res.status})`);
+    return body as T;
+  } finally {
+    clearTimeout(timer);
   }
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(body.error ?? `Build service error (HTTP ${res.status})`);
-  return body as T;
+}
+
+/** True when the local build server answers (quick check; false on the published site). */
+export async function buildServerAvailable(): Promise<boolean> {
+  try { return (await server<{ ok: boolean }>('/health', undefined, 1500)).ok === true; } catch { return false; }
 }
 
 /**
- * Every loadable place. Uses the build service when it runs (featured + generated);
- * otherwise falls back to the featured towns that ship with the app.
+ * Cities for "Future storm": featured towns plus cities built on this machine (and ones
+ * building now). Past-event towns are not listed; they belong to past mode.
  */
-export async function listPlaces(): Promise<{ places: PlaceEntry[]; service: boolean }> {
+export async function listCities(): Promise<CityEntry[]> {
   try {
-    return { places: await api<PlaceEntry[]>('places'), service: true };
+    return await server<CityEntry[]>('/cities', undefined, 2500);
   } catch {
     const res = await fetch(`${BASE}places/index.json`);
-    const featured = res.ok ? ((await res.json()) as Omit<PlaceEntry, 'source'>[]) : [];
-    return { places: featured.map(p => ({ ...p, source: 'featured' as const })), service: false };
+    const index = res.ok ? ((await res.json()) as { place_id: string; name: string | null; kind?: string }[]) : [];
+    return index
+      .filter(e => (e.kind ?? 'featured') !== 'past_event')
+      .map(e => ({ place_id: e.place_id, name: (e.name ?? e.place_id).replace(', USA', ''), status: 'ready' as const }));
   }
 }
 
-export const suggestPlace = (query: string) => api<Suggestion>(`suggest?query=${encodeURIComponent(query)}`);
-
-export const startBuild = (query: string, area: 'rural' | 'urban', maxBuildings?: number) =>
-  api<BuildJob>('build', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query, area, max_buildings: maxBuildings }),
+/** Starts a build and polls until it finishes; `onUpdate` gets every status. Resolves with the place id. */
+export async function buildCity(city: string, state: string, onUpdate?: (s: BuildStatus) => void): Promise<string> {
+  const { job_id } = await server<{ job_id: string }>('/build', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ city, state }),
   });
-
-export const buildStatus = (jobId: string) => api<BuildJob>(`build/${jobId}`);
-
-/** Starts a build and polls until it finishes; `onUpdate` gets every status. */
-export async function buildPlace(query: string, area: 'rural' | 'urban', onUpdate?: (j: BuildJob) => void): Promise<BuildJob> {
-  let job = await startBuild(query, area);
-  onUpdate?.(job);
-  while (job.status === 'queued' || job.status === 'running') {
+  for (;;) {
+    const s = await server<BuildStatus>(`/status/${job_id}`);
+    onUpdate?.(s);
+    if (s.state === 'done') return s.place_id!;
+    if (s.state === 'error') throw new Error(s.message);
     await new Promise(r => setTimeout(r, 1500));
-    job = await buildStatus(job.job_id!);
-    onUpdate?.(job);
   }
-  if (job.status === 'error') throw new Error(job.error ?? 'Build failed');
-  return job;
 }

@@ -7,12 +7,15 @@ import type { PlaceData } from './types';
 
 /** Ground mesh spacing in meters. Coarse on purpose: low-poly look, light on the GPU. */
 const SPACING_M = 50;
+/** Large places (long storm-path boxes) space samples out to stay under this many per side. */
+const MAX_SEGMENTS = 600;
 
 /** Low-poly ground mesh, heights from terrain.bin through the same lookup buildings use. */
 export function Terrain({ place, frame }: { place: PlaceData; frame: Frame }) {
   const geometry = useMemo(() => {
-    const segX = Math.max(1, Math.round(frame.width / SPACING_M));
-    const segZ = Math.max(1, Math.round(frame.depth / SPACING_M));
+    const spacing = Math.max(SPACING_M, Math.max(frame.width, frame.depth) / MAX_SEGMENTS);
+    const segX = Math.max(1, Math.round(frame.width / spacing));
+    const segZ = Math.max(1, Math.round(frame.depth / spacing));
     const geo = new THREE.PlaneGeometry(frame.width, frame.depth, segX, segZ);
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position as THREE.BufferAttribute;

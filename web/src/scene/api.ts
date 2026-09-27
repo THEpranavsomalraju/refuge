@@ -1,4 +1,5 @@
 import { cellToLatLng } from 'h3-js';
+import { buildCity, buildServerAvailable, listCities } from './places';
 import { hurricaneCells, tornadoCells } from './RiskMap';
 import { useSceneStore } from './store';
 import type { LonLat, SceneAPI } from './types';
@@ -89,6 +90,9 @@ export const scene: SceneAPI = {
   onSiteClick(cb) {
     useSceneStore.setState({ onSiteClick: cb });
   },
+  listCities,
+  buildServerAvailable,
+  buildCity,
   onGroundClick(cb) {
     // A new callback (or null) starts a fresh set of point markers.
     useSceneStore.setState({ onGroundClick: cb, groundClicks: [] });

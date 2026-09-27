@@ -69,29 +69,40 @@ DEFAULT_MAX_BUILDINGS = 20_000
 # Night population per km2 of the town rectangle above which a city is suggested as urban.
 # Our towns: Morganton 202, Lumberton 173, Chapel Hill 1,023.
 URBAN_DENSITY_PER_KM2 = 500
+# Places larger than this (km2) list only cells that contain buildings, so cells.json stays
+# small (a 1,300 km2 storm-path box would otherwise need about 90,000 cells).
+FULL_CELLS_MAX_KM2 = 250
 
 STEPS = ["city limits", "buildings", "footprints", "elevation and streams",
          "roads and crossings", "cells", "writing files"]
 
 
-def build_place(query: str, place_id: str, area: str, max_buildings: int | None = None,
+def build_place(query: str, place_id: str, area: str | None = None, max_buildings: int | None = None,
                 out_dir: Path | str = PLACES_DIR, traffic_path: Path | str | None = None,
-                progress=None) -> Path:
+                progress=None, bbox: tuple | None = None, flood: bool = True,
+                kind: str = "featured") -> Path:
     """Build <out_dir>/<place_id>/ for the city named by `query` and return the folder.
 
-    `area` is "rural" or "urban" and picks the traffic volumes and hourly curve.
+    `bbox` (min_lon, min_lat, max_lon, max_lat) uses that box instead of geocoding the city
+    limits; `query` is then only the display name. `flood=False` skips streams, hand_m, and
+    crossings (tornado/hurricane only) but keeps the 3DEP ground. `area` ("rural"/"urban")
+    picks crossing traffic and is only needed when flood=True. `kind` is recorded in the
+    index ("featured", "past_event", "generated").
     `progress(step)` is called with each name in STEPS as the build reaches it.
     The place is also added to <out_dir>/index.json.
     """
-    if area not in ("rural", "urban"):
-        raise ValueError('area must be "rural" or "urban"')
+    if flood and area not in ("rural", "urban"):
+        raise ValueError('area must be "rural" or "urban" when flood layers are built')
     say = progress or (lambda step: None)
-    traffic = load_traffic(traffic_path)
+    traffic = load_traffic(traffic_path) if flood else None
     _configure_osmnx()
 
     say("city limits")
-    limits = ox.geocode_to_gdf(query)
-    rect = box(*limits.geometry.iloc[0].bounds)
+    if bbox is not None:
+        rect = box(*bbox)
+    else:
+        limits = ox.geocode_to_gdf(query)
+        rect = box(*limits.geometry.iloc[0].bounds)
 
     say("buildings")
     raw = fetch_buildings(rect)
@@ -106,7 +117,7 @@ def build_place(query: str, place_id: str, area: str, max_buildings: int | None 
     stats = attach_footprints(records, raw, rect)
 
     say("elevation and streams")
-    terrain = load_terrain(rect)
+    terrain = load_terrain(rect, streams=flood)
     say("roads and crossings")
     try:
         roads = with_overpass_retry(fetch_roads, rect)
@@ -114,11 +125,16 @@ def build_place(query: str, place_id: str, area: str, max_buildings: int | None 
     except OverpassUnavailable as e:
         log.warning("roads unavailable (%s); building without roads and crossings", e)
         roads, roads_pending = empty_roads(), True
-    crossings = find_crossings(roads, terrain, rect, area, traffic)
+    crossings = find_crossings(roads, terrain, rect, area, traffic) if flood else []
 
     say("cells")
-    cover = set(h3.geo_to_cells(rect, H3_RES)) | {c["h3"] for c in crossings}
+    rect_km2 = gpd.GeoSeries([rect], crs=4326).to_crs(gpd.GeoSeries([rect], crs=4326).estimate_utm_crs()).area.iloc[0] / 1e6
+    full_cells = rect_km2 <= FULL_CELLS_MAX_KM2
+    cover = set(h3.geo_to_cells(rect, H3_RES)) if full_cells else set()
+    cover |= {c["h3"] for c in crossings}
     cells = cells_from_records(records, extra_cells=cover)
+    if not full_cells:
+        log.info("large place (%.0f km2): cells.json lists only cells with buildings", rect_km2)
 
     say("writing files")
     folder = Path(out_dir) / place_id
@@ -133,7 +149,8 @@ def build_place(query: str, place_id: str, area: str, max_buildings: int | None 
     write_json(folder / "cells.json", cells)
     write_json(folder / "place.json", place)
     write_json(folder / "crossings.json", crossings)
-    update_index(Path(out_dir), place, records, crossings, area, trimmed, roads_pending)
+    update_index(Path(out_dir), place, records, crossings, area, trimmed, roads_pending, kind, flood,
+                 "full" if full_cells else "buildings")
 
     log.info("footprints: %s", stats)
     return folder
@@ -145,8 +162,9 @@ def slugify(query: str) -> str:
     return "_".join("".join(ch if ch.isalnum() else "_" for ch in p.lower()).strip("_") for p in parts)
 
 
-def update_index(out_dir: Path, place: dict, records: list, crossings: list, area: str, trimmed: bool,
-                 roads_pending: bool = False):
+def update_index(out_dir: Path, place: dict, records: list, crossings: list, area: str | None, trimmed: bool,
+                 roads_pending: bool = False, kind: str = "featured", flood: bool = True,
+                 cells: str = "full"):
     """Add or replace this place in <out_dir>/index.json (what the app's place picker lists)."""
     path = out_dir / "index.json"
     index = json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
@@ -160,6 +178,10 @@ def update_index(out_dir: Path, place: dict, records: list, crossings: list, are
         "buildings": len(records),
         "crossings": len(crossings),
         "pop_night": sum(r["pop_night_u65"] + r["pop_night_o65"] for r in records),
+        "kind": kind,
+        "flood_layers": flood,
+        # "full": every cell in the box (empty ones included); "buildings": only cells with buildings.
+        "cells": cells,
         "area": area,
         "trimmed": trimmed,
         # OSM was down during the build: no roads or crossings yet. Rebuilding the place
@@ -259,7 +281,8 @@ def with_overpass_retry(fn, *args):
                 if attempt == 1:
                     ox.settings.overpass_url = OVERPASS_ENDPOINTS[0]
                 else:
-                    ox.settings.overpass_url = OVERPASS_ENDPOINTS[attempt % len(OVERPASS_ENDPOINTS)]
+                    # retries start on the mirror, then alternate: 2 mirror, 3 main, 4 mirror
+                    ox.settings.overpass_url = OVERPASS_ENDPOINTS[(attempt - 1) % len(OVERPASS_ENDPOINTS)]
                     ox.settings.max_query_area_size = RETRY_TILE_AREA_M2
                     ox.settings.requests_timeout = RETRY_TIMEOUT_S
                 try:
@@ -461,8 +484,12 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Build places/<place_id>/ for a U.S. city.")
     p.add_argument("query", help='City name for OSM geocoding, e.g. "Lumberton, North Carolina, USA"')
     p.add_argument("--place-id", required=True)
-    p.add_argument("--area", required=True, choices=["rural", "urban"],
-                   help="traffic volumes and hourly curve for crossings")
+    p.add_argument("--area", choices=["rural", "urban"], default=None,
+                   help="traffic volumes and hourly curve for crossings (needed unless --no-flood)")
+    p.add_argument("--bbox", nargs=4, type=float, metavar=("MIN_LON", "MIN_LAT", "MAX_LON", "MAX_LAT"),
+                   help="build this box instead of the city limits (query is then the display name)")
+    p.add_argument("--no-flood", action="store_true", help="skip streams, hand_m, and crossings; keep the 3DEP ground")
+    p.add_argument("--kind", default="featured", choices=["featured", "past_event", "generated"])
     p.add_argument("--max-buildings", type=int, default=None)
     p.add_argument("--traffic", default=None,
                    help="path to traffic_by_hour.json (default ml/exports/traffic_by_hour.json)")
@@ -474,7 +501,9 @@ if __name__ == "__main__":
     t0 = time.time()
     folder = build_place(args.query, args.place_id, args.area, args.max_buildings,
                          out_dir=args.out_dir, traffic_path=args.traffic,
-                         progress=lambda step: log.info("step: %s", step))
+                         progress=lambda step: log.info("step: %s", step),
+                         bbox=tuple(args.bbox) if args.bbox else None, flood=not args.no_flood,
+                         kind=args.kind)
 
     recs = json.loads((folder / "buildings.json").read_text())
     cells = json.loads((folder / "cells.json").read_text())

@@ -8,7 +8,6 @@ import { CandidateSites } from './CandidateSites';
 import { loadPlace } from './data';
 import { GroundInput } from './GroundInput';
 import { DifferenceMap } from './DifferenceMap';
-import type { PlaceSource } from './places';
 import { makeFrame, type Frame } from './geo';
 import { Lines } from './Lines';
 import { PALETTE } from './palette';
@@ -22,16 +21,16 @@ import type { PlaceData } from './types';
 export type LoadState = { state: 'loading' } | { state: 'ready'; place: PlaceData } | { state: 'error'; message: string };
 
 /** Loads a featured place and renders it. `onLoad` reports progress to the game UI. */
-export function Town({ placeId, source = 'featured', onLoad }: { placeId: string; source?: PlaceSource; onLoad?: (s: LoadState) => void }) {
+export function Town({ placeId, onLoad }: { placeId: string; onLoad?: (s: LoadState) => void }) {
   const [load, setLoad] = useState<LoadState>({ state: 'loading' });
   useEffect(() => {
     let alive = true;
     setLoad({ state: 'loading' });
-    loadPlace(placeId, source)
+    loadPlace(placeId)
       .then(place => alive && setLoad({ state: 'ready', place }))
       .catch(err => alive && setLoad({ state: 'error', message: String(err?.message ?? err) }));
     return () => { alive = false; };
-  }, [placeId, source]);
+  }, [placeId]);
   useEffect(() => { onLoad?.(load); }, [load, onLoad]);
 
   return (

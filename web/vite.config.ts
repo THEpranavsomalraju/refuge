@@ -1,4 +1,4 @@
-import { cpSync, createReadStream, existsSync, statSync } from 'node:fs';
+import { cpSync, createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
@@ -23,14 +23,6 @@ function placesPlugin(): Plugin {
         res.setHeader('Content-Type', file.endsWith('.json') ? 'application/json' : 'application/octet-stream');
         createReadStream(file).pipe(res);
       });
-      // Dev only: cities built on demand by places/server.py (data/places/, gitignored).
-      const generated = resolve(HERE, '..', 'data', 'places');
-      server.middlewares.use('/generated', (req, res, next) => {
-        const file = join(generated, normalize(decodeURIComponent((req.url ?? '').split('?')[0])));
-        if (!file.startsWith(generated) || !existsSync(file) || !statSync(file).isFile()) return next();
-        res.setHeader('Content-Type', file.endsWith('.json') ? 'application/json' : 'application/octet-stream');
-        createReadStream(file).pipe(res);
-      });
       // Dev only: sample simulation results in the gitignored data/dev_results/ folder.
       const devResults = resolve(HERE, '..', 'data', 'dev_results');
       server.middlewares.use('/dev-results', (req, res, next) => {
@@ -43,8 +35,11 @@ function placesPlugin(): Plugin {
     closeBundle() {
       const out = resolve(HERE, 'dist', 'places');
       if (existsSync(join(PLACES_DIR, 'index.json'))) cpSync(join(PLACES_DIR, 'index.json'), join(out, 'index.json'));
-      // Featured towns only; generated cities stay local to the machine that built them.
-      for (const id of ['morganton', 'lumberton', 'chapel_hill']) {
+      // Every place in the index (featured, past events, cities built locally).
+      const ids = existsSync(join(PLACES_DIR, 'index.json'))
+        ? (JSON.parse(readFileSync(join(PLACES_DIR, 'index.json'), 'utf8')) as { place_id: string }[]).map(e => e.place_id)
+        : [];
+      for (const id of ids) {
         for (const f of PLACE_FILES) {
           const src = join(PLACES_DIR, id, f);
           if (existsSync(src)) cpSync(src, join(out, id, f));
@@ -56,6 +51,6 @@ function placesPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [react(), placesPlugin()],
-  // The local build service (places/server.py) turns any typed-in city into a place.
-  server: { proxy: { '/api': 'http://127.0.0.1:8787' } },
+  // Local build server (places/build_server.py): builds any U.S. city into places/<id>/.
+  server: { proxy: { '/build-api': { target: 'http://127.0.0.1:8765', rewrite: p => p.replace(/^\/build-api/, '') } } },
 });

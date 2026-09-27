@@ -1,4 +1,5 @@
-import type { HurricaneCells } from '../shared/contract';
+import type { CityEntry, HurricaneCells } from '../shared/contract';
+import type { BuildStatus } from './places';
 import type { DiffCells } from './store';
 
 // Shapes of the place files in places/<place_id>/ (see places/README.md) and of the
@@ -139,6 +140,12 @@ export interface SceneAPI {
   showCandidateSites(sites: CandidateSite[]): void;
   hideCandidateSites(): void;
   onSiteClick(cb: ((id: string) => void) | null): void;
+  /** Cities for "Future storm": featured towns plus cities built on this machine (not past-event towns). */
+  listCities(): Promise<CityEntry[]>;
+  /** True when the local build server (places/build_server.py) is running; hide "Build a new city" otherwise. */
+  buildServerAvailable(): Promise<boolean>;
+  /** Builds a new city with the local build server; resolves with its place_id when done. */
+  buildCity(city: string, state: string, onUpdate?: (s: BuildStatus) => void): Promise<string>;
   /** Ground clicks for drawing a tornado path or hurricane track; drags still pan. null stops. */
   onGroundClick(cb: ((lon: number, lat: number) => void) | null): void;
 
