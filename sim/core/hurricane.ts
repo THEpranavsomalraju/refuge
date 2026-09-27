@@ -28,6 +28,8 @@ export interface HurricaneParams {
   cells: { min_share: number; min_residents: number; bands: { moderate: number; severe: number; extreme: number } };
   category_defaults: Record<string, { vmax_kt: number; rmw_km: number; B: number }>;
   forward_speed_kmh: number;
+  /** Future mode: each end of a drawn line is extended this far so the eyewall can cross the town. */
+  drawn_track_extension_km: number;
 }
 
 /** numpy.interp for increasing xp (clamped at both ends). */
@@ -213,4 +215,23 @@ export function trackFromDrawing(points: readonly [number, number][], category: 
     }
     return [pt[0], pt[1], d.vmax_kt, d.rmw_km, d.B, km / hp.forward_speed_kmh];
   });
+}
+
+/**
+ * Extend a drawn line outward along its first and last segments by `km` each. A
+ * hurricane's strongest winds sit tens of km from the eye, so a line drawn across a
+ * town alone would leave the town in the calm eye; the storm instead arrives from and
+ * leaves along the drawn direction. Degenerate end segments are left as they are.
+ */
+export function extendDrawnLine(points: readonly [number, number][], km: number): [number, number][] {
+  if (points.length < 2 || km <= 0) return points.map(p => [p[0], p[1]]);
+  const RAD = Math.PI / 180, KM_PER_DEG = 111.195;
+  const out = (a: readonly [number, number], b: readonly [number, number]): [number, number] | null => {
+    const kx = KM_PER_DEG * Math.cos(a[1] * RAD);
+    const dx = (a[0] - b[0]) * kx, dy = (a[1] - b[1]) * KM_PER_DEG;
+    const len = Math.hypot(dx, dy);
+    return len > 0 ? [a[0] + dx / len * km / kx, a[1] + dy / len * km / KM_PER_DEG] : null;
+  };
+  const head = out(points[0]!, points[1]!), tail = out(points[points.length - 1]!, points[points.length - 2]!);
+  return [...(head ? [head] : []), ...points.map(p => [p[0], p[1]] as [number, number]), ...(tail ? [tail] : [])];
 }

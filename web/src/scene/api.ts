@@ -5,10 +5,9 @@ import type { TrackRow } from '../shared/contract';
 import { useSceneStore } from './store';
 import type { LonLat, SceneAPI } from './types';
 
-/** Duration of the hexagon rise in showRiskMap / showDifference, ms. */
-export const RISK_RISE_MS = 2400;
-/** Default duration of a camera move, ms. */
-export const CAMERA_MS = 1600;
+import { CAMERA_MS, RISK_RISE_MS } from './timing';
+
+export { CAMERA_MS, RISK_RISE_MS };
 /** Camera moves never frame less than this radius, so a single cell isn't a close-up. */
 const MIN_FRAME_RADIUS_M = 450;
 
