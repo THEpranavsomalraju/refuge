@@ -91,6 +91,7 @@ function Step() {
       <>
         {g.event ? <RecordedVsSimulated /> : <Summary r={g.baseline!} />}
         <button style={primary} onClick={() => void g.plan()}>Plan shelters</button>
+        <MapToggle />
       </>
     );
     case 'plan': return <Planning />;
