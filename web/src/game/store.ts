@@ -3,6 +3,8 @@ import { scene, type BuildStatus, type LonLat, type PlaceData } from '../scene';
 import type { CityEntry, SceneExtensions, TrackRow } from '../shared/contract';
 import showcase from '../../../sim/scenarios/lumberton_tornado.json';
 import { extendDrawnLine, trackFromDrawing } from '../../../sim/core/hurricane.js';
+import { shelterSiteId } from '../../../sim/core/protections.js';
+import type { Place } from '../../../sim/core/types.js';
 import { defaultBudget, hurricaneParams, isHurricane, riskBands, shelterRules, sim, type AnyScenario, type Result,
   type ShelterCandidate, type ShelterPlan, type TornadoScenario } from './simClient';
 import { PAST_EVENTS, type PastEvent } from './events';
@@ -326,7 +328,10 @@ export const useGame = create<GameState>((set, get) => {
       showShelters(selected);
       if (get().step === 'plan') refreshPins();
     },
-    pickFromMap(id) {
+    pickFromMap(clicked) {
+      // A duplicate record of the same building stands for that building's shelter site.
+      const place = get().place;
+      const id = place ? shelterSiteId(place as unknown as Place, shelterRules.eligible_classes, clicked) : clicked;
       if (candidate(id)) get().toggle(id);
       set({ inspected: id });
     },

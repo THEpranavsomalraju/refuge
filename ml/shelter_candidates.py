@@ -61,11 +61,17 @@ def main():
     is_mh = np.array([x["cls"] == "MH" for x in b])
     risk = np.where(ppl > 0, ed / np.maximum(ppl, 1), 0)
 
-    rows = []
+    rows, sites = [], set()
     for i, x in enumerate(b):
         f = fp.get(x["id"])
         if x["cls"] not in ELIGIBLE or not f or f != f:
             continue
+        # NSI can list one building as several records at the same point with the same footprint;
+        # they share one floor, so only the first counts (same rule as sim/core/protections.ts).
+        site = (f"{x['lon']:.6f}", f"{x['lat']:.6f}", f)
+        if site in sites:
+            continue
+        sites.add(site)
         cap = int(min(CAP_MAX, max(CAP_MIN, f * HARDENED_SHARE / SQFT_PER_PERSON)))
         d = np.hypot(X - X[i], Y - Y[i])
         near = np.flatnonzero(is_mh & (d <= reach) & (np.arange(len(b)) != i))

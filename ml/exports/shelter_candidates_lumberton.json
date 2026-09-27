@@ -10,8 +10,8 @@
  "reach_m": 321,
  "compliance": 0.3,
  "ceiling_lives_saved": 5.63,
- "eligible_with_footprint": 2643,
- "eligible_near_mobile_homes": 721,
+ "eligible_with_footprint": 2441,
+ "eligible_near_mobile_homes": 700,
  "top": [
   {
    "id": "nsi_56640865",
@@ -278,18 +278,6 @@
    "lives_saved_alone": 0.886
   },
   {
-   "id": "nsi_56677802",
-   "cls": "COMMERCIAL",
-   "lon": -79.040349,
-   "lat": 34.592618,
-   "footprint_sqft": 1225,
-   "capacity": 61,
-   "cost_usd": 91500,
-   "mh_homes_in_reach": 37,
-   "mh_residents_in_reach": 87,
-   "lives_saved_alone": 0.886
-  },
-  {
    "id": "nsi_56687150",
    "cls": "COMMERCIAL",
    "lon": -78.97616,
@@ -312,6 +300,18 @@
    "mh_homes_in_reach": 89,
    "mh_residents_in_reach": 217,
    "lives_saved_alone": 0.855
+  },
+  {
+   "id": "nsi_56640896",
+   "cls": "COMMERCIAL",
+   "lon": -79.040529,
+   "lat": 34.592513,
+   "footprint_sqft": 6517,
+   "capacity": 325,
+   "cost_usd": 487500,
+   "mh_homes_in_reach": 31,
+   "mh_residents_in_reach": 72,
+   "lives_saved_alone": 0.764
   }
  ]
 }

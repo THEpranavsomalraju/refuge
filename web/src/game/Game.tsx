@@ -5,6 +5,8 @@ import { hurricaneParams, isHurricane, riskBands, shelterRules, type DetailedRes
   type Result, type ShelterCandidate } from './simClient';
 import { SHOWN_CANDIDATES, useGame, type MapView } from './store';
 import { useSceneStore } from '../scene/store';
+import { shelterSiteId } from '../../../sim/core/protections.js';
+import type { Place } from '../../../sim/core/types.js';
 import { GROUPS, deaths, driverWords, hourWords, oneInN, usd } from './format';
 
 type G = ReturnType<typeof useGame.getState>;
@@ -406,7 +408,8 @@ function ShelterHoverCard() {
     window.addEventListener('mousemove', move);
     return () => window.removeEventListener('mousemove', move);
   }, []);
-  const i = hoverId ? g.candidates.findIndex(c => c.building_id === hoverId) : -1;
+  const siteId = hoverId && g.place ? shelterSiteId(g.place as unknown as Place, shelterRules.eligible_classes, hoverId) : hoverId;
+  const i = siteId ? g.candidates.findIndex(c => c.building_id === siteId) : -1;
   const hc = i >= 0 ? g.candidates[i] : null;
   const t = shelterRules.tornado;
   const reachM = g.hazard === 'hurricane' ? shelterRules.hurricane.reach_km * 1000 : t.walk_speed_mps * Math.max(0, warningOf(g) - t.mobilize_min) * 60;

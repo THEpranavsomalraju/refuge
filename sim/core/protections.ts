@@ -19,6 +19,30 @@ import { hurricaneBuildings, hurricaneResult, type HurricaneParams, type Hurrica
 type Hazard = 'tornado' | 'hurricane';
 type AnyScenario = TornadoScenario | HurricaneScenario;
 
+/**
+ * The Structure Inventory sometimes lists one building as several records at the same point with
+ * the same footprint (mixed use). They share one floor, so they are one shelter site: the first
+ * eligible record stands for the site and the others map to it (duplicate id -> site id).
+ */
+const siteCache = new WeakMap<Place, Map<string, string>>();
+export function shelterDuplicates(place: Place, eligibleClasses: readonly string[]): ReadonlyMap<string, string> {
+  let dup = siteCache.get(place);
+  if (dup) return dup;
+  dup = new Map();
+  const first = new Map<string, string>();
+  for (const b of place.buildings) {
+    if (!eligibleClasses.includes(b.cls) || typeof b.footprint_sqft !== 'number' || !(b.footprint_sqft > 0)) continue;
+    const key = `${b.lon.toFixed(6)},${b.lat.toFixed(6)},${b.footprint_sqft}`;
+    const site = first.get(key);
+    if (site === undefined) first.set(key, b.id); else dup.set(b.id, site);
+  }
+  siteCache.set(place, dup);
+  return dup;
+}
+/** The shelter site a building record belongs to (itself unless it duplicates another record). */
+export const shelterSiteId = (place: Place, eligibleClasses: readonly string[], id: string): string =>
+  shelterDuplicates(place, eligibleClasses).get(id) ?? id;
+
 /** Walking reach: speed x time left after hearing the warning and getting moving. */
 export function tornadoReachM(scenario: Scenario, config: ProtectionConfig): number {
   const t = config.shelter.tornado;
@@ -198,11 +222,13 @@ function fill(demands: readonly Demand[], pairs: readonly Pair[], capacity: read
 
 function shelterIndices(scenario: AnyScenario, place: Place, config: ProtectionConfig, hazard: Hazard): number[] {
   const index = new Map(place.buildings.map((b, i) => [b.id, i]));
-  return scenario.protections.map(p => {
-    const k = index.get(p.building_id);
-    if (k === undefined) throw new Error(`protections: unknown building ${p.building_id}`);
+  // Duplicate records count as their site, once.
+  const ids = [...new Set(scenario.protections.map(p => shelterSiteId(place, config.shelter.eligible_classes, p.building_id)))];
+  return ids.map(id => {
+    const k = index.get(id);
+    if (k === undefined) throw new Error(`protections: unknown building ${id}`);
     if (shelterCapacity(place.buildings[k]!, config, hazard) === null) {
-      throw new Error(`protections: ${p.building_id} cannot be a shelter (needs ${config.shelter.eligible_classes.join('/')} and footprint_sqft)`);
+      throw new Error(`protections: ${id} cannot be a shelter (needs ${config.shelter.eligible_classes.join('/')} and footprint_sqft)`);
     }
     return k;
   });
@@ -273,9 +299,10 @@ function context(scenario: AnyScenario, place: Place, params: SimParams, config:
 
 function candidatesFrom(ctx: Context): ShelterCandidate[] {
   const out: ShelterCandidate[] = [];
+  const duplicates = shelterDuplicates(ctx.place, ctx.config.shelter.eligible_classes);
   ctx.place.buildings.forEach((b, k) => {
     const capacity = shelterCapacity(b, ctx.config, ctx.hazard);
-    if (capacity === null) return;
+    if (capacity === null || duplicates.has(b.id)) return;
     // Tornado counts served-class homes in reach; hurricane counts displaced people and mobile homes in reach.
     const near = ctx.reach > 0 ? ctx.grid.near(b.lon, b.lat, ctx.reach).filter(([i]) => i !== k) : [];
     const { demands, pairs } = pairsFor(ctx, [k]);
@@ -321,8 +348,9 @@ export function optimizeShelters(scenario: AnyScenario, place: Place, params: Si
   const ctx = context(scenario, place, params, config, hp);
   const ranked = candidatesFrom(ctx);
   const byId = new Map(ranked.map(c => [c.building_id, c]));
-  for (const id of selected) if (!byId.has(id)) throw new Error(`optimizer: ${id} cannot be a shelter`);
-  const ids = [...new Set([...ranked.slice(0, config.optimizer.top_candidates).map(c => c.building_id), ...selected])];
+  const picked = selected.map(id => shelterSiteId(place, config.shelter.eligible_classes, id));
+  for (const id of picked) if (!byId.has(id)) throw new Error(`optimizer: ${id} cannot be a shelter`);
+  const ids = [...new Set([...ranked.slice(0, config.optimizer.top_candidates).map(c => c.building_id), ...picked])];
   const index = new Map(place.buildings.map((b, i) => [b.id, i]));
   const { demands, pairs } = pairsFor(ctx, ids.map(id => index.get(id)!));
   const capacity = ids.map(id => byId.get(id)!.capacity);
