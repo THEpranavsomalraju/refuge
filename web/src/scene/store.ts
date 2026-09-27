@@ -21,7 +21,7 @@ interface SceneState {
   stormT: number | null;
   protections: Protection[];
   /** Risk or displacement map: cells already converted to band/height/hatch. */
-  risk: { hazard: 'tornado' | 'hurricane'; cells: Record<string, RiskCell>; shownAt: number; source: object } | null;
+  risk: { hazard: 'tornado' | 'hurricane'; cells: Record<string, RiskCell>; shownAt: number; source: object; before?: object } | null;
   /** How the risk map is drawn: smooth translucent heat columns, or the exact per-block hexagons. */
   mapStyle: 'heat' | 'blocks';
   diff: { before: DiffCells; after: DiffCells; shownAt: number } | null;

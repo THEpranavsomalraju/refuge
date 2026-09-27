@@ -17,13 +17,13 @@ let protectionSeq = 0;
  * Shows a risk or displacement map. Showing the result that is already on screen (the
  * game re-shows it when switching views) keeps it standing instead of replaying the rise.
  */
-function showMap(hazard: 'tornado' | 'hurricane', source: object, convert: () => Record<string, RiskCell>): Promise<void> {
+function showMap(hazard: 'tornado' | 'hurricane', source: object, convert: () => Record<string, RiskCell>, before?: object): Promise<void> {
   const cur = useSceneStore.getState().risk;
-  if (cur && cur.hazard === hazard && cur.source === source) {
+  if (cur && cur.hazard === hazard && cur.source === source && cur.before === before) {
     useSceneStore.setState({ diff: null });
     return Promise.resolve();
   }
-  useSceneStore.setState({ risk: { hazard, cells: convert(), shownAt: performance.now(), source }, diff: null });
+  useSceneStore.setState({ risk: { hazard, cells: convert(), shownAt: performance.now(), source, before }, diff: null });
   return new Promise(resolve => setTimeout(resolve, RISK_RISE_MS));
 }
 
@@ -78,13 +78,13 @@ export const scene: SceneAPI = {
   onCellHover(cb) {
     useSceneStore.setState({ onCellHover: cb });
   },
-  showRiskMap(cells) {
+  showRiskMap(cells, _bands, before) {
     // Only cells present in the result are drawn (absent = unaffected). Band cutoffs
     // are applied by the sim; the legend (RiskLegend) shows them.
-    return showMap('tornado', cells, () => tornadoCells(cells));
+    return showMap('tornado', cells, () => tornadoCells(cells), before);
   },
-  showDisplacementMap(cells) {
-    return showMap('hurricane', cells, () => hurricaneCells(cells));
+  showDisplacementMap(cells, before) {
+    return showMap('hurricane', cells, () => hurricaneCells(cells), before);
   },
   setMapStyle(style: 'heat' | 'blocks') {
     useSceneStore.setState({ mapStyle: style });

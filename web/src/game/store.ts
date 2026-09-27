@@ -22,7 +22,7 @@ const ext = scene as typeof scene & SceneExtensions;
 
 /** Plan section 1. `busy` overlays any step while the worker runs. */
 export type Step = 'intro' | 'choose_mode' | 'choose_event' | 'choose_city' | 'choose_hazard' | 'storm_setup'
-  | 'load_place' | 'storm_animation' | 'results_map' | 'plan' | 'replay' | 'optimal' | 'score';
+  | 'load_place' | 'storm_animation' | 'results_map' | 'plan' | 'replay' | 'best_preview' | 'optimal' | 'score';
 export type Hazard = 'tornado' | 'hurricane';
 /** Risk maps (before / your plan / best plan) and difference maps (what each plan changed). */
 export type MapView = 'before' | 'yours' | 'optimal' | 'yours_diff' | 'optimal_diff';
@@ -88,6 +88,7 @@ interface GameState {
   fillBest(): Promise<void>;
   replay(): Promise<void>;
   best(): Promise<void>;
+  runBest(): Promise<void>;
   show(view: MapView): void;
   /** Lower the risk layer to see the buildings, or raise the current view again. */
   toggleMap(): void;
@@ -136,16 +137,8 @@ export const useGame = create<GameState>((set, get) => {
     });
   };
   /** Labeled pins over the top shelter options (and any selected ones); clicking a pin selects or removes it. */
-  const refreshPins = () => {
-    const hurricane = get().hazard === 'hurricane';
-    const sel = new Set(get().selected);
-    const ranked = get().candidates;
-    const shown = ranked.filter((c, i) => i < SHOWN_CANDIDATES || sel.has(c.building_id));
-    scene.showCandidateSites(shown.map(c => ({
-      id: c.building_id, lon: c.lon, lat: c.lat, selected: sel.has(c.building_id),
-      label: `#${ranked.indexOf(c) + 1} · ${hurricane ? `${Math.round(c.effectiveness)} served` : `${c.effectiveness.toFixed(1)} lives`}`,
-    })));
-  };
+  // No ranked pins while planning: the player shouldn't be shown the answer.
+  const refreshPins = () => { scene.hideCandidateSites(); };
   const hidePins = () => { scene.hideCandidateSites(); scene.onSiteClick(null); };
   const clearScene = () => {
     hidePins();
@@ -157,7 +150,9 @@ export const useGame = create<GameState>((set, get) => {
   const fresh = { baseline: null, yours: null, optimal: null, candidates: [], selected: [], inspected: null, notice: null,
     view: 'before' as MapView, mapHidden: false, error: null, drawing: false, build: null };
 
-  const showMap = (r: Result) => isHurricane(r) ? scene.showDisplacementMap(r.cells) : scene.showRiskMap(r.cells, riskBands);
+  const showMap = (r: Result, before?: Result) => isHurricane(r)
+    ? scene.showDisplacementMap(r.cells, before && isHurricane(before) ? before.cells : undefined)
+    : scene.showRiskMap(r.cells, riskBands, before && !isHurricane(before) ? before.cells : undefined);
   /** Simulate, animate the storm, then raise the map and end on the worst cells. */
   async function run(shelters: string[]): Promise<Result> {
     const s = scenarioOf(shelters);
@@ -306,8 +301,8 @@ export const useGame = create<GameState>((set, get) => {
           set({ candidates: await sim.candidates(scenarioOf()), busy: null });
         }
         get().show('before');
-        const top = get().candidates[0]?.effectiveness ?? 0;
-        ext.highlightBuildings?.(Object.fromEntries(get().candidates.map(c => [c.building_id, top > 0 ? c.effectiveness / top : 0])));
+        // Blind: every option looks the same; the player finds the good ones by hovering (capacity, cost).
+        ext.highlightBuildings?.(Object.fromEntries(get().candidates.map(c => [c.building_id, 1])));
         showShelters(get().selected);
         scene.onBuildingClick(b => get().pickFromMap(b.id));
         scene.onSiteClick(id => get().pickFromMap(id));
@@ -358,11 +353,23 @@ export const useGame = create<GameState>((set, get) => {
     },
     async best() {
       try {
-        set({ step: 'optimal', busy: 'Searching every affordable plan…' });
+        set({ busy: 'Finding the best plan for your budget…' });
         // The user's picks join the top candidates, so the scores are comparable.
         const optimal = await sim.optimize(scenarioOf(), get().budget, get().selected);
-        set({ optimal, busy: null, step: 'score' });
-        get().show('optimal_diff');
+        // Only mark the best combination; the player runs it themselves.
+        set({ optimal, busy: null, step: 'best_preview' });
+        showShelters(optimal.plan.building_ids);
+        const picks = optimal.plan.building_ids.map(candidate).filter(Boolean).map(c => [c!.lon, c!.lat] as LonLat);
+        if (picks.length) scene.frameCoords(picks, 1500, 400);
+      } catch (e) { fail(e); }
+    },
+    async runBest() {
+      try {
+        const ids = get().optimal!.plan.building_ids;
+        set({ step: 'optimal', busy: null });
+        await run(ids);
+        set({ step: 'score' });
+        get().show('optimal');
       } catch (e) { fail(e); }
     },
     show(view) {
@@ -372,7 +379,7 @@ export const useGame = create<GameState>((set, get) => {
       showShelters(view === 'before' ? [] : view.startsWith('yours') ? selected : optimal!.plan.building_ids);
       set({ view, mapHidden: false });
       if (view.endsWith('_diff')) void scene.showDifference(baseline.cells, after.cells);
-      else void showMap(after);
+      else void showMap(after, view === 'before' ? undefined : baseline);
     },
     toggleMap() {
       if (get().mapHidden) {

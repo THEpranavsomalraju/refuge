@@ -27,10 +27,14 @@ export function Game({ load }: { load: LoadState }) {
   const title = g.event ? g.event.title
     : g.place && !['intro', 'choose_mode', 'choose_city'].includes(g.step) ? g.place.meta.name : 'Refuge';
   // The blue "what your plan changed" view gets its own legend.
-  const legend = g.view.endsWith('_diff') ? differenceLegendFor(g.hazard)
+  const base = g.view.endsWith('_diff') ? differenceLegendFor(g.hazard)
     : g.hazard === 'hurricane'
       ? legendFor('hurricane', hurricaneParams.cells.bands, hurricaneParams.cells.min_residents)
       : legendFor('tornado', riskBands, riskBands.min_cell_people);
+  // "Your plan" / "Best plan" maps: areas the shelters took care of are drawn in blue.
+  const legend = g.view === 'yours' || g.view === 'optimal'
+    ? { ...base, rows: [{ label: 'Protected', range: g.hazard === 'hurricane' ? 'blue: people here have a shelter bed' : 'blue: people here reach a shelter', color: 'linear-gradient(90deg, #9cc9ef, #1f5fb8)', hatched: false }, ...base.rows] }
+    : base;
   return (
     <>
       <div style={panel}>
@@ -100,11 +104,12 @@ function Step() {
       <>
         <BeforeAfter />
         <Views options={['before', 'yours', 'yours_diff']} />
-        <button style={primary} onClick={() => void g.best()}>Compare with the best plan</button>
+        <button style={primary} onClick={() => void g.best()}>Show the best plan</button>
         <button style={secondary} onClick={() => void g.plan()}>Change my plan</button>
       </>
     ) : <div style={muted}>Replaying the same storm…</div>;
-    case 'optimal': return <div style={muted}>Searching every affordable plan…</div>;
+    case 'best_preview': return <BestPreview />;
+    case 'optimal': return <div style={muted}>Replaying the storm with the best plan…</div>;
     case 'score': return <Compare />;
   }
 }
@@ -343,7 +348,7 @@ function Planning() {
         {g.mapHidden ? 'Show the risk map' : 'Hide the risk map to see the shelter options'}
       </button>
       <div style={muted}>
-        Hover a pin or a highlighted building to see how many people it could shelter and what it costs. Click to add it. Click a highlighted school, church or business on the map to make it a shelter (click again to remove): a FEMA P-361
+        Hover a highlighted building to see how many people it can hold and what it costs. Click to add it. Click a highlighted school, church or business on the map to make it a shelter (click again to remove): a FEMA P-361
         hardened core, {h.sqft_per_person} sq ft per person, {usd(h.cost_per_person)} per person.
         {hurricane
           ? ` Displaced residents within ${shelterRules.hurricane.reach_km} km drive there before landfall, nearest first.`
@@ -358,7 +363,7 @@ function Planning() {
       {g.notice && <div style={bad}>{g.notice}</div>}
 
       <div style={{ fontWeight: 600 }}>Your shelters ({g.selected.length})</div>
-      {g.selected.length === 0 && <div style={muted}>None yet. Click a highlighted building on the map, or a suggestion below.</div>}
+      {g.selected.length === 0 && <div style={muted}>None yet. Click a highlighted building on the map.</div>}
       {g.selected.map(id => {
         const c = byId(id);
         if (!c) return null;
@@ -367,7 +372,6 @@ function Planning() {
             <span style={row}>
               <button style={{ ...link, color: '#e3eae7', padding: 0, textAlign: 'left' }} onClick={() => g.inspect(id)}>{CLASS_WORDS[c.cls] ?? c.cls}</button>
               <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <span style={mono}>{objective(g).short} {c.effectiveness.toFixed(1)}</span>
                 <button aria-label={`Remove ${CLASS_WORDS[c.cls] ?? c.cls}`} style={{ ...link, fontSize: 15 }} onClick={() => g.toggle(id)}>×</button>
               </span>
             </span>
@@ -378,15 +382,6 @@ function Planning() {
       <button style={primary} onClick={() => void g.replay()}>
         Submit plan: replay the storm with {g.selected.length} shelter{g.selected.length === 1 ? '' : 's'}
       </button>
-      <button style={bestButton} onClick={() => void g.fillBest()}>
-        ★ Use the best plan for {usd(g.budget)}
-      </button>
-
-      <div style={muted}>Top suggestions for this storm ({objective(g).effect}):</div>
-      <div style={{ display: 'grid', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
-        {shown.map(c => <CandidateRow key={c.building_id} c={c} spent={spent} />)}
-        {shown.length === 0 && <div style={muted}>No eligible buildings: needs schools, churches or businesses with a known footprint.</div>}
-      </div>
     </>
   );
 }
@@ -432,11 +427,9 @@ function ShelterHoverCard() {
   const on = g.selected.includes(c.building_id);
   return (
     <div style={{ ...panel, position: 'fixed', left: pos[0] + 18, top: pos[1] + 18, right: 'auto', bottom: 'auto', width: 250, pointerEvents: 'none', zIndex: 30 }}>
-      <div style={row}><b>{b ? CLASS_WORDS[b.cls] ?? b.cls : 'Building'}</b><span style={muted}>#{i + 1} of {g.candidates.length}</span></div>
-      <div style={{ ...row, fontWeight: 700 }}><span>{hurricane ? 'Displaced people served' : 'Lives saved'}</span><span style={mono}>{c.effectiveness.toFixed(1)}</span></div>
+      <div style={row}><b>{b ? CLASS_WORDS[b.cls] ?? b.cls : 'Building'}</b></div>
       <div style={row}><span>Capacity</span><span style={mono}>{num(c.capacity)} people</span></div>
       <div style={row}><span>Cost</span><span style={mono}>{usd(c.cost_usd)}</span></div>
-      <div style={row}><span>{hurricane ? 'Displaced people in reach' : 'People in reach'}</span><span style={mono}>{num(c.people_in_reach)}</span></div>
       <div style={muted}>Serves {hurricane ? `displaced people within ${shelterRules.hurricane.reach_km} km (the ring)` : `people within a ${Math.round(reachM)} m walk (the ring)`}</div>
       <div style={muted}>{on ? 'Selected: click to remove' : 'Click to add to your plan'}</div>
     </div>
@@ -461,9 +454,6 @@ function ShelterCard() {
           <div style={row}><span>Footprint</span><span style={mono}>{num(c.footprint_sqft)} sq ft</span></div>
           <div style={row}><span>Capacity</span><span style={mono}>{num(c.capacity)} people, {hurricane ? shelterRules.hurricane.sqft_per_person : shelterRules.tornado.sqft_per_person} sq ft each</span></div>
           <div style={row}><span>Cost</span><span style={mono}>{usd(c.cost_usd)}</span></div>
-          <div style={row}><span>{hurricane ? 'Displaced people in reach' : 'People in reach'}</span><span style={mono}>{num(c.people_in_reach)}</span></div>
-          <div style={row}><span>Mobile homes in reach</span><span style={mono}>{num(c.mh_homes_in_reach)}</span></div>
-          <div style={{ ...row, fontWeight: 700 }}><span>{hurricane ? 'Displaced people served' : 'Lives saved'} if converted</span><span style={mono}>{c.effectiveness.toFixed(1)}</span></div>
           <div style={muted}>Hardened safe room (FEMA P-361), built to survive a direct hit.</div>
           <button style={on ? secondary : primary} onClick={() => g.toggle(id)}>{on ? 'Remove' : 'Select'}</button>
           {!on && spent + c.cost_usd > g.budget && <div style={bad}>Over budget: {usd(g.budget - spent)} left.</div>}
@@ -513,6 +503,22 @@ function PlanSentence({ who, ids, result }: { who: string; ids: readonly string[
   }
   const before = (g.baseline as DetailedResult).expected_deaths, after = (result as DetailedResult).expected_deaths;
   return <div style={muted}>{head} Saves {(before - after).toFixed(1)} of {before.toFixed(1)} expected deaths.</div>;
+}
+
+function BestPreview() {
+  const g = useGame();
+  const plan = g.optimal!.plan;
+  const cs = plan.building_ids.map(id => g.candidates.find(c => c.building_id === id)).filter(Boolean);
+  const places = cs.reduce((s, c) => s + (c?.capacity ?? 0), 0);
+  const names = cs.map(c => CLASS_WORDS[c!.cls] ?? c!.cls).join(', ') || 'no shelters';
+  return (
+    <>
+      <div style={{ fontWeight: 700 }}>The best plan for {usd(g.budget)}</div>
+      <div style={muted}>{plan.building_ids.length} shelters ({names}), {num(places)} places, {usd(plan.cost_usd)}. They're marked on the map. Run it to see what it changes.</div>
+      <button style={primary} onClick={() => void g.runBest()}>Run the best plan</button>
+      <button style={secondary} onClick={() => { g.go('replay'); g.show('yours'); }}>Back to my plan</button>
+    </>
+  );
 }
 
 function Compare() {

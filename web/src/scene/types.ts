@@ -125,9 +125,10 @@ export interface SceneAPI {
   onBuildingClick(cb: ((b: BuildingRecord) => void) | null): void;
   onCellHover(cb: ((h3: string | null) => void) | null): void;
   /** Tornado map. Only cells present in `cells` are drawn; absent cells were unaffected. */
-  showRiskMap(cells: Record<string, CellResult>, bands?: RiskBands): Promise<void>;
+  /** `before` (the no-shelter cells) makes areas the shelters protect show in blue. */
+  showRiskMap(cells: Record<string, CellResult>, bands?: RiskBands, before?: Record<string, CellResult>): Promise<void>;
   /** Hurricane map: same hexes, colored by share displaced, height = displaced people. */
-  showDisplacementMap(cells: HurricaneCells): Promise<void>;
+  showDisplacementMap(cells: HurricaneCells, before?: HurricaneCells): Promise<void>;
   /** Hides the risk map and the difference map. */
   /** Draw the risk map as smooth heat columns ('heat', default) or exact per-block hexagons ('blocks'). */
   setMapStyle(style: 'heat' | 'blocks'): void;

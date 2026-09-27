@@ -42,24 +42,32 @@ interface Column { x: number; z: number; y: number; h: number; color: THREE.Colo
 
 type SourceCell = { expected_deaths?: number; people?: number; displaced?: number; residents?: number };
 
-function buildColumns(frame: Frame, hazard: 'tornado' | 'hurricane', source: Record<string, SourceCell>): Column[] {
+const PROTECTED_LOW = new THREE.Color('#9cc9ef'), PROTECTED_HIGH = new THREE.Color('#1f5fb8');
+
+/** With `before` (the no-shelter result), columns where shelters took care of most of the risk turn blue. */
+function buildColumns(frame: Frame, hazard: 'tornado' | 'hurricane', source: Record<string, SourceCell>, before?: Record<string, SourceCell>): Column[] {
   const nx = Math.ceil(frame.width / GRID_M), nz = Math.ceil(frame.depth / GRID_M);
   const x0 = -frame.width / 2, z0 = -frame.depth / 2;
-  const num = new Float64Array(nx * nz), den = new Float64Array(nx * nz);
+  const num = new Float64Array(nx * nz), den = new Float64Array(nx * nz), saved = new Float64Array(nx * nz);
   const r = Math.ceil((REACH * SIGMA_M) / GRID_M), inv2s2 = 1 / (2 * SIGMA_M * SIGMA_M);
-  for (const [h3, c] of Object.entries(source)) {
+  const keys = before ? new Set([...Object.keys(source), ...Object.keys(before)]) : Object.keys(source);
+  for (const h3 of keys) {
+    const c = source[h3], b = before?.[h3];
     let lat: number, lon: number;
     try { [lat, lon] = cellToLatLng(h3); } catch { continue; }
     const [cx, cz] = frame.toXZ(lon, lat);
-    const people = hazard === 'tornado' ? c.people ?? 0 : c.residents ?? 0;
-    const hit = hazard === 'tornado' ? c.expected_deaths ?? 0 : c.displaced ?? 0;
+    const pick = (x?: SourceCell) => hazard === 'tornado' ? x?.people ?? 0 : x?.residents ?? 0;
+    const people = Math.max(pick(c), pick(b));
+    const hit = hazard === 'tornado' ? c?.expected_deaths ?? 0 : c?.displaced ?? 0;
+    const was = hazard === 'tornado' ? b?.expected_deaths ?? 0 : b?.displaced ?? 0;
+    const help = before ? Math.max(0, was - hit) : 0;
     if (people <= 0) continue;
     const gi = Math.floor((cx - x0) / GRID_M), gk = Math.floor((cz - z0) / GRID_M);
     for (let i = Math.max(0, gi - r); i <= Math.min(nx - 1, gi + r); i++) {
       for (let k = Math.max(0, gk - r); k <= Math.min(nz - 1, gk + r); k++) {
         const dx = x0 + (i + 0.5) * GRID_M - cx, dz = z0 + (k + 0.5) * GRID_M - cz;
         const w = Math.exp(-(dx * dx + dz * dz) * inv2s2);
-        num[i * nz + k] += w * hit; den[i * nz + k] += w * people;
+        num[i * nz + k] += w * hit; den[i * nz + k] += w * people; saved[i * nz + k] += w * help;
       }
     }
   }
@@ -70,10 +78,17 @@ function buildColumns(frame: Frame, hazard: 'tornado' | 'hurricane', source: Rec
     for (let k = 0; k < nz; k++) {
       const d = den[i * nz + k]!;
       if (d < MIN_PEOPLE) continue;
-      const ratio = num[i * nz + k]! / d;
+      const x = x0 + (i + 0.5) * GRID_M, z = z0 + (k + 0.5) * GRID_M;
+      const sv = saved[i * nz + k]!, left = num[i * nz + k]!;
+      if (before && sv > left && sv > 0) {
+        // Shelters took care of most of the risk here: blue, taller where more people are protected.
+        const share = Math.min(1, hazard === 'tornado' ? sv / (sv + left) : sv / d);
+        out.push({ x, z, y: frame.groundY(x, z), h: MIN_H + Math.sqrt(share) * (MAX_H - MIN_H) * 0.6, color: PROTECTED_LOW.clone().lerp(PROTECTED_HIGH, Math.sqrt(share)) });
+        continue;
+      }
+      const ratio = left / d;
       const v = hazard === 'tornado' ? Math.log10(Math.max(ratio, 1e-9)) : ratio;
       const t = Math.min(1, Math.max(0, (v - lo) / (hi - lo)));
-      const x = x0 + (i + 0.5) * GRID_M, z = z0 + (k + 0.5) * GRID_M;
       out.push({ x, z, y: frame.groundY(x, z), h: MIN_H + t * (MAX_H - MIN_H), color: colorAt(stops, v, new THREE.Color()) });
     }
   }
@@ -85,7 +100,7 @@ export function HeatVoxels({ frame }: { frame: Frame }) {
   const style = useSceneStore(s => s.mapStyle);
   const lowered = useSceneStore(s => s.highlight !== null);
   const columns = useMemo(
-    () => (risk && style === 'heat' ? buildColumns(frame, risk.hazard, risk.source as Record<string, SourceCell>) : []),
+    () => (risk && style === 'heat' ? buildColumns(frame, risk.hazard, risk.source as Record<string, SourceCell>, risk.before as Record<string, SourceCell> | undefined) : []),
     [risk, style, frame]);
   const mesh = useRef<THREE.InstancedMesh>(null);
   const geometry = useMemo(() => new THREE.BoxGeometry(GRID_M * 0.94, 1, GRID_M * 0.94).translate(0, 0.5, 0), []);
