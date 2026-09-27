@@ -78,8 +78,14 @@ export function Buildings({ place, frame }: { place: PlaceData; frame: Frame }) 
     paint(true);
   });
 
-  const buildingOf = (e: ThreeEvent<PointerEvent | MouseEvent>) =>
-    e.faceIndex == null ? null : place.buildings[buildingAtVertex(built.starts, e.faceIndex * 3)];
+  // <Bvh> gives the geometry an index buffer and reorders its triangles, so map the hit
+  // triangle through the index to a real vertex before looking up its building (Mahil's fix).
+  const buildingOf = (e: ThreeEvent<PointerEvent | MouseEvent>) => {
+    if (e.faceIndex == null) return null;
+    const index = built.geometry.index;
+    const vertex = index ? index.getX(e.faceIndex * 3) : e.faceIndex * 3;
+    return place.buildings[buildingAtVertex(built.starts, vertex)];
+  };
 
   const onClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();

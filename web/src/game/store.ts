@@ -6,6 +6,7 @@ import { extendDrawnLine, trackFromDrawing } from '../../../sim/core/hurricane.j
 import { defaultBudget, hurricaneParams, isHurricane, riskBands, shelterRules, sim, type AnyScenario, type Result,
   type ShelterCandidate, type ShelterPlan, type TornadoScenario } from './simClient';
 import { PAST_EVENTS, type PastEvent } from './events';
+import { usd } from './format';
 import { stormGlow } from './stormGlow';
 
 /** Median NOAA path width by EF rating, 2007-2025 (ml/exports/tornado_width_by_ef.json). */
@@ -54,6 +55,8 @@ interface GameState {
   selected: string[];
   /** Building shown in the shelter card. */
   inspected: string | null;
+  /** Short message for the plan box (e.g. over budget). */
+  notice: string | null;
   yours: Result | null;
   optimal: { plan: ShelterPlan; result: Result } | null;
   view: MapView;
@@ -75,7 +78,10 @@ interface GameState {
   play(): Promise<void>;
   plan(): Promise<void>;
   inspect(buildingId: string | null): void;
+  /** Select or remove a shelter; over budget it leaves the plan unchanged and sets `notice`. */
   toggle(buildingId: string): void;
+  /** A map click in the plan step: toggle an eligible building and open its card. */
+  pickFromMap(buildingId: string): void;
   /** Fill the plan with the optimizer's best picks for this budget (the player can still change them). */
   fillBest(): Promise<void>;
   replay(): Promise<void>;
@@ -132,20 +138,10 @@ export const useGame = create<GameState>((set, get) => {
     scene.hideRiskMap(); scene.clearBuildingGlow(); scene.hideTornadoPath(); ext.hideHurricaneTrack?.();
     scene.onGroundClick(null); scene.onBuildingClick(null);
   };
-  const fresh = { baseline: null, yours: null, optimal: null, candidates: [], selected: [], inspected: null,
+  const fresh = { baseline: null, yours: null, optimal: null, candidates: [], selected: [], inspected: null, notice: null,
     view: 'before' as MapView, error: null, drawing: false, build: null };
 
   const showMap = (r: Result) => isHurricane(r) ? scene.showDisplacementMap(r.cells) : scene.showRiskMap(r.cells, riskBands);
-  /** Cells to end the camera on: the worst band present (deep red, or extreme then severe for hurricanes). */
-  const hotCells = (r: Result) => {
-    const order = isHurricane(r) ? ['extreme', 'severe'] : ['deep_red', 'red'];
-    for (const band of order) {
-      const hits = Object.entries(r.cells).filter(([, c]) => c.band === band).map(([h3]) => h3);
-      if (hits.length) return hits;
-    }
-    return [];
-  };
-
   /** Simulate, animate the storm, then raise the map and end on the worst cells. */
   async function run(shelters: string[]): Promise<Result> {
     const s = scenarioOf(shelters);
@@ -159,11 +155,10 @@ export const useGame = create<GameState>((set, get) => {
       await scene.playStorm(STORM_MS, stormGlow(get().place!, s.path as LonLat[], (result as { building_prob: Record<string, number> }).building_prob));
       scene.clearBuildingGlow(); scene.hideTornadoPath();
     } else if (ext.showHurricaneTrack && ext.playHurricane) {
+      // The full (extended) track goes to the scene; its camera stays on the town. Never frame the track here.
       ext.showHurricaneTrack(s.track, categoryOf(s.track));
       await ext.playHurricane(STORM_MS);
       ext.hideHurricaneTrack?.();
-    } else {
-      scene.frameCoords(s.track.map(r => [r[0], r[1]] as LonLat));
     }
     await showMap(result);
     // Show the whole risk picture: every affected cell in view.
@@ -175,7 +170,7 @@ export const useGame = create<GameState>((set, get) => {
     step: 'intro', busy: null, error: null, mode: null, event: null, builtEvents: new Set(), cities: [], canBuild: false,
     build: null, hazard: 'tornado', placeId: 'lumberton', place: null,
     ef: showcase.ef, category: 2, hour: showcase.hour, warning: showcase.warning_min, path: [], drawing: false,
-    budget: defaultBudget.tornado, baseline: null, candidates: [], selected: [], inspected: null, yours: null, optimal: null,
+    budget: defaultBudget.tornado, baseline: null, candidates: [], selected: [], inspected: null, notice: null, yours: null, optimal: null,
     view: 'before',
 
     go(step) { set({ step, error: null }); },
@@ -289,19 +284,29 @@ export const useGame = create<GameState>((set, get) => {
         const top = get().candidates[0]?.effectiveness ?? 0;
         ext.highlightBuildings?.(Object.fromEntries(get().candidates.map(c => [c.building_id, top > 0 ? c.effectiveness / top : 0])));
         showShelters(get().selected);
-        scene.onBuildingClick(b => get().inspect(b.id));
-        set({ step: 'plan' });
+        scene.onBuildingClick(b => get().pickFromMap(b.id));
+        set({ step: 'plan', notice: null });
       } catch (e) { fail(e); }
     },
     inspect(id) { set({ inspected: id }); },
     toggle(id) {
-      // Show the player where this building is.
       const c = candidate(id);
-      if (c) scene.frameCoords([[c.lon, c.lat]], 1200, 350);
-      const selected = get().selected.includes(id) ? get().selected.filter(x => x !== id) : [...get().selected, id];
-      if (cost(selected) > get().budget && selected.length > get().selected.length) return;
-      set({ selected });
+      if (!c) return;
+      const adding = !get().selected.includes(id);
+      const selected = adding ? [...get().selected, id] : get().selected.filter(x => x !== id);
+      if (adding && cost(selected) > get().budget) {
+        const left = get().budget - cost();
+        set({ notice: `Over budget: ${usd(left)} left, this shelter costs ${usd(c.cost_usd)}.` });
+        return;
+      }
+      // Show the player where this building is.
+      if (adding) scene.frameCoords([[c.lon, c.lat]], 1200, 350);
+      set({ selected, notice: null });
       showShelters(selected);
+    },
+    pickFromMap(id) {
+      if (candidate(id)) get().toggle(id);
+      set({ inspected: id });
     },
     async fillBest() {
       try {
@@ -317,7 +322,7 @@ export const useGame = create<GameState>((set, get) => {
     async replay() {
       try {
         scene.onBuildingClick(null); ext.highlightBuildings?.(null);
-        set({ step: 'replay', yours: null, inspected: null });
+        set({ step: 'replay', yours: null, inspected: null, notice: null });
         const yours = await run(get().selected);
         set({ yours, view: 'yours' });
       } catch (e) { fail(e); }
