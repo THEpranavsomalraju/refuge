@@ -84,3 +84,20 @@ test('a short drawn track is extended so the eyewall crosses the town', () => {
   const gust = core.maxGustMph(track, [-79.03], [34.645], hp)[0];
   assert.ok(calm < 1 && gust > 90, `calm ${calm}, extended ${gust}`);
 });
+
+// Past hurricanes on Structures' real towns vs the ML reference in each event file.
+for (const id of ['michael_mexico_beach_2018', 'florence_wilmington_2018']) {
+  const town = new URL(`places/${id}/buildings.json`, root);
+  test(`${id} matches the ML reference`, { skip: !existsSync(town) && `places/${id} missing` }, () => {
+    const e = json(`ml/past_events/${id}.json`), ref = e.reference_result;
+    const place = { buildings: JSON.parse(readFileSync(town)) };
+    const r = core.hurricaneResult(e.scenario, place, params, hp);
+    assert.equal(Math.round(r.residents), ref.residents);
+    assert.ok(Math.abs(r.displaced - ref.displaced) < 0.1, `displaced ${r.displaced} vs ${ref.displaced}`);
+    assert.ok(Math.abs(r.destroyed - ref.destroyed) < 0.1, `destroyed ${r.destroyed} vs ${ref.destroyed}`);
+    assert.ok(Math.abs(r.expected_deaths - ref.expected_deaths) < 1e-4, `deaths ${r.expected_deaths} vs ${ref.expected_deaths}`);
+    const counts = { low: 0, moderate: 0, severe: 0, extreme: 0, sparse: 0 };
+    for (const c of Object.values(r.cells)) counts[c.band]++;
+    assert.deepEqual(counts, ref.band_counts);
+  });
+}

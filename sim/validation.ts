@@ -1,3 +1,4 @@
+import type { HurricaneParams, HurricaneScenario, TrackRow } from './core/hurricane.js';
 import { BUILDING_CLASSES, type Building, type Crossing, type ProtectionConfig, type Scenario, type Shelter, type SimParams, type Coordinate } from './core/types.js';
 
 function fail(at: string, message: string): never { throw new Error(`${at}: ${message}`); }
@@ -91,12 +92,12 @@ export function parseParams(value: unknown): SimParams {
   return p as unknown as SimParams;
 }
 
-export function parseScenario(value: unknown): Scenario {
+export function parseScenario(value: unknown): Scenario | HurricaneScenario {
   const s = record(value, 'scenario');
   if (typeof s.place_id !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/.test(s.place_id)) {
     fail('place_id', 'use a nonempty folder name with letters, digits, underscores or hyphens');
   }
-  if (s.hazard !== 'tornado' && s.hazard !== 'flood') fail('hazard', 'expected "tornado" or "flood"');
+  if (s.hazard !== 'tornado' && s.hazard !== 'flood' && s.hazard !== 'hurricane') fail('hazard', 'expected "tornado", "flood" or "hurricane"');
   const raw = s.protections ?? [];
   if (!Array.isArray(raw)) fail('protections', 'expected an array');
   if (s.hazard === 'flood' && raw.length > 0) fail('protections', 'flood protections are not implemented yet');
@@ -109,6 +110,21 @@ export function parseScenario(value: unknown): Scenario {
     seen.add(r.building_id);
     return { type: 'shelter', building_id: r.building_id };
   });
+  if (s.hazard === 'hurricane') {
+    for (const key of ['ef', 'path', 'width_m', 'flood_height_m']) {
+      if (s[key] !== undefined && s[key] !== null) fail(key, 'must be null for a hurricane');
+    }
+    if (!Array.isArray(s.track) || s.track.length < 2) fail('track', 'expected at least two [lon, lat, vmax_kt, rmw_km, B, time_h] rows');
+    const track = s.track.map((row, i): TrackRow => {
+      const at = `track[${i}]`;
+      if (!Array.isArray(row) || row.length !== 6) fail(at, 'expected [lon, lat, vmax_kt, rmw_km, B, time_h]');
+      const [lon, lat] = coordinate([row[0], row[1]], at);
+      return [lon, lat, number(row[2], `${at}[2] vmax_kt`, 0, 300), number(row[3], `${at}[3] rmw_km`, Number.MIN_VALUE, 1000),
+        number(row[4], `${at}[4] B`, 0.1, 5), number(row[5], `${at}[5] time_h`, 0, 10000)];
+    });
+    for (let i = 1; i < track.length; i++) if (track[i]![5] <= track[i - 1]![5]) fail(`track[${i}][5] time_h`, 'must increase along the track');
+    return { place_id: s.place_id, hazard: 'hurricane', track, hour: integer(s.hour, 'hour', 0, 23), protections };
+  }
   const common = {
     place_id: s.place_id,
     hour: integer(s.hour, 'hour', 0, 23),
@@ -209,4 +225,16 @@ export function parseProtectionConfig(value: unknown): ProtectionConfig {
   integer(o.top_candidates, 'protections.optimizer.top_candidates', 0, 100);
   integer(o.exhaustive_max, 'protections.optimizer.exhaustive_max', 0, 20);
   return c as unknown as ProtectionConfig;
+}
+
+export function parseHurricaneParams(value: unknown): HurricaneParams {
+  const h = record(value, 'hurricane');
+  if (h.schema_version !== 1) fail('hurricane.schema_version', 'expected 1');
+  const w = record(h.wind, 'hurricane.wind');
+  for (const k of ['land_factor', 'gust_factor', 'kt_to_mph', 'step_h', 'earth_radius_km', 'nm_to_km']) number(w[k], `hurricane.wind.${k}`, Number.MIN_VALUE);
+  number(h.fragility_beta, 'hurricane.fragility_beta', Number.MIN_VALUE, 10);
+  const m = record(h.mortality, 'hurricane.mortality');
+  number(m.a, 'hurricane.mortality.a', -1000, 1000);
+  number(m.b_per_mph, 'hurricane.mortality.b_per_mph', -10, 10);
+  return h as unknown as HurricaneParams;
 }

@@ -2,13 +2,16 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parseBuildings, parseCrossings, parseScenario } from './validation.js';
 import type { Place, Scenario } from './core/types.js';
+import type { HurricaneScenario } from './core/hurricane.js';
+
+type AnyScenario = Scenario | HurricaneScenario;
 
 export async function readJson(file: string): Promise<unknown> {
   try { return JSON.parse(await readFile(file, 'utf8')); }
   catch (error) { throw new Error(`${file}: ${error instanceof Error ? error.message : String(error)}`); }
 }
 
-export async function readScenarios(file: string, batch: boolean): Promise<Scenario[]> {
+export async function readScenarios(file: string, batch: boolean): Promise<AnyScenario[]> {
   if (!batch) {
     try { return [parseScenario(await readJson(file))]; }
     catch (error) { throw new Error(`${file}: ${error instanceof Error ? error.message : String(error)}`); }
@@ -23,7 +26,7 @@ export async function readScenarios(file: string, batch: boolean): Promise<Scena
   });
 }
 
-export async function loadPlaces(root: string, scenarios: readonly Scenario[]): Promise<Map<string, Place>> {
+export async function loadPlaces(root: string, scenarios: readonly AnyScenario[]): Promise<Map<string, Place>> {
   const places = new Map<string, Place>();
   const flooded = new Set(scenarios.filter(s => s.hazard === 'flood').map(s => s.place_id));
   for (const id of new Set(scenarios.map(s => s.place_id))) {

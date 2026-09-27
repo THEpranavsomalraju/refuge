@@ -79,7 +79,7 @@ export function Buildings({ place, frame }: { place: PlaceData; frame: Frame }) 
   });
 
   // <Bvh> gives the geometry an index buffer and reorders its triangles, so map the hit
-  // triangle through the index to a real vertex before looking up its building (Mahil's fix).
+  // triangle through the index to a real vertex before looking up its building.
   const buildingOf = (e: ThreeEvent<PointerEvent | MouseEvent>) => {
     if (e.faceIndex == null) return null;
     const index = built.geometry.index;
