@@ -93,6 +93,8 @@ interface GameState {
   /** Lower the risk layer to see the buildings, or raise the current view again. */
   toggleMap(): void;
   restart(): void;
+  /** One screen back, cleaning up what that screen put on the map. */
+  back(): void;
 }
 
 /** Default storm line through the town (until the player draws): showcase path, or 8 km SW-NE through the center. */
@@ -395,7 +397,30 @@ export const useGame = create<GameState>((set, get) => {
     },
     restart() {
       clearScene();
-      set({ ...fresh, step: 'choose_mode', mode: null, event: null, busy: null });
+      set({ ...fresh, mode: null, event: null, busy: null });
+      void get().chooseMode('future');
+    },
+    back() {
+      const step = get().step;
+      switch (step) {
+        case 'choose_city': set({ step: 'intro', error: null }); return;
+        case 'choose_hazard': void get().chooseMode('future'); return;
+        case 'storm_setup':
+          scene.onGroundClick(null); scene.hideTornadoPath(); ext.hideHurricaneTrack?.();
+          set({ step: 'choose_hazard', drawing: false, error: null }); return;
+        case 'results_map': case 'plan': {
+          // Back to the storm: keep the drawn path, drop results, shelters and maps.
+          clearScene();
+          set({ baseline: null, yours: null, optimal: null, candidates: [], selected: [], inspected: null, notice: null,
+            view: 'before', mapHidden: false, error: null, drawing: false, step: 'storm_setup' });
+          get().set({});
+          return;
+        }
+        case 'replay': void get().plan(); return;
+        case 'best_preview': set({ step: 'replay' }); get().show('yours'); return;
+        case 'score': set({ step: 'replay' }); get().show('yours'); return;
+        default: return;
+      }
     },
   };
 });

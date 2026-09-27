@@ -38,7 +38,12 @@ export function Game({ load }: { load: LoadState }) {
   return (
     <>
       <div style={panel}>
-        <div style={{ fontWeight: 700, fontSize: 15 }}>{title}</div>
+        <div style={{ ...row, alignItems: 'center' }}>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>{title}</div>
+          {!g.busy && ['choose_city', 'choose_hazard', 'storm_setup', 'results_map', 'plan', 'replay', 'best_preview', 'score'].includes(g.step) && (
+            <button style={{ ...link, fontSize: 13 }} onClick={g.back}>← Back</button>
+          )}
+        </div>
         {g.error && <div style={bad}>{g.error}</div>}
         {g.busy ? <div style={muted}>{g.busy}</div> : <Step />}
         {g.error && <button style={secondary} onClick={g.restart}>Back to start</button>}
@@ -70,24 +75,15 @@ function Step() {
     case 'intro': return (
       <>
         <div style={muted}>Send a real storm through a real town, see who is at risk and why, then turn existing buildings into shelters and see how close your plan gets to the best one.</div>
-        <button style={primary} onClick={() => g.go('choose_mode')}>Start</button>
+        <button style={primary} onClick={() => void g.chooseMode('future')}>Start</button>
       </>
     );
-    case 'choose_mode': return (
-      <>
-        {PAST_EVENTS.some(e => built?.has(e.scenario.place_id)) && (
-          <button style={choice} onClick={() => void g.chooseMode('past')}><b>Past disaster</b><span style={muted}>Replay a real storm on today's buildings and compare with what NOAA recorded.</span></button>
-        )}
-        <button style={choice} onClick={() => void g.chooseMode('future')}><b>Future storm</b><span style={muted}>Pick a town and design the storm yourself.</span></button>
-      </>
-    );
-    case 'choose_event': return <ChooseEvent />;
+    case 'choose_mode': case 'choose_event': return <ChooseCity />;
     case 'choose_city': return <ChooseCity />;
     case 'choose_hazard': return (
       <>
         <button style={choice} onClick={() => g.chooseHazard('tornado')}><b>Tornado</b><span style={muted}>Chance of death per person, and shelters that save lives.</span></button>
         <button style={choice} onClick={() => g.chooseHazard('hurricane')}><b>Hurricane</b><span style={muted}>Damage and displacement, and shelters for people who lose their homes.</span></button>
-        <button style={secondary} onClick={() => void g.chooseMode('future')}>Back</button>
       </>
     );
     case 'load_place': return <div style={muted}>Loading town…</div>;
@@ -127,7 +123,6 @@ function ChooseEvent() {
           </button>
         );
       })}
-      <button style={secondary} onClick={() => g.go('choose_mode')}>Back</button>
     </>
   );
 }
@@ -142,7 +137,7 @@ function ChooseCity() {
   return (
     <>
       {g.cities.length === 0 && <div style={muted}>Loading cities…</div>}
-      {g.cities.map(c => (
+      {g.cities.filter(c => !PAST_EVENTS.some(e => e.scenario.place_id === c.place_id)).map(c => (
         <button key={c.place_id} style={{ ...choice, opacity: c.status === 'ready' ? 1 : 0.45 }} disabled={c.status !== 'ready'}
           onClick={() => g.chooseCity(c.place_id)}>
           <b>{c.name}</b>{c.status !== 'ready' && <span style={muted}>{c.status === 'building' ? 'Building…' : 'Not built'}</span>}
@@ -167,7 +162,6 @@ function ChooseCity() {
           )}
         </div>
       )}
-      <button style={secondary} onClick={() => g.go('choose_mode')}>Back</button>
     </>
   );
 }
