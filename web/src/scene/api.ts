@@ -86,6 +86,9 @@ export const scene: SceneAPI = {
   showDisplacementMap(cells) {
     return showMap('hurricane', cells, () => hurricaneCells(cells));
   },
+  setMapStyle(style: 'heat' | 'blocks') {
+    useSceneStore.setState({ mapStyle: style });
+  },
   hideRiskMap() {
     useSceneStore.setState({ risk: null, diff: null });
   },

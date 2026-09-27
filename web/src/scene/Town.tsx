@@ -14,6 +14,7 @@ import { Lines } from './Lines';
 import { PALETTE } from './palette';
 import { Protections } from './Protections';
 import { RiskMap } from './RiskMap';
+import { HeatVoxels } from './HeatVoxels';
 import { useSceneStore } from './store';
 import { Terrain } from './Terrain';
 import { TornadoPath } from './TornadoPath';
@@ -57,6 +58,7 @@ function Place({ place }: { place: PlaceData }) {
       <HurricaneTrack frame={frame} />
       <Protections frame={frame} />
       <RiskMap place={place} frame={frame} />
+      <HeatVoxels frame={frame} />
       <DifferenceMap place={place} frame={frame} />
       <CandidateSites frame={frame} />
       <CameraRig frame={frame} />

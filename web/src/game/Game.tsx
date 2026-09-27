@@ -42,7 +42,7 @@ export function Game({ load }: { load: LoadState }) {
       {g.step === 'plan' && g.inspected && <ShelterCard />}
       {g.step === 'plan' && <ShelterHoverCard />}
       {g.baseline && !g.mapHidden && <HoverCard />}
-      {g.baseline && !g.mapHidden && <div style={legendBox}><RiskLegend legend={legend} /></div>}
+      {g.baseline && !g.mapHidden && <div style={legendBox}><RiskLegend legend={legend} /><MapStyleSwitch /></div>}
     </>
   );
 }
@@ -586,6 +586,22 @@ function HoverCard() {
       <div style={row}><span>People at {hourWords(hourOf(g))}</span><span style={mono}>{Math.round(c.people)}</span></div>
       {c.expected_deaths > 0 && <div style={row}><span>Expected deaths</span><span style={mono}>{c.expected_deaths.toFixed(2)} ({c.p05}–{c.p95})</span></div>}
       {c.drivers.length > 0 && <div style={muted}>{driverWords(c.drivers, hourOf(g))}{c.uncertain ? ' · uncertain' : ''}</div>}
+    </div>
+  );
+}
+
+/** Smooth heat columns (default) or the exact per-block hexagons. */
+function MapStyleSwitch() {
+  const style = useSceneStore(s => s.mapStyle);
+  const pick = (v: 'heat' | 'blocks') => useSceneStore.setState({ mapStyle: v });
+  return (
+    <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
+      {(['heat', 'blocks'] as const).map(v => (
+        <button key={v} onClick={() => pick(v)} aria-pressed={style === v}
+          style={{ ...tab, flex: 1, background: style === v ? '#e3eae7' : 'transparent', color: style === v ? '#101817' : '#e3eae7' }}>
+          {v === 'heat' ? 'Heat map' : 'Blocks'}
+        </button>
+      ))}
     </div>
   );
 }

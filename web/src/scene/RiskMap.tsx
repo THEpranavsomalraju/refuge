@@ -66,8 +66,9 @@ interface Group {
 /** Post-storm layer for scene.showRiskMap (tornado) and scene.showDisplacementMap (hurricane). */
 export function RiskMap({ place, frame }: { place: PlaceData; frame: Frame }) {
   const risk = useSceneStore(s => s.risk);
+  const style = useSceneStore(s => s.mapStyle);
   const hatchTex = useMemo(makeHatchTexture, []);
-  const built = useMemo(() => (risk ? buildLayer(place, frame, risk.cells) : null), [risk, place, frame]);
+  const built = useMemo(() => (risk && style === 'blocks' ? buildLayer(place, frame, risk.cells) : null), [risk, style, place, frame]);
   const riseRef = useRef<Record<RiseBand, number>>({ green: -1, yellow: -1, red: -1, deep_red: -1 });
   // While shelter candidates are highlighted, the map lowers and fades so buildings show.
   const lowered = useSceneStore(s => s.highlight !== null);

@@ -129,6 +129,8 @@ export interface SceneAPI {
   /** Hurricane map: same hexes, colored by share displaced, height = displaced people. */
   showDisplacementMap(cells: HurricaneCells): Promise<void>;
   /** Hides the risk map and the difference map. */
+  /** Draw the risk map as smooth heat columns ('heat', default) or exact per-block hexagons ('blocks'). */
+  setMapStyle(style: 'heat' | 'blocks'): void;
   hideRiskMap(): void;
   /**
    * Difference view: cells where expected deaths dropped rise in blue, height = lives
