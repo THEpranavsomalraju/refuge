@@ -3,44 +3,50 @@ import type { SectionConfig } from './types';
 // THE page. Sections render top to bottom in this order.
 //  - Reorder entries to reorder the page.
 //  - nav: false hides a section from the top nav (it still renders).
+//  - showTitle: false keeps the nav link but skips the heading (for charts with their own).
 //  - kind: 'placeholder' holds a spot for something still being built.
 //  - A chart `src` is a folder name in web/public/charts/, or a full URL (e.g. Flourish).
 // See README.md in this folder for recipes.
 export const SITE: { title: string; tagline: string; sections: SectionConfig[] } = {
   title: 'Refuge',
-  tagline: 'Send a storm through a real town. See who is at risk and why. Plan protections, then replay it.',
+  tagline: 'Send a tornado or hurricane through a real town. See who is at risk and why. Turn existing buildings into shelters, then replay the storm.',
   sections: [
-    {
-      id: 'hero',
-      kind: 'hero',
-      nav: false,
-      stats: [
-        { label: 'Tornado deaths at night', value: '36', unit: '%', note: 'of deaths, 29% of tornadoes (8 PM–6 AM)' },
-        { label: 'Tornado deaths in mobile homes', value: '42', unit: '%', note: 'known locations, 1996–2025' },
-        { label: 'Simulated runs per storm', value: '500' },
-      ],
-    },
+    { id: 'hero', kind: 'hero', nav: false },
     { id: 'play', kind: 'game', title: 'Try a storm', height: '100vh' },
     {
-      id: 'patterns',
+      id: 'where',
       kind: 'charts',
-      title: 'Who dies in storms',
-      intro: 'NOAA Storm Events direct deaths, 50 states + DC, 1996–2025.',
+      title: 'Where people died',
+      showTitle: false,
+      charts: [{ src: 'where-people-died', title: 'Where people died', height: 500, wide: true, bare: true }],
+    },
+    {
+      id: 'risk-factors',
+      kind: 'charts',
+      title: 'Risk factors',
+      showTitle: false,
       charts: [
-        { src: 'deaths-by-hour', title: 'Tornado deaths by hour of day', height: 380 },
-        { src: 'deaths-by-location', title: 'Where tornado deaths happen', height: 380 },
+        { src: 'risk-factors', title: 'Risk factors', height: 900, wide: true, bare: true },
+        { src: 'deaths-by-hour', title: 'Tornado deaths by hour of day', height: 380, wide: true },
       ],
+    },
+    {
+      id: 'national-map',
+      kind: 'charts',
+      title: '30 years of storm deaths',
+      showTitle: false,
+      charts: [{ src: 'national-animation', title: 'Tornado and hurricane deaths, 1996–2025', height: 620, wide: true, bare: true, clickToInteract: true }],
     },
     { id: 'model', kind: 'placeholder', title: 'The model, explained', note: 'SHAP charts from ml/exports/shap_summary.json' },
     { id: 'backtest', kind: 'placeholder', title: 'Backtest against real storms', note: 'ml/exports/backtest.json' },
-    { id: 'national-map', kind: 'placeholder', title: 'National risk map', note: 'deck.gl, county_risk.json' },
     {
       id: 'methods',
       kind: 'text',
       title: 'Methods',
       paragraphs: [
-        'Every building comes from the USACE National Structure Inventory. For each one the simulator estimates storm intensity, damage level, and lethality for the people inside, then samples 500 runs to get expected deaths and a range.',
-        'Lethality is calibrated to NOAA Storm Events fatality records. Structure Inventory populations are modeled estimates. Protection effects are model estimates, not proven causal effects.',
+        'Every building comes from the USACE National Structure Inventory. For a tornado, the simulator estimates wind speed, damage level, and lethality for the people inside each building, then samples 500 runs to get expected deaths and a range. Lethality is calibrated to NOAA Storm Events fatality records, 1996–2025.',
+        'For a hurricane, winds come from a Holland wind profile around the storm track. Hurricane wind rarely kills people indoors, so hurricane mode plans for the people displaced from damaged homes rather than for deaths. Storm surge, rain flooding and falling trees are not modeled.',
+        'Structure Inventory populations are modeled estimates. Shelter effects are model estimates, not proven causal effects.',
       ],
     },
   ],

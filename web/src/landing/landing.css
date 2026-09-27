@@ -33,11 +33,10 @@ html { scroll-behavior: smooth; scroll-padding-top: var(--nav-h); }
 .note { font-size: 12px; margin-top: 4px; }
 
 /* hero */
-.section-hero { padding-top: 0; }
-.hero-band { background: var(--hero-gradient); padding: 72px 20px 60px; text-align: center; }
+.section-hero { padding: 0; }
+.hero-band { background: var(--hero-bg); padding: 72px 20px 60px; text-align: center; }
 .wordmark { font-size: clamp(56px, 12vw, 128px); margin: 0; font-weight: 500; color: var(--cream); line-height: 1; }
 .tagline { max-width: 620px; margin: 18px auto 0; font-size: 15px; color: var(--cream); }
-.stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 28px; }
 
 /* game: full-bleed, the old full-screen App lives in here */
 .section-game { padding: 0; }
@@ -53,6 +52,16 @@ html { scroll-behavior: smooth; scroll-padding-top: var(--nav-h); }
 .chart { margin: 0; display: grid; gap: 8px; min-width: 0; align-content: start; }
 .chart-wide { grid-column: 1 / -1; }
 .chart iframe { width: 100%; border: 0; display: block; background: transparent; }
+.chart-bare { background: none; border: 0; padding: 0; }
+.chart-body { position: relative; }
+.chart-shield {
+  position: absolute; inset: 0; z-index: 1; width: 100%; border: 0; cursor: pointer;
+  background: transparent; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 16px;
+}
+.chart-shield span {
+  padding: 6px 12px; border-radius: 999px; font: 12px var(--font-body);
+  background: rgba(26, 34, 51, 0.85); border: 1px solid var(--border); color: var(--fg-muted);
+}
 .chart-missing { display: grid; place-items: center; text-align: center; color: var(--fg-muted); font-size: 12px; border: 1px dashed var(--border); border-radius: var(--radius); padding: 12px; }
 
 .placeholder { display: grid; gap: 4px; padding: 36px; text-align: center; border-style: dashed; }

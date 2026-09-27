@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Risk Factors Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #232E43; font-family: 'IBM Plex Mono', monospace; }
+  #wrap { width: 100vw; min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+           padding: 40px 20px; box-sizing: border-box; }
+  h1 { font-family: 'Chakra Petch', sans-serif; color: #EEE4D7; font-size: 28px; letter-spacing: 1px;
+        margin: 0 0 4px 0; text-align: center; }
+  .subtitle { color: #EEE4D7; opacity: 0.6; font-size: 13px; margin-bottom: 28px; text-align: center; }
+  .section-title { font-family: 'Chakra Petch', sans-serif; color: #EEE4D7; font-size: 17px;
+                     letter-spacing: 0.5px; margin: 0 0 4px 0; text-align: center; }
+  .section-subtitle { color: #EEE4D7; opacity: 0.55; font-size: 12px; margin-bottom: 18px; text-align: center; }
+
+  .panel { background: #2E3A56; border-radius: 12px; padding: 26px 30px; margin-bottom: 28px;
+            width: 100%; max-width: 980px; box-sizing: border-box; }
+
+  /* Mirrored bar chart */
+  .mirror-row { display: grid; grid-template-columns: 1fr 140px 1fr; align-items: center;
+                 margin-bottom: 10px; font-size: 13px; color: #EEE4D7; }
+  .mirror-bar-left { display: flex; justify-content: flex-end; }
+  .mirror-bar-right { display: flex; justify-content: flex-start; }
+  .mirror-fill { height: 22px; border-radius: 4px 0 0 4px; transition: width 0.6s cubic-bezier(.2,.8,.2,1); }
+  .mirror-fill.right { border-radius: 0 4px 4px 0; }
+  .mirror-label { text-align: center; opacity: 0.85; font-size: 12px; color: #EEE4D7; }
+  .mirror-value { font-size: 11px; opacity: 0.7; padding: 0 8px; white-space: nowrap; color: #EEE4D7; }
+  .legend-row { display: flex; justify-content: center; gap: 28px; margin-bottom: 20px; font-size: 12px; color: #EEE4D7; }
+  .legend-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+
+  /* Heatmap */
+  .heatmap-wrap { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; }
+  .heatmap-col h3 { font-family: 'Chakra Petch', sans-serif; color: #EEE4D7; font-size: 14px;
+                      text-align: center; margin: 0 0 10px 153px; width: 198px; }
+  .heatmap-grid { display: grid; grid-template-columns: 150px repeat(3, 64px); gap: 3px; }
+  .hm-cell { display: flex; align-items: center; justify-content: center; font-size: 11px;
+              color: #EEE4D7; height: 34px; border-radius: 3px; }
+  .hm-rowlabel { justify-content: flex-end; padding-right: 8px; opacity: 0.85; background: none !important;
+                  white-space: nowrap; }
+  .hm-collabel { opacity: 0.6; font-size: 10px; background: none !important; }
+
+  /* Small supporting cards */
+  #small-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;
+                 width: 100%; max-width: 980px; }
+  .small-panel { background: #2E3A56; border-radius: 12px; padding: 20px 24px; }
+  .panel-title { font-family: 'Chakra Petch', sans-serif; color: #EEE4D7; font-size: 14px;
+                  letter-spacing: 0.5px; margin: 0 0 4px 0; }
+  .panel-stat { font-family: 'IBM Plex Mono', monospace; color: #FF4944; font-size: 30px;
+                 font-weight: 600; margin: 2px 0 12px 0; }
+  .bar-row { display: flex; align-items: center; margin-bottom: 7px; font-size: 12px; color: #EEE4D7; }
+  .bar-label { width: 90px; flex-shrink: 0; opacity: 0.85; }
+  .bar-track { flex: 1; background: rgba(238,228,215,0.12); border-radius: 4px; height: 14px;
+                overflow: hidden; margin-right: 10px; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s cubic-bezier(.2,.8,.2,1); }
+  .bar-value { width: 46px; text-align: right; opacity: 0.7; flex-shrink: 0; }
+
+  #toggle { display: flex; gap: 10px; margin-bottom: 16px; }
+  .toggle-btn {
+    background: #2E3A56; color: #EEE4D7; border: 1.5px solid transparent;
+    padding: 8px 20px; border-radius: 8px; font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px; cursor: pointer; letter-spacing: 0.5px; transition: all 0.15s;
+  }
+  .toggle-btn.active { border-color: #FF4944; background: #3a2432; }
+  .toggle-btn:hover { border-color: #EEE4D7; }
+
+  #source { color: #EEE4D7; opacity: 0.4; font-size: 11px; text-align: right; width: 100%;
+             max-width: 980px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>RISK FACTORS</h1>
+  <div class="subtitle">Tornado &amp; hurricane deaths, 1996&ndash;2025 &middot; direct deaths only</div>
+
+  <!-- Panel A: How each storm kills -->
+  <div class="panel">
+    <div class="section-title">HOW EACH STORM KILLS</div>
+    <div class="section-subtitle">Where deaths happened, as a share of each storm type&rsquo;s own total</div>
+    <div class="legend-row">
+      <span><span class="legend-swatch" style="background:#FF4944"></span>Tornado</span>
+      <span><span class="legend-swatch" style="background:#84F9FE"></span>Hurricane</span>
+    </div>
+    <div id="mirror-chart"></div>
+  </div>
+
+  <!-- Panel B: Compounding risk heatmaps -->
+  <div class="panel">
+    <div class="section-title">COMPOUNDING RISK</div>
+    <div class="section-subtitle">Age &times; location, as a share of each storm type&rsquo;s own total &mdash; darker means more deaths</div>
+    <div class="heatmap-wrap">
+      <div class="heatmap-col">
+        <h3 style="color:#FF4944">TORNADO</h3>
+        <div class="heatmap-grid" id="heatmap-tornado"></div>
+      </div>
+      <div class="heatmap-col">
+        <h3 style="color:#84F9FE">HURRICANE</h3>
+        <div class="heatmap-grid" id="heatmap-hurricane"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supporting cards: night/day, age, still toggleable -->
+  <div id="toggle">
+    <button class="toggle-btn active" data-key="Both">Both</button>
+    <button class="toggle-btn" data-key="Tornado">Tornado</button>
+    <button class="toggle-btn" data-key="Hurricane">Hurricane</button>
+  </div>
+  <div id="small-grid">
+    <div class="small-panel">
+      <div class="panel-title">NIGHT VS. DAY</div>
+      <div class="panel-stat" id="stat-night">--%</div>
+      <div id="chart-nightday"></div>
+    </div>
+    <div class="small-panel">
+      <div class="panel-title">AGE 65+</div>
+      <div class="panel-stat" id="stat-over65">--%</div>
+      <div id="chart-age"></div>
+    </div>
+  </div>
+  <div id="source">NOAA Storm Events Database, 1996&ndash;2025</div>
+</div>
+
+<script>
+const SUMMARIES = {"Both": {"total": 3649, "location": {"Other or unknown": 1218, "Mobile home": 898, "House": 857, "Vehicle": 248, "Public building": 202, "Outdoors": 127, "Water": 99}, "night_day": {"Day": 2782, "Night": 867}, "age_group": {"Under 65": 2064, "65+": 1337, "Unknown": 248}, "night_pct": 23.8, "over65_pct": 36.6, "location_pct": {"Other or unknown": 33.4, "Mobile home": 24.6, "House": 23.5, "Vehicle": 6.8, "Public building": 5.5, "Outdoors": 3.5, "Water": 2.7}}, "Tornado": {"total": 2178, "location": {"Mobile home": 866, "House": 767, "Public building": 195, "Vehicle": 159, "Other or unknown": 120, "Outdoors": 69, "Water": 2}, "night_day": {"Day": 1484, "Night": 694}, "age_group": {"Under 65": 1473, "65+": 630, "Unknown": 75}, "night_pct": 31.9, "over65_pct": 28.9, "location_pct": {"Mobile home": 39.8, "House": 35.2, "Public building": 9.0, "Vehicle": 7.3, "Other or unknown": 5.5, "Outdoors": 3.2, "Water": 0.1}}, "Hurricane": {"total": 1471, "location": {"Other or unknown": 1098, "Water": 97, "House": 90, "Vehicle": 89, "Outdoors": 58, "Mobile home": 32, "Public building": 7}, "night_day": {"Day": 1298, "Night": 173}, "age_group": {"65+": 707, "Under 65": 591, "Unknown": 173}, "night_pct": 11.8, "over65_pct": 48.1, "location_pct": {"Other or unknown": 74.6, "Water": 6.6, "House": 6.1, "Vehicle": 6.1, "Outdoors": 3.9, "Mobile home": 2.2, "Public building": 0.5}}};
+const HEATMAPS = {"Tornado": [{"location": "Mobile home", "Under 65": 28.6, "65+": 9.9, "Unknown": 1.3}, {"location": "House", "Under 65": 21.4, "65+": 13.3, "Unknown": 0.5}, {"location": "Public building", "Under 65": 7.0, "65+": 1.8, "Unknown": 0.1}, {"location": "Vehicle", "Under 65": 5.4, "65+": 1.6, "Unknown": 0.4}, {"location": "Other or unknown", "Under 65": 2.8, "65+": 1.7, "Unknown": 1.0}, {"location": "Outdoors", "Under 65": 2.3, "65+": 0.7, "Unknown": 0.1}, {"location": "Water", "Under 65": 0.1, "65+": 0.0, "Unknown": 0.0}], "Hurricane": [{"location": "Other or unknown", "Under 65": 25.4, "65+": 41.3, "Unknown": 8.0}, {"location": "Water", "Under 65": 3.8, "65+": 0.8, "Unknown": 2.0}, {"location": "House", "Under 65": 3.3, "65+": 2.2, "Unknown": 0.6}, {"location": "Vehicle", "Under 65": 3.3, "65+": 2.2, "Unknown": 0.6}, {"location": "Outdoors", "Under 65": 2.9, "65+": 0.8, "Unknown": 0.3}, {"location": "Mobile home", "Under 65": 1.4, "65+": 0.5, "Unknown": 0.3}, {"location": "Public building", "Under 65": 0.2, "65+": 0.3, "Unknown": 0.0}]};
+const AGE_ORDER = ["Under 65", "65+", "Unknown"];
+const CORAL = "#FF4944";
+const CYAN = "#84F9FE";
+const CREAM = "#EEE4D7";
+const PALETTE = ["#FF4944", "#84F9FE", "#5248D7", "#086AED", "#5A6987", "#B94A6B"];
+
+// --- Panel A: mirrored bar chart (Tornado left, Hurricane right) ---
+function renderMirrorChart() {
+  const tornadoLoc = SUMMARIES["Tornado"].location_pct;
+  const hurricaneLoc = SUMMARIES["Hurricane"].location_pct;
+  const allLocations = Array.from(new Set([...Object.keys(tornadoLoc), ...Object.keys(hurricaneLoc)]));
+  // Sort by combined magnitude, biggest contrast first
+  allLocations.sort((a, b) => (tornadoLoc[b] || 0) + (hurricaneLoc[b] || 0) - ((tornadoLoc[a] || 0) + (hurricaneLoc[a] || 0)));
+
+  const maxVal = Math.max(...allLocations.map(l => Math.max(tornadoLoc[l] || 0, hurricaneLoc[l] || 0)));
+  const container = d3.select("#mirror-chart");
+
+  allLocations.forEach(loc => {
+    const row = container.append("div").attr("class", "mirror-row");
+    const tVal = tornadoLoc[loc] || 0;
+    const hVal = hurricaneLoc[loc] || 0;
+
+    const left = row.append("div").attr("class", "mirror-bar-left");
+    left.append("span").attr("class", "mirror-value").text(tVal + "%");
+    left.append("div").attr("class", "mirror-fill")
+      .style("background", CORAL)
+      .style("width", (tVal / maxVal * 100) + "px");
+
+    row.append("div").attr("class", "mirror-label").text(loc);
+
+    const right = row.append("div").attr("class", "mirror-bar-right");
+    right.append("div").attr("class", "mirror-fill right")
+      .style("background", CYAN)
+      .style("width", (hVal / maxVal * 100) + "px");
+    right.append("span").attr("class", "mirror-value").text(hVal + "%");
+  });
+}
+
+// --- Panel B: heatmaps ---
+function colorForPct(pct, maxPct) {
+  const t = Math.min(1, pct / maxPct);
+  // Interpolate from navy-light (low) to coral (high)
+  const c = d3.interpolateRgb("#2E3A56", "#FF4944")(t);
+  return c;
+}
+
+function renderHeatmap(containerId, grid) {
+  const container = d3.select("#" + containerId);
+  const maxPct = Math.max(...grid.flatMap(row => AGE_ORDER.map(age => row[age])));
+  // Shorter label here only -- guarantees it fits on one line regardless
+  // of exact column width, rather than fighting text-wrapping edge cases
+  const SHORT_LABEL = { "Other or unknown": "Other/Unknown" };
+
+  container.append("div").attr("class", "hm-cell hm-rowlabel hm-collabel").text("");
+  AGE_ORDER.forEach(age => {
+    container.append("div").attr("class", "hm-cell hm-collabel").text(age);
+  });
+
+  grid.forEach(row => {
+    const label = SHORT_LABEL[row.location] || row.location;
+    container.append("div").attr("class", "hm-cell hm-rowlabel").text(label);
+    AGE_ORDER.forEach(age => {
+      container.append("div")
+        .attr("class", "hm-cell")
+        .style("background", colorForPct(row[age], maxPct))
+        .text(row[age] + "%");
+    });
+  });
+}
+
+// --- Supporting cards ---
+function barChart(containerId, dataObj, total) {
+  const container = d3.select("#" + containerId);
+  container.selectAll("*").remove();
+  const entries = Object.entries(dataObj).sort((a, b) => b[1] - a[1]);
+  entries.forEach((d, i) => {
+    const row = container.append("div").attr("class", "bar-row");
+    row.append("div").attr("class", "bar-label").text(d[0]);
+    const track = row.append("div").attr("class", "bar-track");
+    track.append("div").attr("class", "bar-fill")
+      .style("background", PALETTE[i % PALETTE.length])
+      .style("width", (100 * d[1] / total) + "%");
+    row.append("div").attr("class", "bar-value").text(Math.round(100 * d[1] / total) + "%");
+  });
+}
+
+function renderSmallCards(key) {
+  const s = SUMMARIES[key];
+  if (!s) return;
+  document.getElementById("stat-night").textContent = s.night_pct + "%";
+  document.getElementById("stat-over65").textContent = s.over65_pct + "%";
+  barChart("chart-nightday", s.night_day, s.total);
+  barChart("chart-age", s.age_group, s.total);
+}
+
+document.querySelectorAll(".toggle-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".toggle-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderSmallCards(btn.dataset.key);
+  });
+});
+
+renderMirrorChart();
+renderHeatmap("heatmap-tornado", HEATMAPS["Tornado"]);
+renderHeatmap("heatmap-hurricane", HEATMAPS["Hurricane"]);
+renderSmallCards("Both");
+</script>
+<!-- Added for the Refuge site: lets the page size this chart's frame to fit. -->
+<script>
+  new ResizeObserver(() => parent.postMessage({ type: 'refuge:height', height: document.body.getBoundingClientRect().height }, '*'))
+    .observe(document.body);
+</script>
+</body>
+</html>

@@ -7,11 +7,11 @@ interface Base {
   title?: string;
   /** Show in the top nav. Default true when the section has a title. */
   nav?: boolean;
+  /** Render the title as a heading. Set false when the content has its own (it still names the nav link). */
+  showTitle?: boolean;
 }
 
-export interface Stat { label: string; value: string; unit?: string; note?: string }
-
-export interface HeroSection extends Base { kind: 'hero'; stats?: Stat[] }
+export interface HeroSection extends Base { kind: 'hero' }
 
 export interface GameSection extends Base { kind: 'game'; height?: string }
 
@@ -23,6 +23,10 @@ export interface ChartSpec {
   height?: number;
   /** Span both grid columns on wide screens. */
   wide?: boolean;
+  /** No card or caption, for charts that carry their own heading. */
+  bare?: boolean;
+  /** Cover the chart until clicked, so maps that zoom on scroll don't trap page scrolling. */
+  clickToInteract?: boolean;
 }
 
 export interface ChartsSection extends Base { kind: 'charts'; intro?: string; charts: ChartSpec[] }

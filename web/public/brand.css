@@ -24,7 +24,7 @@
   --accent: var(--cyan);
   --alert: var(--coral);
   --link: var(--cyan);
-  --hero-gradient: linear-gradient(90deg, var(--indigo) 0%, var(--blue) 60%, #3FB6C8 100%);
+  --hero-bg: var(--navy);
 
   /* chart series, in order */
   --series-1: var(--cyan);
@@ -50,7 +50,7 @@ body {
 h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; letter-spacing: 0.01em; }
 a { color: var(--link); }
 
-/* Dashboard card, as on the brand board: small label on top, big mono number below. */
+/* Panel style from the brand board: navy with a thin light border. */
 .card {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -58,5 +58,3 @@ a { color: var(--link); }
   padding: 12px 14px;
 }
 .card .label { font-family: var(--font-display); font-size: 13px; color: var(--fg-muted); }
-.card .value { font-family: var(--font-body); font-size: 30px; line-height: 1.2; }
-.card .value small { font-size: 0.5em; margin-left: 4px; }

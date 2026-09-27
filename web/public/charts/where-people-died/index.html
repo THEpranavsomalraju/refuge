@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Storm Type to Fatality Location</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-sankey/0.12.3/d3-sankey.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #232E43; font-family: 'IBM Plex Mono', monospace; }
+  #wrap { width: 100vw; min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+           padding: 40px 20px; box-sizing: border-box; }
+  h1 { font-family: 'Chakra Petch', sans-serif; color: #EEE4D7; font-size: 28px; letter-spacing: 1px;
+        margin: 0 0 4px 0; text-align: center; }
+  .subtitle { color: #EEE4D7; opacity: 0.6; font-size: 13px; margin-bottom: 28px; text-align: center; }
+  #sankey { width: 100%; max-width: 1200px; height: auto; }
+  .node rect { stroke: #232E43; stroke-width: 1.5px; }
+  .node text { fill: #EEE4D7; font-family: 'IBM Plex Mono', monospace; font-size: 14px; }
+  .link { fill: none; stroke-opacity: 0.55; transition: stroke-opacity 0.2s, filter 0.2s; }
+  .link:hover { stroke-opacity: 0.95; filter: brightness(1.3); }
+  .value-label { fill: #EEE4D7; opacity: 0.55; font-size: 11px; font-family: 'IBM Plex Mono', monospace; }
+  #source { color: #EEE4D7; opacity: 0.4; font-size: 11px; text-align: right; width: 100%;
+             max-width: 1200px; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>WHERE PEOPLE DIED</h1>
+  <div class="subtitle">Tornado &amp; flooding deaths by location, 1996&ndash;2025 &middot; direct deaths only</div>
+  <svg id="sankey" viewBox="0 0 1200 680" preserveAspectRatio="xMidYMid meet"></svg>
+  <div id="source">NOAA Storm Events Database, 1996&ndash;2025</div>
+</div>
+
+<script>
+const DATA = {"nodes": [{"name": "Hurricane"}, {"name": "Tornado"}, {"name": "Vehicle"}, {"name": "House"}, {"name": "Mobile home"}, {"name": "Water"}, {"name": "Outdoors"}, {"name": "Other or unknown"}, {"name": "Public building"}], "links": [{"source": 0, "target": 3, "value": 260}, {"source": 0, "target": 4, "value": 48}, {"source": 0, "target": 7, "value": 254}, {"source": 0, "target": 6, "value": 397}, {"source": 0, "target": 8, "value": 68}, {"source": 0, "target": 2, "value": 1328}, {"source": 0, "target": 5, "value": 745}, {"source": 1, "target": 3, "value": 767}, {"source": 1, "target": 4, "value": 866}, {"source": 1, "target": 7, "value": 120}, {"source": 1, "target": 6, "value": 69}, {"source": 1, "target": 8, "value": 195}, {"source": 1, "target": 2, "value": 159}, {"source": 1, "target": 5, "value": 2}]};
+const CORAL = "#FF4944";
+const CYAN = "#84F9FE";
+const CREAM = "#EEE4D7";
+
+const NODE_COLORS = {
+  "Tornado": CORAL,
+  "Hurricane": CYAN,
+};
+const LOCATION_COLORS = {"Mobile home": "#FF4944", "House": "#B94A6B", "Vehicle": "#84F9FE", "Water": "#086AED", "Outdoors": "#5248D7", "Public building": "#2D2DCA", "Other or unknown": "#5A6987"};
+const DEFAULT_COLOR = "#5A6987";
+
+function colorFor(name) {
+  return NODE_COLORS[name] || LOCATION_COLORS[name] || DEFAULT_COLOR;
+}
+
+const svg = d3.select("#sankey");
+const width = 1200;
+const height = 680;
+
+const sankeyGen = d3.sankey()
+  .nodeWidth(20)
+  .nodePadding(40)
+  .extent([[1, 30], [width - 1, height - 30]]);
+
+const graph = sankeyGen({
+  nodes: DATA.nodes.map(d => Object.assign({}, d)),
+  // Sort links so the thickest flows stack together — much less visual
+  // crossing/tangling than the original arbitrary order
+  links: DATA.links.map(d => Object.assign({}, d)).sort((a, b) => b.value - a.value),
+});
+
+// A per-link gradient (source color -> destination's own color) makes each
+// flow visually traceable end-to-end, even where paths cross each other
+const defs = svg.append("defs");
+graph.links.forEach((d, i) => {
+  const gradId = "grad-" + i;
+  d.gradId = gradId;
+  const grad = defs.append("linearGradient")
+    .attr("id", gradId)
+    .attr("gradientUnits", "userSpaceOnUse")
+    .attr("x1", d.source.x1).attr("x2", d.target.x0);
+  grad.append("stop").attr("offset", "0%").attr("stop-color", colorFor(d.source.name));
+  grad.append("stop").attr("offset", "100%").attr("stop-color", colorFor(d.target.name));
+});
+
+// Links
+const link = svg.append("g")
+  .selectAll("path")
+  .data(graph.links)
+  .join("path")
+  .attr("class", "link")
+  .attr("d", d3.sankeyLinkHorizontal())
+  .attr("stroke", d => `url(#${d.gradId})`)
+  .attr("stroke-width", d => Math.max(1.5, d.width))
+  .attr("stroke-dasharray", function() { return this.getTotalLength(); })
+  .attr("stroke-dashoffset", function() { return this.getTotalLength(); });
+
+link.transition()
+  .duration(1400)
+  .delay((d, i) => i * 80)
+  .ease(d3.easeCubicInOut)
+  .attr("stroke-dashoffset", 0);
+
+// Nodes
+const node = svg.append("g")
+  .selectAll("rect")
+  .data(graph.nodes)
+  .join("rect")
+  .attr("class", "node")
+  .attr("x", d => d.x0)
+  .attr("y", d => d.y0)
+  .attr("height", d => d.y1 - d.y0)
+  .attr("width", d => d.x1 - d.x0)
+  .attr("fill", d => colorFor(d.name))
+  .style("opacity", 0);
+
+node.transition().duration(600).delay(1000).style("opacity", 1);
+
+// Labels
+const label = svg.append("g")
+  .selectAll("text")
+  .data(graph.nodes)
+  .join("text")
+  .attr("x", d => d.x0 < width / 2 ? d.x1 + 10 : d.x0 - 10)
+  .attr("y", d => (d.y0 + d.y1) / 2)
+  .attr("dy", "0.35em")
+  .attr("text-anchor", d => d.x0 < width / 2 ? "start" : "end")
+  .attr("fill", "#EEE4D7")
+  .attr("font-family", "'IBM Plex Mono', monospace")
+  .attr("font-size", "15px")
+  .attr("font-weight", "600")
+  .text(d => d.name)
+  .style("opacity", 0);
+
+label.transition().duration(600).delay(1200).style("opacity", 1);
+
+// Value labels under each node
+const valueLabel = svg.append("g")
+  .selectAll("text")
+  .data(graph.nodes)
+  .join("text")
+  .attr("class", "value-label")
+  .attr("x", d => d.x0 < width / 2 ? d.x1 + 10 : d.x0 - 10)
+  .attr("y", d => (d.y0 + d.y1) / 2 + 18)
+  .attr("text-anchor", d => d.x0 < width / 2 ? "start" : "end")
+  .text(d => d.value.toLocaleString() + " deaths")
+  .style("opacity", 0);
+
+valueLabel.transition().duration(600).delay(1200).style("opacity", 1);
+
+// Hover highlight: dim all but the hovered flow
+link.on("mouseover", function(event, d) {
+  link.transition().duration(150).attr("stroke-opacity", l => l === d ? 0.95 : 0.08);
+}).on("mouseout", function() {
+  link.transition().duration(150).attr("stroke-opacity", 0.55);
+});
+</script>
+<!-- Added for the Refuge site: lets the page size this chart's frame to fit. -->
+<script>
+  new ResizeObserver(() => parent.postMessage({ type: 'refuge:height', height: document.body.getBoundingClientRect().height }, '*'))
+    .observe(document.body);
+</script>
+</body>
+</html>

@@ -12,6 +12,7 @@ export function ChartFrame({ chart }: { chart: ChartSpec }) {
   const ref = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState(chart.height ?? 360);
   const [missing, setMissing] = useState(false);
+  const [active, setActive] = useState(!chart.clickToInteract);
 
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
@@ -33,15 +34,23 @@ export function ChartFrame({ chart }: { chart: ChartSpec }) {
     }
   };
 
+  const classes = ['chart', 'card', chart.wide && 'chart-wide', chart.bare && 'chart-bare'].filter(Boolean).join(' ');
   return (
-    <figure className={`chart card${chart.wide ? ' chart-wide' : ''}`}>
-      <figcaption className="label">{chart.title}</figcaption>
+    <figure className={classes} onMouseLeave={() => chart.clickToInteract && setActive(false)}>
+      {!chart.bare && <figcaption className="label">{chart.title}</figcaption>}
       {missing ? (
         <div className="chart-missing" style={{ height }}>
           Chart not found: <code>web/public/charts/{chart.src}/index.html</code>
         </div>
       ) : (
-        <iframe ref={ref} src={chartUrl(chart.src)} title={chart.title} loading="lazy" onLoad={onLoad} style={{ height }} />
+        <div className="chart-body">
+          <iframe ref={ref} src={chartUrl(chart.src)} title={chart.title} loading="lazy" onLoad={onLoad} style={{ height }} />
+          {!active && (
+            <button type="button" className="chart-shield" onClick={() => setActive(true)} aria-label={`Interact with ${chart.title}`}>
+              <span>Click to interact · scroll to keep reading</span>
+            </button>
+          )}
+        </div>
       )}
     </figure>
   );
