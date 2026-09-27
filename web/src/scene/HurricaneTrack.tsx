@@ -6,6 +6,7 @@ import type { TrackRow } from '../shared/contract';
 import { scene } from './api';
 import type { Frame } from './geo';
 import { useSceneStore } from './store';
+import { HurricaneFX, type HurricaneFXState } from './StormFX';
 
 const CLIP_M = 60_000;          // track drawn within this distance of the town center
 const TRACK_LIFT_M = 60;
@@ -121,6 +122,7 @@ function Eye({ at, closest, window, frame, category }: { at: (t: number) => EyeS
     return g;
   }, []);
   const camStage = useRef<'idle' | 'wide' | 'settled'>('idle');
+  const fx = useRef<HurricaneFXState>({ rmwM: 1, playing: false, t: 0 });
   useEffect(() => () => { cloudTex.dispose(); cloudGeo.dispose(); rainGeo.dispose(); }, [cloudTex, cloudGeo, rainGeo]);
 
   useFrame((_, dt) => {
@@ -132,6 +134,10 @@ function Eye({ at, closest, window, frame, category }: { at: (t: number) => EyeS
     const t = playing ? window[0] + raw * (window[1] - window[0]) : closest;
     const e = at(t);
     g.position.set(e.x, frame.groundY(e.x, e.z), e.z);
+    // Cosmetic layer (StormFX) takes over while playing; the simple shapes stay for the preview.
+    fx.current = { rmwM: e.rmwM, playing, t: raw ?? 0 };
+    if (cloud.current) cloud.current.visible = !playing;
+    if (eyewall.current) eyewall.current.visible = !playing;
 
     // Cloud band out to about 3 x RMW, clear eye inside ~0.35 x RMW, turning counterclockwise.
     if (cloud.current) {
@@ -141,7 +147,7 @@ function Eye({ at, closest, window, frame, category }: { at: (t: number) => EyeS
     }
     if (eyewall.current) eyewall.current.scale.setScalar(e.rmwM);
     if (rain.current) {
-      rain.current.visible = playing;
+      rain.current.visible = false;   // replaced by StormFX rain bands
       const r = Math.min(RAIN_RADIUS_MAX_M, 2 * e.rmwM);
       rain.current.scale.set(r, 1, r);
       const pos = rainGeo.getAttribute('position') as THREE.BufferAttribute;
@@ -173,6 +179,7 @@ function Eye({ at, closest, window, frame, category }: { at: (t: number) => EyeS
       <points ref={rain} geometry={rainGeo} raycast={() => null} visible={false}>
         <pointsMaterial color="#9fb3c4" size={40} sizeAttenuation transparent opacity={0.45} depthWrite={false} />
       </points>
+      <HurricaneFX state={fx} cloudAltM={CLOUD_ALT_M} lowAltM={EYEWALL_ALT_M} />
       <Html position={[0, CLOUD_ALT_M + 800, 0]} center zIndexRange={[20, 0]}>
         <div ref={label} style={{
           font: '600 13px "Public Sans", "Segoe UI", system-ui, sans-serif', whiteSpace: 'nowrap', color: '#e3eae7',

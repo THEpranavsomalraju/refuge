@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type { Frame } from './geo';
 import { PALETTE } from './palette';
 import { useSceneStore } from './store';
+import { TornadoFX } from './StormFX';
 import type { LonLat } from './types';
 
 const LIFT_M = 2;
@@ -23,7 +24,7 @@ export function TornadoPath({ frame }: { frame: Frame }) {
       <lineSegments geometry={built.edges} raycast={() => null}>
         <lineBasicMaterial color={PALETTE.path} transparent opacity={0.55} />
       </lineSegments>
-      <Funnel center={built.center} widthM={tornado.widthM} frame={frame} />
+      <TornadoFX center={built.center} widthM={tornado.widthM} frame={frame} />
     </group>
   );
 }
