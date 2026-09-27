@@ -1,0 +1,32 @@
+<!doctype html>
+<!-- Copy this folder to web/public/charts/<your-chart>/ and add one line to
+     web/src/landing/site.config.ts:  { src: '<your-chart>', title: '…', height: 400 }
+     Any library works (D3, Chart.js, Plotly via CDN). This page runs isolated in an iframe. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/brand.css" />
+  <style>
+    body { margin: 0; background: transparent; }
+  </style>
+</head>
+<body>
+  <div id="chart">Your chart here</div>
+
+  <script>
+    // Data: ML exports are served at /data/<file> (from ml/exports/).
+    // fetch('/data/deaths_by_hour.json').then(r => r.json()).then(draw);
+
+    // Brand colors for your library: read the CSS variables.
+    // const css = getComputedStyle(document.documentElement);
+    // const cyan = css.getPropertyValue('--cyan').trim();
+  </script>
+
+  <!-- Optional: tell the site how tall this chart is, so its frame fits exactly. Keep as-is. -->
+  <script>
+    new ResizeObserver(() => parent.postMessage({ type: 'refuge:height', height: document.body.getBoundingClientRect().height }, '*'))
+      .observe(document.body);
+  </script>
+</body>
+</html>
