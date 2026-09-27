@@ -98,5 +98,30 @@
   "kind": "featured",
   "flood_layers": true,
   "cells": "full"
+ },
+ {
+  "place_id": "valley_view_tx_2024",
+  "name": "Valley View, Texas",
+  "county_fips": "48097",
+  "bbox": [
+   -97.7639,
+   33.3904,
+   -96.9397,
+   33.5472
+  ],
+  "center": [
+   -97.3518,
+   33.4688
+  ],
+  "buildings": 13040,
+  "crossings": 0,
+  "pop_night": 21837,
+  "kind": "past_event",
+  "flood_layers": false,
+  "cells": "buildings",
+  "area": null,
+  "trimmed": false,
+  "roads_pending": true,
+  "built": "2026-09-26 20:45"
  }
 ]
