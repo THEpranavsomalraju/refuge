@@ -174,7 +174,8 @@ export const useGame = create<GameState>((set, get) => {
       await ext.playHurricane(STORM_MS);
       ext.hideHurricaneTrack?.();
     }
-    await showMap(result);
+    // With shelters, always draw against the no-shelter result so protected areas show in blue, never as a gap.
+    await showMap(result, shelters.length && get().baseline ? get().baseline! : undefined);
     if (isHurricane(result)) {
       // A hurricane touches the whole town; end on the hardest-hit blocks instead of zooming out to all of it.
       const worst = Object.entries(result.cells as Record<string, { displaced: number }>)
