@@ -5,6 +5,7 @@ import { hurricaneParams, isHurricane, riskBands, shelterRules, type DetailedRes
   type Result, type ShelterCandidate } from './simClient';
 import { SHOWN_CANDIDATES, useGame, type MapView } from './store';
 import { useSceneStore } from '../scene/store';
+import { INTRO_STEPS, IntroOverlay } from './intro/IntroOverlay';
 import { shelterSiteId } from '../../../sim/core/protections.js';
 import type { Place } from '../../../sim/core/types.js';
 import { GROUPS, deaths, driverWords, hourWords, oneInN, usd } from './format';
@@ -37,9 +38,11 @@ export function Game({ load }: { load: LoadState }) {
   const legend = g.view === 'yours' || g.view === 'optimal'
     ? { ...base, rows: [{ label: 'Protected', range: g.hazard === 'hurricane' ? 'blue: people here have a shelter bed' : 'blue: people here reach a shelter', color: 'linear-gradient(90deg, #9cc9ef, #1f5fb8)', hatched: false }, ...base.rows] }
     : base;
+  const intro = INTRO_STEPS.includes(g.step);
   return (
     <>
-      <div style={panel}>
+      <IntroOverlay />
+      {!intro && <div style={panel}>
         <div style={{ ...row, alignItems: 'center' }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}>{title}</div>
           {!g.busy && ['choose_city', 'choose_hazard', 'storm_setup', 'results_map', 'plan', 'replay', 'best_preview', 'score'].includes(g.step) && (
@@ -49,7 +52,7 @@ export function Game({ load }: { load: LoadState }) {
         {g.error && <div style={bad}>{g.error}</div>}
         {g.busy ? <div style={muted}>{g.busy}</div> : <Step />}
         {g.error && <button style={secondary} onClick={g.restart}>Back to start</button>}
-      </div>
+      </div>}
       {g.step === 'plan' && g.inspected && <ShelterCard />}
       {g.step === 'plan' && <ShelterHoverCard />}
       {g.baseline && !g.mapHidden && <HoverCard />}
@@ -657,10 +660,11 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 }
 
 const panel: CSSProperties = {
-  position: 'absolute', top: 12, left: 12, width: 330, padding: '12px 14px', display: 'grid', gap: 8, maxHeight: 'calc(100% - 24px)', overflowY: 'auto',
+  // Above the map's floating labels (drei Html uses z-index up to 20), below the intro (30).
+  position: 'absolute', zIndex: 25, top: 12, left: 12, width: 330, padding: '12px 14px', display: 'grid', gap: 8, maxHeight: 'calc(100% - 24px)', overflowY: 'auto',
   background: 'rgba(16, 24, 23, 0.94)', border: '1px solid #2c3a37', borderRadius: 8, fontSize: 13, color: '#e3eae7',
 };
-const legendBox: CSSProperties = { position: 'absolute', top: 12, right: 12 };
+const legendBox: CSSProperties = { position: 'absolute', top: 60, right: 12 };
 const row: CSSProperties = { display: 'flex', justifyContent: 'space-between', gap: 10 };
 const muted: CSSProperties = { color: '#93a4a0', fontSize: 12 };
 const bad: CSSProperties = { color: '#f08c73', fontSize: 12 };

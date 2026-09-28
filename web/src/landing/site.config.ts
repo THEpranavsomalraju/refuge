@@ -11,7 +11,7 @@ export const SITE: { title: string; tagline: string; sections: SectionConfig[] }
   tagline: 'Send a tornado or hurricane through a real town. See who is at risk and why. Turn existing buildings into shelters, then replay the storm.',
   sections: [
     { id: 'hero', kind: 'hero', nav: false },
-    { id: 'play', kind: 'game', title: 'Try a storm', height: '100vh' },
+    { id: 'play', kind: 'game', title: 'Try a storm', height: 'calc(100dvh - 52px)' },
     {
       id: 'where',
       kind: 'charts',
