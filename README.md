@@ -2,7 +2,7 @@
 
 Send a tornado or hurricane through a real American town. See who is at risk and why, turn existing schools, churches and businesses into shelters, then replay the storm and compare your plan with the best one.
 
-Carolina Data Challenge 2026, Natural Science track.
+1st place, Carolina Data Challenge 2026, Natural Science track.
 
 **Live site: https://refugestorms.vercel.app**
 
