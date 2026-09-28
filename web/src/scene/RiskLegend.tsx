@@ -71,8 +71,8 @@ export function differenceLegendFor(hazard: LegendHazard): Legend {
 /** Ready-made legend panel; the game can place it anywhere or draw its own from legendFor(). */
 export function RiskLegend({ legend }: { legend: Legend }) {
   return (
-    <div role="group" aria-label={legend.title} style={box}>
-      <div style={{ fontWeight: 700, fontSize: 13 }}>{legend.title}</div>
+    <div role="group" aria-label={legend.title} className="gp-panel" style={box}>
+      <div style={{ font: '600 14px var(--font-display)' }}>{legend.title}</div>
       {legend.rows.map(r => (
         <div key={r.label} style={row}>
           <span aria-hidden style={{
@@ -81,7 +81,7 @@ export function RiskLegend({ legend }: { legend: Legend }) {
             background: r.hatched ? `repeating-linear-gradient(135deg, rgba(12,16,18,0.75) 0 3px, transparent 3px 7px), ${r.color}` : r.color,
           }} />
           <span style={{ fontWeight: 600, minWidth: 64 }}>{r.label}</span>
-          <span style={{ color: '#b9c6c2', fontVariantNumeric: 'tabular-nums' }}>{r.range}{r.hatched ? ' (hatched)' : ''}</span>
+          <span style={{ color: 'var(--ui-muted, #b9c6c2)', fontVariantNumeric: 'tabular-nums' }}>{r.range}{r.hatched ? ' (hatched)' : ''}</span>
         </div>
       ))}
       {legend.outline && (
@@ -95,9 +95,7 @@ export function RiskLegend({ legend }: { legend: Legend }) {
   );
 }
 
-const box: React.CSSProperties = {
-  display: 'grid', gap: 5, padding: '10px 12px', borderRadius: 8, fontSize: 12.5, color: '#e3eae7',
-  background: 'rgba(16, 24, 23, 0.92)', border: '1px solid #2c3a37', fontFamily: '"Public Sans", "Segoe UI", system-ui, sans-serif',
-};
+// The look comes from .gp-panel (web/src/game/ui.css), shared with the game panels.
+const box: React.CSSProperties = { gap: 7, padding: '12px 14px', maxWidth: 380, fontSize: 12 };
 const row: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8 };
-const muted: React.CSSProperties = { color: '#93a4a0', fontSize: 12 };
+const muted: React.CSSProperties = { color: 'var(--ui-muted, #93a4a0)', fontSize: 11.5 };

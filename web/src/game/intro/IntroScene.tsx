@@ -24,8 +24,8 @@ const RIGHT = new THREE.Vector2(Math.cos(HEADING), -Math.sin(HEADING)), TOWARD =
 /** A point `x` to the right and `z` toward the camera, in world xz. */
 const view = (x: number, z: number) => RIGHT.clone().multiplyScalar(x).add(TOWARD.clone().multiplyScalar(z));
 // The tornado crosses the foreground below the card; the hurricane eye tracks just behind it.
-const TORNADO_A = view(-34, 13), TORNADO_B = view(30, 6);
-const EYE_A = view(-30, -4), EYE_B = view(30, 2);
+const TORNADO_A = view(-40, 21), TORNADO_B = view(36, 15);
+const EYE_A = view(-34, 10), EYE_B = view(34, 4);
 const TORNADO_S = 13, EYE_S = 38;                  // seconds per pass
 
 function rng(seed: number) {
@@ -42,7 +42,7 @@ attribute vec2 aCenter;
 attribute float aBase, aDist, aSeed;
 varying vec3 vN;
 varying vec2 vLocal;
-varying float vHeat, vTop, vDepth, vRise, vDist, vLit;
+varying float vHeat, vTop, vDepth, vRise, vDist;
 
 float tornadoHeat(vec2 c) {
   vec2 rel = c - uStorm;
@@ -71,8 +71,6 @@ void main() {
   gl_Position = projectionMatrix * mv;
   vN = normal; vLocal = position.xz; vHeat = heat; vTop = step(0.5, normal.y);
   vDepth = -mv.z; vRise = rise; vDist = aDist;
-  // A few blocks have a lit window that slowly twinkles.
-  vLit = step(0.94, aSeed) * (0.55 + 0.45 * sin(uTime * (0.6 + aSeed * 1.7) + aSeed * 40.0)) * rise;
 }`
 
 const HEX_FRAG = /* glsl */ `
@@ -80,7 +78,7 @@ uniform vec3 uBg;
 uniform float uFogNear, uFogFar;
 varying vec3 vN;
 varying vec2 vLocal;
-varying float vHeat, vTop, vDepth, vRise, vDist, vLit;
+varying float vHeat, vTop, vDepth, vRise, vDist;
 
 vec3 heatColor(float x) {
   vec3 c = mix(vec3(0.17, 0.25, 0.38), vec3(0.95, 0.69, 0.20), smoothstep(0.08, 0.42, x));   // slate -> amber
@@ -99,8 +97,6 @@ void main() {
   float hd = max(abs(vLocal.x), max(abs(0.5 * vLocal.x + 0.866 * vLocal.y), abs(-0.5 * vLocal.x + 0.866 * vLocal.y)));
   float edge = vTop * smoothstep(0.72, 0.79, hd);
   col += edge * mix(vec3(0.52, 0.98, 1.0) * 0.16, hc * 0.7, smoothstep(0.1, 0.6, vHeat));
-  float window = vTop * vLit * (1.0 - smoothstep(0.18, 0.34, length(vLocal))) * (1.0 - smoothstep(0.2, 0.5, vHeat));
-  col += window * vec3(1.0, 0.86, 0.62) * 0.9;
   float fade = max(smoothstep(uFogNear, uFogFar, vDepth), smoothstep(0.8, 0.98, vDist));
   col = mix(col, uBg, fade);
   gl_FragColor = vec4(col, 1.0);

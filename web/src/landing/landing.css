@@ -55,10 +55,7 @@ html { scroll-behavior: smooth; scroll-padding-top: var(--nav-h); }
   transition: background 0.2s, border-color 0.2s, box-shadow 0.25s;
 }
 .game-full svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
-.game-full:hover, .game-full:focus-visible {
-  background: rgba(132, 249, 254, 0.1); border-color: rgba(132, 249, 254, 0.55); outline: none;
-  box-shadow: 0 0 22px rgba(132, 249, 254, 0.15);
-}
+.game-full:hover, .game-full:focus-visible { background: rgba(132, 249, 254, 0.1); border-color: rgba(132, 249, 254, 0.55); outline: none; }
 .game-full:hover svg { transform: scale(1.12); }
 @keyframes game-full-in { from { opacity: 0.4; } to { opacity: 1; } }
 @media (max-width: 600px) { .game-full span { display: none; } .game-full { padding: 0 10px; } }
@@ -101,7 +98,7 @@ html { scroll-behavior: smooth; scroll-padding-top: var(--nav-h); }
 }
 /* While the game chunk downloads: same ground as the game intro, so the hand-off is seamless. */
 .game-loading {
-  display: grid; place-items: center; height: 100%; background: radial-gradient(ellipse at 50% 45%, #141c2e, #0e1422 70%);
+  display: grid; place-items: center; height: 100%; background: #0e1422;
   color: rgba(238, 228, 215, 0.55); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
 }
 .game-loading::before {

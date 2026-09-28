@@ -6,6 +6,7 @@ import { hurricaneParams, isHurricane, riskBands, shelterRules, type DetailedRes
 import { SHOWN_CANDIDATES, useGame, type MapView } from './store';
 import { useSceneStore } from '../scene/store';
 import { INTRO_STEPS, IntroOverlay } from './intro/IntroOverlay';
+import './ui.css';
 import { shelterSiteId } from '../../../sim/core/protections.js';
 import type { Place } from '../../../sim/core/types.js';
 import { GROUPS, deaths, driverWords, hourWords, oneInN, usd } from './format';
@@ -42,16 +43,19 @@ export function Game({ load }: { load: LoadState }) {
   return (
     <>
       <IntroOverlay />
-      {!intro && <div style={panel}>
-        <div style={{ ...row, alignItems: 'center' }}>
-          <div style={{ fontWeight: 700, fontSize: 15 }}>{title}</div>
+      {!intro && <div className="gp-panel" style={panel}>
+        <div className="gp-head">
+          <div>
+            <div className="gp-kicker">{g.hazard === 'hurricane' ? 'Hurricane' : 'Tornado'} · {STEP_WORDS[g.step] ?? 'Simulation'}</div>
+            <div className="gp-title">{(title ?? 'Refuge').replace(/, USA$/, '')}</div>
+          </div>
           {!g.busy && ['choose_city', 'choose_hazard', 'storm_setup', 'results_map', 'plan', 'replay', 'best_preview', 'score'].includes(g.step) && (
-            <button style={{ ...link, fontSize: 13 }} onClick={g.back}>← Back</button>
+            <button className="gp-link" onClick={g.back}>← Back</button>
           )}
         </div>
         {g.error && <div style={bad}>{g.error}</div>}
         {g.busy ? <div style={muted}>{g.busy}</div> : <Step />}
-        {g.error && <button style={secondary} onClick={g.restart}>Back to start</button>}
+        {g.error && <button className="gp-btn gp-ghost" onClick={g.restart}>Back to start</button>}
       </div>}
       {g.step === 'plan' && g.inspected && <ShelterCard />}
       {g.step === 'plan' && <ShelterHoverCard />}
@@ -73,6 +77,11 @@ function useBuiltPlaces(): Set<string> | null {
   return built;
 }
 
+const STEP_WORDS: Partial<Record<string, string>> = {
+  storm_setup: 'Set up the storm', storm_animation: 'Storm passing', results_map: 'Results', plan: 'Plan shelters',
+  replay: 'Your plan', best_preview: 'Best plan', optimal: 'Best plan', score: 'Score',
+};
+
 function Step() {
   const g = useGame();
   const built = useBuiltPlaces();
@@ -80,15 +89,15 @@ function Step() {
     case 'intro': return (
       <>
         <div style={muted}>Send a real storm through a real town, see who is at risk and why, then turn existing buildings into shelters and see how close your plan gets to the best one.</div>
-        <button style={primary} onClick={() => void g.chooseMode('future')}>Start</button>
+        <button className="gp-btn" onClick={() => void g.chooseMode('future')}>Start</button>
       </>
     );
     case 'choose_mode': case 'choose_event': return <ChooseCity />;
     case 'choose_city': return <ChooseCity />;
     case 'choose_hazard': return (
       <>
-        <button style={choice} onClick={() => g.chooseHazard('tornado')}><b>Tornado</b><span style={muted}>Chance of death per person, and shelters that save lives.</span></button>
-        <button style={choice} onClick={() => g.chooseHazard('hurricane')}><b>Hurricane</b><span style={muted}>Damage and displacement, and shelters for people who lose their homes.</span></button>
+        <button className="gp-choice" onClick={() => g.chooseHazard('tornado')}><b>Tornado</b><span style={muted}>Chance of death per person, and shelters that save lives.</span></button>
+        <button className="gp-choice" onClick={() => g.chooseHazard('hurricane')}><b>Hurricane</b><span style={muted}>Damage and displacement, and shelters for people who lose their homes.</span></button>
       </>
     );
     case 'load_place': return <div style={muted}>Loading town…</div>;
@@ -97,7 +106,7 @@ function Step() {
     case 'results_map': return (
       <>
         {g.event ? <RecordedVsSimulated /> : <Summary r={g.baseline!} />}
-        <button style={primary} onClick={() => void g.plan()}>Plan shelters</button>
+        <button className="gp-btn" onClick={() => void g.plan()}>Plan shelters</button>
         <MapToggle />
       </>
     );
@@ -106,8 +115,8 @@ function Step() {
       <>
         <BeforeAfter />
         <Views options={['before', 'yours', 'yours_diff']} />
-        <button style={primary} onClick={() => void g.best()}>Show the best plan</button>
-        <button style={secondary} onClick={() => void g.plan()}>Change my plan</button>
+        <button className="gp-btn" onClick={() => void g.best()}>Show the best plan</button>
+        <button className="gp-btn gp-ghost" onClick={() => void g.plan()}>Change my plan</button>
       </>
     ) : <div style={muted}>Replaying the same storm…</div>;
     case 'best_preview': return <BestPreview />;
@@ -123,7 +132,7 @@ function ChooseEvent() {
       {PAST_EVENTS.map(e => {
         const ready = g.builtEvents.has(e.id);
         return (
-          <button key={e.id} style={{ ...choice, opacity: ready ? 1 : 0.45 }} disabled={!ready} onClick={() => g.chooseEvent(e.id)}>
+          <button key={e.id} className="gp-choice" style={{ opacity: ready ? 1 : 0.45 }} disabled={!ready} onClick={() => g.chooseEvent(e.id)}>
             <b>{e.title}</b><span style={muted}>{e.subtitle}</span>
             <span style={muted}>{ready ? recordedLine(e) : 'Town still being built'}</span>
           </button>
@@ -144,25 +153,25 @@ function ChooseCity() {
     <>
       {g.cities.length === 0 && <div style={muted}>Loading cities…</div>}
       {g.cities.filter(c => !PAST_EVENTS.some(e => e.scenario.place_id === c.place_id)).map(c => (
-        <button key={c.place_id} style={{ ...choice, opacity: c.status === 'ready' ? 1 : 0.45 }} disabled={c.status !== 'ready'}
+        <button key={c.place_id} className="gp-choice" style={{ opacity: c.status === 'ready' ? 1 : 0.45 }} disabled={c.status !== 'ready'}
           onClick={() => g.chooseCity(c.place_id)}>
           <b>{c.name}</b>{c.status !== 'ready' && <span style={muted}>{c.status === 'building' ? 'Building…' : 'Not built'}</span>}
         </button>
       ))}
       {g.canBuild && (
-        <div style={{ display: 'grid', gap: 6, borderTop: '1px solid #2c3a37', paddingTop: 8 }}>
+        <div style={{ display: 'grid', gap: 6, borderTop: '1px solid var(--ui-line)', paddingTop: 8 }}>
           <div style={{ fontWeight: 600 }}>Build a new city</div>
           <div style={{ display: 'flex', gap: 6 }}>
-            <input placeholder="City" value={city} onChange={e => setCity(e.target.value)} style={{ ...input, flex: 1 }} />
-            <input placeholder="ST" maxLength={2} value={state} onChange={e => setState(e.target.value.toUpperCase())} style={{ ...input, width: 44 }} />
+            <input placeholder="City" value={city} onChange={e => setCity(e.target.value)} className="gp-input" style={{ flex: 1 }} />
+            <input placeholder="ST" maxLength={2} value={state} onChange={e => setState(e.target.value.toUpperCase())} className="gp-input" style={{ width: 44 }} />
           </div>
           {g.build ? (
             <>
-              <div style={bar}><div style={{ ...barFill, width: pct(g.build.progress) }} /></div>
+              <div className="gp-bar"><div className="gp-bar-fill" style={{ width: pct(g.build.progress) }} /></div>
               <div style={muted}>{g.build.message}</div>
             </>
           ) : (
-            <button style={secondary} disabled={!city.trim() || state.length !== 2} onClick={() => void g.buildCity(city.trim(), state)}>
+            <button className="gp-btn gp-ghost" disabled={!city.trim() || state.length !== 2} onClick={() => void g.buildCity(city.trim(), state)}>
               Build (1–3 minutes)
             </button>
           )}
@@ -179,13 +188,13 @@ function Setup() {
     <>
       {tornado ? (
         <Row label="Strength">
-          <select value={g.ef} onChange={e => g.set({ ef: Number(e.target.value) })} style={input}>
+          <select value={g.ef} onChange={e => g.set({ ef: Number(e.target.value) })} className="gp-input">
             {[0, 1, 2, 3, 4, 5].map(ef => <option key={ef} value={ef}>EF{ef}</option>)}
           </select>
         </Row>
       ) : (
         <Row label="Category">
-          <select value={g.category} onChange={e => g.set({ category: Number(e.target.value) })} style={input}>
+          <select value={g.category} onChange={e => g.set({ category: Number(e.target.value) })} className="gp-input">
             {[1, 2, 3, 4, 5].map(c => <option key={c} value={c}>Category {c}</option>)}
           </select>
         </Row>
@@ -198,19 +207,19 @@ function Setup() {
           <input type="range" min={0} max={30} value={g.warning} onChange={e => g.set({ warning: Number(e.target.value) })} />
         </Row>
       )}
-      <button style={secondary} onClick={g.startDrawing}>
+      <button className="gp-btn gp-ghost" onClick={g.startDrawing}>
         {g.drawing ? `Click the map to add points: ${g.path.length} so far` : `Draw the ${tornado ? 'path' : 'track'} (2+ clicks)`}
       </button>
       {g.drawing && (
         <div style={{ display: 'flex', gap: 6 }}>
-          <button style={{ ...secondary, flex: 1 }} disabled={g.path.length === 0} onClick={g.undoPoint}>Undo last point</button>
-          <button style={{ ...secondary, flex: 1 }} disabled={g.path.length === 0} onClick={g.clearPath}>Clear</button>
+          <button className="gp-btn gp-ghost" style={{ flex: 1 }} disabled={g.path.length === 0} onClick={g.undoPoint}>Undo last point</button>
+          <button className="gp-btn gp-ghost" style={{ flex: 1 }} disabled={g.path.length === 0} onClick={g.clearPath}>Clear</button>
         </div>
       )}
       {g.drawing && <div style={muted}>Right-click the map or press Backspace to remove the last point.</div>}
       {!g.drawing && <div style={muted}>Using {g.placeId === 'lumberton' && tornado ? 'the showcase path through both mobile-home parks' : `a default ${tornado ? 'path' : 'track'} through the town center`} until you draw one.</div>}
       {!tornado && <div style={muted}>The storm arrives from {hurricaneParams.drawn_track_extension_km} km out along your line and leaves the same way, at 20 km/h; size and shape from recent Category {g.category} hurricanes (NOAA HURDAT2).</div>}
-      <button style={primary} disabled={g.path.length < 2} onClick={() => void g.play()}>Play storm</button>
+      <button className="gp-btn" disabled={g.path.length < 2} onClick={() => void g.play()}>Play storm</button>
     </>
   );
 }
@@ -229,7 +238,7 @@ function Summary({ r }: { r: Result }) {
         <Stat value={num(r.people_exposed)} label="people in buildings the storm damaged" />
         <Stat value={deaths(r.expected_deaths)} label="expected deaths" strong />
       </div>
-      <div style={muted}>Most likely between <b style={{ color: '#e3eae7' }}>{r.p05}</b> and <b style={{ color: '#e3eae7' }}>{r.p95}</b> deaths (9 in 10 of 500 simulated storms).</div>
+      <div style={muted}>Most likely between <b style={{ color: 'var(--ui-text)' }}>{r.p05}</b> and <b style={{ color: 'var(--ui-text)' }}>{r.p95}</b> deaths (9 in 10 of 500 simulated storms).</div>
       {parts.length > 0 && (
         <div style={{ display: 'grid', gap: 5 }}>
           <div style={{ ...muted, fontWeight: 600 }}>Where the deaths happen</div>
@@ -243,8 +252,8 @@ function Summary({ r }: { r: Result }) {
 /** One headline number with its meaning underneath. */
 function Stat({ value, label, strong }: { value: string; label: string; strong?: boolean }) {
   return (
-    <div style={{ display: 'grid', gap: 3, padding: '8px 10px', borderRadius: 6, background: strong ? '#2a1618' : '#18211f', border: `1px solid ${strong ? '#6e2a31' : '#2c3a37'}` }}>
-      <div style={{ ...bigger, color: strong ? '#ffb4ac' : '#e3eae7' }}>{value}</div>
+    <div className="gp-stat" data-strong={strong || undefined}>
+      <div className="gp-stat-value">{value}</div>
       <div style={muted}>{label}</div>
     </div>
   );
@@ -255,9 +264,7 @@ function Bar({ label, value, share }: { label: string; value: string; share: num
   return (
     <div style={{ display: 'grid', gap: 2 }}>
       <div style={row}><span>{label}</span><span style={mono}>{value}</span></div>
-      <div style={{ height: 6, borderRadius: 3, background: '#1c2826', overflow: 'hidden' }}>
-        <div style={{ width: `${Math.max(2, Math.round(share * 100))}%`, height: '100%', background: '#e4572e' }} />
-      </div>
+      <div className="gp-bar"><div className="gp-bar-fill is-risk" style={{ width: `${Math.max(2, Math.round(share * 100))}%` }} /></div>
     </div>
   );
 }
@@ -342,47 +349,45 @@ function Planning() {
   return (
     <>
       {g.baseline && (g.event ? <RecordedVsSimulated /> : <Summary r={g.baseline} />)}
-      <div style={{ fontWeight: 700, marginTop: 4 }}>Plan your shelters</div>
-      <button onClick={g.toggleMap} aria-pressed={g.mapHidden}
-        style={{ ...tab, background: g.mapHidden ? '#e3eae7' : 'transparent', color: g.mapHidden ? '#101817' : '#e3eae7' }}>
+      <div className="gp-section">Plan your shelters</div>
+      <button className="gp-tab" onClick={g.toggleMap} aria-pressed={g.mapHidden}>
         {g.mapHidden ? 'Show the risk map' : 'Hide the risk map to see the shelter options'}
       </button>
-      <div style={muted}>
-        Hover a highlighted building to see how many people it can hold and what it costs. Click to add it. Click a highlighted school, church or business on the map to make it a shelter (click again to remove): a FEMA P-361
-        hardened core, {h.sqft_per_person} sq ft per person, {usd(h.cost_per_person)} per person.
-        {hurricane
-          ? ` Displaced residents within ${shelterRules.hurricane.reach_km} km drive there before landfall, nearest first.`
-          : ` Its own occupants go first, then about ${pct(t.compliance)} of mobile-home residents within a ${reach} m walk.`}
-      </div>
+      <div>Click a highlighted school, church or business to make it a shelter; click again to remove it. Hover one to see its size and cost.</div>
+      <ul className="gp-rules">
+        <li>FEMA P-361 safe room · {h.sqft_per_person} sq ft and {usd(h.cost_per_person)} per person</li>
+        <li>{hurricane
+          ? `Displaced residents within ${shelterRules.hurricane.reach_km} km drive there, nearest first`
+          : `Its own occupants first, then ~${pct(t.compliance)} of mobile-home residents within ${reach} m`}</li>
+      </ul>
       <Row label="Budget">
-        <input type="number" min={0} step={hurricane ? 1_000_000 : 50_000} value={g.budget} style={{ ...input, width: 130 }}
+        <input type="number" min={0} step={hurricane ? 1_000_000 : 50_000} value={g.budget} className="gp-input" style={{ width: 130 }}
           onChange={e => g.set({ budget: Math.max(0, Number(e.target.value) || 0) })} />
       </Row>
-      <div style={bar}><div style={{ ...barFill, width: pct(Math.min(1, g.budget ? spent / g.budget : 0)) }} /></div>
+      <div className="gp-bar"><div className="gp-bar-fill" style={{ width: pct(Math.min(1, g.budget ? spent / g.budget : 0)) }} /></div>
       <div style={row}><span style={muted}>Spent</span><span style={mono}>{usd(spent)} of {usd(g.budget)}</span></div>
       {g.notice && <div style={bad}>{g.notice}</div>}
 
-      <div style={{ fontWeight: 600 }}>Your shelters ({g.selected.length})</div>
+      <div className="gp-section">Your shelters ({g.selected.length})</div>
       {g.selected.length === 0 && <div style={muted}>None yet. Click a highlighted building on the map.</div>}
       {g.selected.map(id => {
         const c = byId(id);
         if (!c) return null;
         return (
-          <div key={id} style={{ ...site, borderColor: '#e3eae7', cursor: 'default' }}>
+          <div key={id} className="gp-site" data-state="on">
             <span style={row}>
-              <button style={{ ...link, color: '#e3eae7', padding: 0, textAlign: 'left' }} onClick={() => g.inspect(id)}>{CLASS_WORDS[c.cls] ?? c.cls}</button>
+              <button className="gp-link" style={{ color: 'var(--ui-text)', fontWeight: 600 }} onClick={() => g.inspect(id)}>{CLASS_WORDS[c.cls] ?? c.cls}</button>
               <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <button aria-label={`Remove ${CLASS_WORDS[c.cls] ?? c.cls}`} style={{ ...link, fontSize: 15 }} onClick={() => g.toggle(id)}>×</button>
+                <button className="gp-link" aria-label={`Remove ${CLASS_WORDS[c.cls] ?? c.cls}`} style={{ fontSize: 16, lineHeight: 1 }} onClick={() => g.toggle(id)}>×</button>
               </span>
             </span>
             <span style={muted}>{num(c.capacity)} people · {usd(c.cost_usd)}</span>
           </div>
         );
       })}
-      <button style={primary} onClick={() => void g.replay()}>
+      <button className="gp-btn" onClick={() => void g.replay()}>
         Submit plan: replay the storm with {g.selected.length} shelter{g.selected.length === 1 ? '' : 's'}
       </button>
-      <MapToggle />
     </>
   );
 }
@@ -392,8 +397,8 @@ function CandidateRow({ c, spent }: { c: ShelterCandidate; spent: number }) {
   const on = g.selected.includes(c.building_id);
   const affordable = on || spent + c.cost_usd <= g.budget;
   return (
-    <button onClick={() => { g.toggle(c.building_id); g.inspect(c.building_id); }}
-      style={{ ...site, borderColor: on ? '#e3eae7' : g.inspected === c.building_id ? '#93a4a0' : '#2c3a37', opacity: affordable ? 1 : 0.5 }}>
+    <button className="gp-site" data-state={on ? 'on' : g.inspected === c.building_id ? 'inspected' : undefined}
+      onClick={() => { g.toggle(c.building_id); g.inspect(c.building_id); }} style={{ opacity: affordable ? 1 : 0.5 }}>
       <span style={row}><span>{on ? '■' : '□'} {CLASS_WORDS[c.cls] ?? c.cls}</span><span style={mono}>{objective(g).short} {c.effectiveness.toFixed(1)}</span></span>
       <span style={muted}>{num(c.capacity)} people · {usd(c.cost_usd)}</span>
     </button>
@@ -428,7 +433,7 @@ function ShelterHoverCard() {
   const hurricane = g.hazard === 'hurricane';
   const on = g.selected.includes(c.building_id);
   return (
-    <div style={{ ...panel, position: 'fixed', left: pos[0] + 18, top: pos[1] + 18, right: 'auto', bottom: 'auto', width: 250, pointerEvents: 'none', zIndex: 30 }}>
+    <div className="gp-panel" style={{ ...panel, position: 'fixed', left: pos[0] + 18, top: pos[1] + 18, right: 'auto', bottom: 'auto', width: 250, pointerEvents: 'none', zIndex: 30 }}>
       <div style={row}><b>{b ? CLASS_WORDS[b.cls] ?? b.cls : 'Building'}</b></div>
       <div style={row}><span>Capacity</span><span style={mono}>{num(c.capacity)} people</span></div>
       <div style={row}><span>Cost</span><span style={mono}>{usd(c.cost_usd)}</span></div>
@@ -447,8 +452,8 @@ function ShelterCard() {
   const spent = g.selected.reduce((s, x) => s + (g.candidates.find(y => y.building_id === x)?.cost_usd ?? 0), 0);
   const hurricane = g.hazard === 'hurricane';
   return (
-    <div style={{ ...panel, left: 'auto', right: 12, top: 'auto', bottom: 12, width: 300 }}>
-      <div style={row}><b>{b ? CLASS_WORDS[b.cls] ?? b.cls : 'Building'}</b><button style={link} onClick={() => g.inspect(null)}>close</button></div>
+    <div className="gp-panel" style={{ ...panel, left: 'auto', right: 12, top: 'auto', bottom: 12, width: 300 }}>
+      <div style={row}><b>{b ? CLASS_WORDS[b.cls] ?? b.cls : 'Building'}</b><button className="gp-link" onClick={() => g.inspect(null)}>close</button></div>
       {!c ? (
         <div style={muted}>This building can't be a shelter: only schools, places of worship and businesses with a known footprint qualify.</div>
       ) : (
@@ -457,7 +462,7 @@ function ShelterCard() {
           <div style={row}><span>Capacity</span><span style={mono}>{num(c.capacity)} people, {hurricane ? shelterRules.hurricane.sqft_per_person : shelterRules.tornado.sqft_per_person} sq ft each</span></div>
           <div style={row}><span>Cost</span><span style={mono}>{usd(c.cost_usd)}</span></div>
           <div style={muted}>Hardened safe room (FEMA P-361), built to survive a direct hit.</div>
-          <button style={on ? secondary : primary} onClick={() => g.toggle(id)}>{on ? 'Remove' : 'Select'}</button>
+          <button className={on ? 'gp-btn gp-ghost' : 'gp-btn'} onClick={() => g.toggle(id)}>{on ? 'Remove' : 'Select'}</button>
           {!on && spent + c.cost_usd > g.budget && <div style={bad}>Over budget: {usd(g.budget - spent)} left.</div>}
         </>
       )}
@@ -517,8 +522,8 @@ function BestPreview() {
     <>
       <div style={{ fontWeight: 700 }}>The best plan for {usd(g.budget)}</div>
       <div style={muted}>{plan.building_ids.length} shelters ({names}), {num(places)} places, {usd(plan.cost_usd)}. They're marked on the map. Run it to see what it changes.</div>
-      <button style={primary} onClick={() => void g.runBest()}>Run the best plan</button>
-      <button style={secondary} onClick={() => { g.go('replay'); g.show('yours'); }}>Back to my plan</button>
+      <button className="gp-btn" onClick={() => void g.runBest()}>Run the best plan</button>
+      <button className="gp-btn gp-ghost" onClick={() => { g.go('replay'); g.show('yours'); }}>Back to my plan</button>
     </>
   );
 }
@@ -537,7 +542,7 @@ function Compare() {
     <>
       {none
         ? <div style={{ fontWeight: 600 }}>No shelter plan among these buildings helps in this storm.</div>
-        : <><div style={big}>{Math.round(100 * yours / plan.value)}%</div>
+        : <><div className="gp-big">{Math.round(100 * yours / plan.value)}%</div>
           <div style={muted}>of the {unit} the {label.toLowerCase()} plan achieves</div></>}
       <div style={row}><span>Your plan</span><span style={mono}>{yours.toFixed(1)} · {usd(yourCost)}</span></div>
       <div style={row}><span>{label} plan</span><span style={mono}>{plan.value.toFixed(1)} · {usd(plan.cost_usd)}</span></div>
@@ -550,8 +555,8 @@ function Compare() {
           : ` Greedy search with swaps over ${plan.candidates.length} buildings; not guaranteed optimal.`}
       </div>
       <Views options={['yours_diff', 'optimal_diff', 'before', 'yours', 'optimal']} />
-      <button style={secondary} onClick={() => void g.plan()}>Try another plan</button>
-      <button style={secondary} onClick={g.restart}>New storm</button>
+      <button className="gp-btn gp-ghost" onClick={() => void g.plan()}>Try another plan</button>
+      <button className="gp-btn gp-ghost" onClick={g.restart}>New storm</button>
     </>
   );
 }
@@ -563,10 +568,9 @@ const HOME_NOTE = 'The map shows risk where people live: residents who reach a s
 function Views({ options }: { options: MapView[] }) {
   const g = useGame();
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+    <div className="gp-tabs">
       {options.map(v => (
-        <button key={v} onClick={() => g.show(v)}
-          style={{ ...tab, background: g.view === v ? '#e3eae7' : 'transparent', color: g.view === v ? '#101817' : '#e3eae7' }}>
+        <button key={v} className="gp-tab" aria-pressed={g.view === v} onClick={() => g.show(v)}>
           {VIEW_WORDS[v]}
         </button>
       ))}
@@ -579,8 +583,7 @@ function Views({ options }: { options: MapView[] }) {
 function MapToggle() {
   const g = useGame();
   return (
-    <button onClick={g.toggleMap} aria-pressed={g.mapHidden}
-      style={{ ...tab, flexBasis: '100%', background: g.mapHidden ? '#e3eae7' : 'transparent', color: g.mapHidden ? '#101817' : '#e3eae7' }}>
+    <button className="gp-tab" style={{ flexBasis: '100%' }} onClick={g.toggleMap} aria-pressed={g.mapHidden}>
       {g.mapHidden ? 'Show the risk map' : 'Hide the risk map (see buildings)'}
     </button>
   );
@@ -609,7 +612,7 @@ function HoverCard() {
     const c = result.cells[h3];
     if (!c) return null;
     return (
-      <div style={{ ...panel, top: 'auto', bottom: 12, left: '50%', transform: 'translateX(-50%)', width: 300, pointerEvents: 'none' }}>
+      <div className="gp-panel" style={{ ...panel, top: 'auto', bottom: 12, left: '50%', transform: 'translateX(-50%)', width: 300, pointerEvents: 'none' }}>
         <div style={{ fontWeight: 600 }}>{c.band === 'sparse' ? 'Too few residents for a stable estimate.' : `${pct(c.share)} of residents displaced`}</div>
         <div style={row}><span>Residents</span><span style={mono}>{num(c.residents)}</span></div>
         <div style={row}><span>Displaced{g.view !== 'before' ? ' without shelter' : ''}</span><span style={mono}>{num(c.displaced)}</span></div>
@@ -620,7 +623,7 @@ function HoverCard() {
   if (!c) return null;
   const text = c.band === 'sparse' ? 'Too few people for a stable estimate.' : `${oneInN(c.risk)} chance of death for someone here`;
   return (
-    <div style={{ ...panel, top: 'auto', bottom: 12, left: '50%', transform: 'translateX(-50%)', width: 300, pointerEvents: 'none' }}>
+    <div className="gp-panel" style={{ ...panel, top: 'auto', bottom: 12, left: '50%', transform: 'translateX(-50%)', width: 300, pointerEvents: 'none' }}>
       <div style={{ fontWeight: 600 }}>{text}</div>
       <div style={row}><span>People at {hourWords(hourOf(g))}</span><span style={mono}>{Math.round(c.people)}</span></div>
       {c.expected_deaths > 0 && <div style={row}><span>Expected deaths</span><span style={mono}>{c.expected_deaths.toFixed(2)} ({c.p05}–{c.p95})</span></div>}
@@ -636,7 +639,7 @@ function DiffHover({ h3, before, after, title }: { h3: string; before: Result; a
     if (!b && !a) return null;
     const was = b?.displaced ?? 0, now = a?.displaced ?? 0;
     return (
-      <div style={{ ...panel, top: 'auto', bottom: 12, width: 300 }}>
+      <div className="gp-panel" style={{ ...panel, top: 'auto', bottom: 12, width: 300 }}>
         <div style={{ fontWeight: 600 }}>{title}: {num(Math.max(0, was - now))} people sheltered from here</div>
         <div style={row}><span>Displaced without shelter</span><span style={mono}>{num(was)} → {num(now)}</span></div>
         <div style={row}><span>Residents</span><span style={mono}>{num(b?.residents ?? a?.residents ?? 0)}</span></div>
@@ -647,7 +650,7 @@ function DiffHover({ h3, before, after, title }: { h3: string; before: Result; a
   if (!b && !a) return null;
   const was = b?.expected_deaths ?? 0, now = a?.expected_deaths ?? 0;
   return (
-    <div style={{ ...panel, top: 'auto', bottom: 12, width: 300 }}>
+    <div className="gp-panel" style={{ ...panel, top: 'auto', bottom: 12, width: 300 }}>
       <div style={{ fontWeight: 600 }}>{title}: {Math.max(0, was - now).toFixed(2)} lives saved here</div>
       <div style={row}><span>Expected deaths</span><span style={mono}>{was.toFixed(2)} → {now.toFixed(2)}</span></div>
       <div style={row}><span>People here</span><span style={mono}>{Math.round(b?.people ?? a?.people ?? 0)}</span></div>
@@ -659,25 +662,14 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   return <label style={{ ...row, alignItems: 'center' }}><span>{label}</span>{children}</label>;
 }
 
+// Position only; the look is .gp-panel in ui.css. Above the map's floating labels (drei Html uses
+// z-index up to 20), below the intro (30).
 const panel: CSSProperties = {
-  // Above the map's floating labels (drei Html uses z-index up to 20), below the intro (30).
-  position: 'absolute', zIndex: 25, top: 12, left: 12, width: 330, padding: '12px 14px', display: 'grid', gap: 8, maxHeight: 'calc(100% - 24px)', overflowY: 'auto',
-  background: 'rgba(16, 24, 23, 0.94)', border: '1px solid #2c3a37', borderRadius: 8, fontSize: 13, color: '#e3eae7',
+  position: 'absolute', zIndex: 25, top: 12, left: 12, width: 340, maxHeight: 'calc(100% - 24px)', overflowY: 'auto',
 };
 const legendBox: CSSProperties = { position: 'absolute', top: 60, right: 12 };
 const row: CSSProperties = { display: 'flex', justifyContent: 'space-between', gap: 10 };
-const muted: CSSProperties = { color: '#93a4a0', fontSize: 12 };
-const bad: CSSProperties = { color: '#f08c73', fontSize: 12 };
-const big: CSSProperties = { fontSize: 30, fontWeight: 700, lineHeight: 1 };
-const bigger: CSSProperties = { fontSize: 26, fontWeight: 700, lineHeight: 1 };
-const mono: CSSProperties = { fontFamily: 'ui-monospace, Consolas, monospace', fontVariantNumeric: 'tabular-nums' };
-const input: CSSProperties = { background: '#101817', color: '#e3eae7', border: '1px solid #2c3a37', borderRadius: 4, padding: '3px 6px' };
-const primary: CSSProperties = { padding: '8px 10px', borderRadius: 6, border: 0, background: '#e3eae7', color: '#101817', fontWeight: 600, cursor: 'pointer' };
-const bestButton: CSSProperties = { ...primary, background: '#2f6f5e', border: '1px solid #5fe0c8', color: '#eafffa', fontWeight: 700 };
-const secondary: CSSProperties = { ...primary, background: 'transparent', color: '#e3eae7', border: '1px solid #2c3a37' };
-const link: CSSProperties = { background: 'none', border: 0, color: '#93a4a0', cursor: 'pointer', fontSize: 12 };
-const choice: CSSProperties = { display: 'grid', gap: 3, padding: '8px 10px', borderRadius: 6, border: '1px solid #2c3a37', background: 'transparent', color: '#e3eae7', cursor: 'pointer', textAlign: 'left' };
-const site: CSSProperties = { display: 'grid', gap: 2, padding: '6px 8px', borderRadius: 6, border: '1px solid', background: 'transparent', color: '#e3eae7', cursor: 'pointer', textAlign: 'left' };
-const tab: CSSProperties = { flex: '1 1 45%', padding: '5px 6px', borderRadius: 5, border: '1px solid #2c3a37', cursor: 'pointer', fontSize: 12 };
-const bar: CSSProperties = { height: 6, borderRadius: 3, background: '#2c3a37', overflow: 'hidden' };
-const barFill: CSSProperties = { height: '100%', background: '#e3eae7' };
+const muted: CSSProperties = { color: 'var(--ui-muted)', fontSize: 12 };
+const bad: CSSProperties = { color: '#ff8a84', fontSize: 12 };
+const bigger: CSSProperties = { font: '600 26px/1 var(--font-display)' };
+const mono: CSSProperties = { fontVariantNumeric: 'tabular-nums' };

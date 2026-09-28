@@ -85,7 +85,7 @@ export function IntroOverlay() {
     <div className="rf-intro" data-leaving={exiting || undefined}>
       <IntroScene state={scene} />
       <div className="rf-vignette" />
-      <div className="rf-hud rf-hud-tl"><span className="rf-dot" />Refuge · storm simulator</div>
+      <div className="rf-hud rf-hud-tl">Refuge · storm simulator</div>
       <div className="rf-hud rf-hud-br">NOAA 1996–2025 · USACE Structure Inventory · FEMA P-361</div>
       <div className="rf-stage">
         <Card stage={stage}>
@@ -136,7 +136,6 @@ function Title({ onBegin }: { onBegin: () => void }) {
       <div className="rf-rule"><span /></div>
       <p className="rf-tag">Send a tornado or hurricane through a real town. See who is at risk and why, then plan the shelters that save lives.</p>
       <button className="rf-begin" onClick={onBegin} autoFocus>
-        <span className="rf-begin-dot" />
         Begin simulation
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </button>
