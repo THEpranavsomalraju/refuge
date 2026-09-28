@@ -82,9 +82,17 @@ function siteUrlPlugin(): Plugin {
   };
 }
 
+// The in-browser town builder (web/src/builder) reaches the building inventory and one
+// OpenStreetMap server through these same-origin paths; vercel.json has the same rewrites.
+const dataProxy = {
+  '/nsi-api': { target: 'https://nsi.sec.usace.army.mil', changeOrigin: true, rewrite: (p: string) => p.replace(/^\/nsi-api/, '/nsiapi') },
+  '/overpass-api': { target: 'https://overpass-api.de', changeOrigin: true, rewrite: (p: string) => p.replace(/^\/overpass-api/, '/api') },
+};
+
 export default defineConfig({
   plugins: [react(), tailwindcss(), placesPlugin(), exportsPlugin(), siteUrlPlugin()],
   resolve: { alias: { '@': resolve(HERE, 'src') } },
   // Local build server (places/build_server.py): builds any U.S. city into places/<id>/.
-  server: { proxy: { '/build-api': { target: 'http://127.0.0.1:8765', rewrite: p => p.replace(/^\/build-api/, '') } } },
+  server: { proxy: { '/build-api': { target: 'http://127.0.0.1:8765', rewrite: p => p.replace(/^\/build-api/, '') }, ...dataProxy } },
+  preview: { proxy: dataProxy },
 });

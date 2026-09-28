@@ -67,7 +67,7 @@ export function buildingShape(b: BuildingRecord, frame: Frame): { ring: [number,
   let gMin = Infinity, gMax = -Infinity;
   for (const [x, z] of ring) { const g = frame.groundY(x, z); gMin = Math.min(gMin, g); gMax = Math.max(gMax, g); }
   const y0 = gMin - SINK_M;
-  const y1 = gMax + (b.cls === 'MH' ? MH_HEIGHT_M : Math.max(1, b.stories ?? 1) * STORY_HEIGHT_M);
+  const y1 = gMax + (b.cls === 'MH' ? MH_HEIGHT_M : b.height_m ?? Math.max(1, b.stories ?? 1) * STORY_HEIGHT_M);
   return { ring, y0, y1 };
 }
 

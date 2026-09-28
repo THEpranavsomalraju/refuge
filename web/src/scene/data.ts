@@ -1,3 +1,4 @@
+import { isLocalTown, loadTown } from '../builder/db';
 import { placeUrl } from './places';
 import type { BuildingRecord, CellRecord, CrossingRecord, PlaceData, PlaceMeta } from './types';
 
@@ -7,8 +8,13 @@ async function json<T>(url: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-/** Loads a place folder (buildings, cells, crossings, place.json, terrain.bin). */
+/** Loads a place folder (buildings, cells, crossings, place.json, terrain.bin), or a town built in this browser. */
 export async function loadPlace(id: string): Promise<PlaceData> {
+  if (isLocalTown(id)) {
+    const town = await loadTown(id);
+    if (!town) throw new Error('This town was built in another browser or its saved data was cleared. Build it again.');
+    return town;
+  }
   const dir = placeUrl(id);
   const [meta, buildings, cells, crossings] = await Promise.all([
     json<PlaceMeta>(`${dir}/place.json`),

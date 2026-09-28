@@ -23,6 +23,8 @@ export interface BuildingRecord {
   occtype: string;
   cls: BuildingClass;
   stories: number | null;
+  /** Real height from OpenStreetMap (towns built in the browser only); drawn instead of stories x 3.4 m. */
+  height_m?: number | null;
   basement: boolean;
   ground_elev_m: number | null;
   first_floor_ht_m: number | null;

@@ -43,7 +43,10 @@ export async function buildServerAvailable(): Promise<boolean> {
  */
 export async function listCities(): Promise<CityEntry[]> {
   try {
-    return await server<CityEntry[]>('/cities', undefined, 2500);
+    // Anything but a list (e.g. the site's own page when no build server exists) means no server.
+    const cities = await server<CityEntry[]>('/cities', undefined, 2500);
+    if (!Array.isArray(cities)) throw new Error('no build server');
+    return cities;
   } catch {
     const res = await fetch(`${BASE}places/index.json`);
     const index = res.ok ? ((await res.json()) as { place_id: string; name: string | null; kind?: string }[]) : [];

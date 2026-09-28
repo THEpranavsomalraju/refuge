@@ -18,9 +18,13 @@ Open http://localhost:5173. The page has the game plus the charts and methods. T
 
 `npm run build` writes a static site to `web/dist/`.
 
-### Optional: build a new town
+### Any U.S. town
 
-Any U.S. city can be built on demand. With this server running, the game shows "Build a new city":
+In the game's town step, search for any U.S. city or town. The browser builds it in about a minute from public data: buildings and populations (USACE National Structure Inventory), outlines, heights, roads and rivers (OpenStreetMap), elevation (AWS Terrain Tiles) and the boundary (Census TIGERweb). Big cities are cropped to a 15 × 15 km area you pick, holding up to 20,000 buildings. Built towns are saved in that browser. The builder lives in `web/src/builder/` and follows the same rules as the Python pipeline in `places/` (a browser-built Lumberton matches the Python one building for building).
+
+The Structure Inventory and one OpenStreetMap server are reached through same-origin proxy paths (`/nsi-api`, `/overpass-api`), set up in `web/vite.config.ts` for local runs and `vercel.json` for the live site.
+
+The Python pipeline can also build a town locally, which the featured towns use:
 
 ```bash
 python3.12 -m venv places/.venv

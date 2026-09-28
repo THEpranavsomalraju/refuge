@@ -2,5 +2,15 @@
   "installCommand": "npm ci --prefix web",
   "buildCommand": "npm run build --prefix web",
   "outputDirectory": "web/dist",
-  "framework": null
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/nsi-api/:path*",
+      "destination": "https://nsi.sec.usace.army.mil/nsiapi/:path*"
+    },
+    {
+      "source": "/overpass-api/:path*",
+      "destination": "https://overpass-api.de/api/:path*"
+    }
+  ]
 }
