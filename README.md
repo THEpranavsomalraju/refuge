@@ -4,21 +4,7 @@ Send a tornado or hurricane through a real American town. See who is at risk and
 
 Carolina Data Challenge 2026, Natural Science track.
 
-## Run the site
-
-Needs Node 22.
-
-```bash
-cd web
-npm ci
-npm run dev
-```
-
-Open http://localhost:5173. The page has the game plus the charts and methods. The game uses the towns that are already built in `places/`, so nothing else has to be running.
-
-`npm run build` writes a static site to `web/dist/`.
-
-### Any U.S. town
+## Any U.S. town
 
 In the game's town step, search for any U.S. city or town. The browser builds it in about a minute from public data: buildings and populations (USACE National Structure Inventory), outlines, heights, roads and rivers (OpenStreetMap), elevation (AWS Terrain Tiles) and the boundary (Census TIGERweb). Big cities are cropped to a 15 × 15 km area you pick, holding up to 20,000 buildings. Built towns are saved in that browser. The builder lives in `web/src/builder/` and follows the same rules as the Python pipeline in `places/` (a browser-built Lumberton matches the Python one building for building).
 
