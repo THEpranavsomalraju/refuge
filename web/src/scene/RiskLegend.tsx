@@ -1,3 +1,5 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { DIFF_COLOR, RISK_COLOR } from './palette';
 
 // Legends for the risk map (tornado) and displacement map (hurricane). Both hazards use
@@ -60,7 +62,7 @@ export function differenceLegendFor(hazard: LegendHazard): Legend {
       { label: tornado ? 'Lives saved' : 'Sheltered', range: tornado
           ? 'blue rises where people reached a shelter; taller, darker = more lives saved there'
           : 'blue rises where displaced people now have a shelter bed; taller, darker = more people helped there',
-        color: `linear-gradient(90deg, ${DIFF_COLOR.savedLow}, ${DIFF_COLOR.savedHigh})`, hatched: false },
+        color: DIFF_COLOR.savedHigh, hatched: false },
       { label: 'Nothing', range: tornado ? 'no blue: nobody there reached a shelter' : 'no blue: nobody displaced there got a bed', color: 'transparent', hatched: false },
     ],
     outline: null,
@@ -71,31 +73,28 @@ export function differenceLegendFor(hazard: LegendHazard): Legend {
 /** Ready-made legend panel; the game can place it anywhere or draw its own from legendFor(). */
 export function RiskLegend({ legend }: { legend: Legend }) {
   return (
-    <div role="group" aria-label={legend.title} className="gp-panel" style={box}>
-      <div style={{ font: '600 14px var(--font-display)' }}>{legend.title}</div>
-      {legend.rows.map(r => (
-        <div key={r.label} style={row}>
-          <span aria-hidden style={{
-            width: 14, height: 14, borderRadius: 3, flex: 'none', minWidth: 14,
-            // One shorthand only: mixing background with backgroundImage made React drop the gradient swatches.
-            background: r.hatched ? `repeating-linear-gradient(135deg, rgba(12,16,18,0.75) 0 3px, transparent 3px 7px), ${r.color}` : r.color,
-          }} />
-          <span style={{ fontWeight: 600, minWidth: 64 }}>{r.label}</span>
-          <span style={{ color: 'var(--ui-muted, #b9c6c2)', fontVariantNumeric: 'tabular-nums' }}>{r.range}{r.hatched ? ' (hatched)' : ''}</span>
-        </div>
-      ))}
-      {legend.outline && (
-        <div style={row}>
-          <span aria-hidden style={{ width: 12, height: 12, borderRadius: 2, flex: 'none', border: `1.5px solid ${RISK_COLOR.sparse}` }} />
-          <span style={muted}>{legend.outline}</span>
-        </div>
-      )}
-      <div style={muted}>{legend.height}</div>
-    </div>
+    <Card role="group" aria-label={legend.title} className="w-[320px] gap-3 py-4">
+      <CardHeader className="px-4"><CardTitle className="text-sm">{legend.title}</CardTitle></CardHeader>
+      <CardContent className="grid gap-2 px-4 text-xs">
+        {legend.rows.map(r => (
+          <div key={r.label} className="flex items-center gap-2.5">
+            <span aria-hidden className="size-3 shrink-0 rounded-sm" style={{
+              // The extreme band is drawn hatched on the map, so its swatch is too.
+              background: r.hatched ? `repeating-linear-gradient(135deg, rgba(12,16,18,0.75) 0 3px, transparent 3px 7px), ${r.color}` : r.color,
+            }} />
+            <span className="w-16 shrink-0 font-medium">{r.label}</span>
+            <span className="text-muted-foreground tabular-nums">{r.range}</span>
+          </div>
+        ))}
+        {legend.outline && (
+          <div className="flex items-center gap-2.5">
+            <span aria-hidden className="size-3 shrink-0 rounded-sm border" style={{ borderColor: RISK_COLOR.sparse }} />
+            <span className="text-muted-foreground">{legend.outline}</span>
+          </div>
+        )}
+        <Separator className="my-1" />
+        <div className="text-muted-foreground">{legend.height}</div>
+      </CardContent>
+    </Card>
   );
 }
-
-// The look comes from .gp-panel (web/src/game/ui.css), shared with the game panels.
-const box: React.CSSProperties = { gap: 7, padding: '12px 14px', maxWidth: 380, fontSize: 12 };
-const row: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8 };
-const muted: React.CSSProperties = { color: 'var(--ui-muted, #93a4a0)', fontSize: 11.5 };

@@ -1,5 +1,10 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import type { GameSection as Config } from '../types';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import '@/styles/ui.css';
 
 // The scene + game (Three.js, ~1.3 MB) load as their own chunk once the section is near.
 const GameMount = lazy(() => import('./GameMount').then(m => ({ default: m.GameMount })));
@@ -12,22 +17,22 @@ export function GameSection({ section }: { section: Config }) {
   const active = useClickToInteract(box) || full;
 
   return (
-    <div ref={box} className={`game-box${full ? ' is-full' : ''}`} style={{ height: full ? undefined : section.height ?? '100vh' }}>
+    // .refuge-ui scopes the shadcn theme (web/src/styles/ui.css) to the game.
+    <div ref={box} className={`game-box refuge-ui dark bg-background${full ? ' is-full' : ''}`} style={{ height: full ? undefined : section.height ?? '100vh' }}>
       {near && (
-        <Suspense fallback={<div className="game-loading">Loading town…</div>}>
+        <Suspense fallback={<div className="flex h-full items-center justify-center gap-2 text-sm text-muted-foreground"><Spinner />Loading</div>}>
           <GameMount />
         </Suspense>
       )}
-      <button className="game-full" onClick={toggle} aria-pressed={full}
+      <Button variant="outline" size="sm" className="absolute top-3 right-3 z-40" onClick={toggle} aria-pressed={full}
         aria-label={full ? 'Exit full screen' : 'Full screen'} title={full ? 'Exit full screen (Esc)' : 'Full screen (F)'}>
-        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
-          {full
-            ? <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />
-            : <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />}
-        </svg>
-        <span>{full ? 'Exit' : 'Full screen'}</span>
-      </button>
-      {!active && <div className="game-hint">Click the map to zoom · scroll to keep reading</div>}
+        {full ? <Minimize2 /> : <Maximize2 />}<span className="hidden sm:inline">{full ? 'Exit' : 'Full screen'}</span>
+      </Button>
+      {!active && (
+        <Badge variant="secondary" className="pointer-events-none absolute bottom-4 left-1/2 z-20 -translate-x-1/2">
+          Click the map to zoom · scroll to keep reading
+        </Badge>
+      )}
     </div>
   );
 }

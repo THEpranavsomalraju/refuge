@@ -2,6 +2,7 @@ import { cpSync, createReadStream, existsSync, readFileSync, statSync } from 'no
 import { dirname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, type Plugin } from 'vite';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -82,7 +83,8 @@ function siteUrlPlugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), placesPlugin(), exportsPlugin(), siteUrlPlugin()],
+  plugins: [react(), tailwindcss(), placesPlugin(), exportsPlugin(), siteUrlPlugin()],
+  resolve: { alias: { '@': resolve(HERE, 'src') } },
   // Local build server (places/build_server.py): builds any U.S. city into places/<id>/.
   server: { proxy: { '/build-api': { target: 'http://127.0.0.1:8765', rewrite: p => p.replace(/^\/build-api/, '') } } },
 });

@@ -43,28 +43,10 @@ html { scroll-behavior: smooth; scroll-padding-top: var(--nav-h); }
 .section-game { padding: 0; }
 .game-box { position: relative; width: 100%; overflow: hidden; border-block: 1px solid var(--border); background: var(--bg-deep); }
 /* Full screen: the browser's own mode, or pinned over the page where that isn't available. */
-.game-box.is-full { border: 0; animation: game-full-in 0.35s ease both; }
+.game-box.is-full { border: 0; }
 .game-box.is-full:not(:fullscreen) { position: fixed; inset: 0; z-index: 1000; height: 100dvh; }
 .game-box:fullscreen { width: 100%; height: 100%; }
-.game-full {
-  position: absolute; top: 12px; right: 12px; z-index: 40; display: inline-flex; align-items: center; gap: 8px;
-  height: 36px; padding: 0 12px 0 10px; border-radius: 8px; cursor: pointer;
-  font: 500 12px var(--font-body); letter-spacing: 0.04em; color: var(--fg);
-  background: rgba(20, 27, 42, 0.72); border: 1px solid var(--border);
-  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-  transition: background 0.2s, border-color 0.2s, box-shadow 0.25s;
-}
-.game-full svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
-.game-full:hover, .game-full:focus-visible { background: rgba(132, 249, 254, 0.1); border-color: rgba(132, 249, 254, 0.55); outline: none; }
-.game-full:hover svg { transform: scale(1.12); }
-@keyframes game-full-in { from { opacity: 0.4; } to { opacity: 1; } }
-@media (max-width: 600px) { .game-full span { display: none; } .game-full { padding: 0 10px; } }
 
-.game-hint {
-  position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 20;
-  padding: 6px 12px; border-radius: 999px; font-size: 12px; pointer-events: none;
-  background: rgba(26, 34, 51, 0.85); border: 1px solid var(--border); color: var(--fg-muted);
-}
 
 /* charts */
 .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 16px; }
@@ -96,14 +78,3 @@ html { scroll-behavior: smooth; scroll-padding-top: var(--nav-h); }
   .container { padding-inline: 16px; }
   .section { padding-block: 40px; }
 }
-/* While the game chunk downloads: same ground as the game intro, so the hand-off is seamless. */
-.game-loading {
-  display: grid; place-items: center; height: 100%; background: #0e1422;
-  color: rgba(238, 228, 215, 0.55); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
-}
-.game-loading::before {
-  content: ''; width: 34px; height: 34px; margin-bottom: 14px; border-radius: 50%;
-  border: 1.5px solid rgba(132, 249, 254, 0.2); border-top-color: var(--cyan); animation: game-spin 0.9s linear infinite;
-}
-.game-loading { grid-template-rows: auto auto; align-content: center; justify-items: center; }
-@keyframes game-spin { to { transform: rotate(360deg); } }

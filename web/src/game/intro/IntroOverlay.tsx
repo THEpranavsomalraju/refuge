@@ -1,8 +1,19 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { ArrowRight, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, CloudRainWind, Tornado } from 'lucide-react';
 import { PAST_EVENTS } from '../events';
 import { useGame, type Hazard } from '../store';
 import { IntroScene, type IntroSceneState } from './IntroScene';
-import './intro.css';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Kbd } from '@/components/ui/kbd';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
 
 /**
  * The game's opening: title card, then storm type, then town, then a short load before the
@@ -33,7 +44,7 @@ export function IntroOverlay() {
   const [leaving, setLeaving] = useState(false);
   const wasIntro = useRef(onIntroStep);
   const [stats, setStats] = useState<Record<string, TownStats>>({});
-  const scene = useRef<IntroSceneState>({ hazard: 'tornado', shot: 'wide' });
+  const scene = useRef<IntroSceneState>({ focus: null, shot: 'wide' });
 
   // Town list (and whether a build server is up) as soon as the intro shows.
   useEffect(() => { if (g.step === 'intro') void g.chooseMode('future'); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -57,14 +68,15 @@ export function IntroOverlay() {
     if (!was && onIntroStep) { setLeaving(false); setHover(null); setStage('hazard'); }
   }, [onIntroStep]);
 
-  scene.current = {
-    hazard: hover ?? (stage === 'title' ? 'tornado' : hazard),
-    shot: leaving || (wasIntro.current && !onIntroStep) ? 'dive' : stage === 'title' ? 'wide' : 'choose',
-  };
-
   // The render where the step first leaves the intro counts as leaving too (the effect sets `leaving` right after).
   const exiting = leaving || (wasIntro.current && !onIntroStep);
   const gone = !onIntroStep && !exiting;
+  scene.current = {
+    // Both storms always circle the card; the one you point at (or picked) comes forward.
+    focus: hover ?? (stage === 'title' ? null : hazard),
+    shot: exiting ? 'dive' : stage === 'title' ? 'wide' : 'choose',
+  };
+
   // Enter starts the simulation from the title card.
   useEffect(() => {
     if (stage !== 'title' || gone) return;
@@ -82,45 +94,26 @@ export function IntroOverlay() {
   };
 
   return (
-    <div className="rf-intro" data-leaving={exiting || undefined}>
+    <div className={cn('absolute inset-0 z-30 overflow-hidden bg-background transition-opacity delay-300 duration-700',
+      exiting && 'pointer-events-none opacity-0')}>
       <IntroScene state={scene} />
-      <div className="rf-vignette" />
-      <div className="rf-hud rf-hud-tl">Refuge · storm simulator</div>
-      <div className="rf-hud rf-hud-br">NOAA 1996–2025 · USACE Structure Inventory · FEMA P-361</div>
-      <div className="rf-stage">
-        <Card stage={stage}>
-          {stage === 'title' && <Title onBegin={() => setStage('hazard')} />}
-          {stage === 'hazard' && (
-            <HazardStep onHover={setHover} onBack={() => setStage('title')}
-              onPick={h => { setHazard(h); setHover(null); setStage('city'); }} />
-          )}
-          {stage === 'city' && (
-            <CityStep hazard={hazard} stats={stats} onBack={() => setStage('hazard')} onPick={pickTown} />
-          )}
-          {stage === 'loading' && <Loading stats={stats} onBack={() => setStage('city')} />}
-        </Card>
+      <div className="pointer-events-none absolute top-4 left-5 text-xs text-muted-foreground">Refuge · Storm simulator</div>
+      <div className="pointer-events-none absolute right-5 bottom-4 hidden text-xs text-muted-foreground sm:block">
+        NOAA 1996–2025 · USACE Structure Inventory · FEMA P-361
       </div>
-    </div>
-  );
-}
-
-/** The glass card. Its height follows its content, so switching steps resizes it smoothly. */
-function Card({ stage, children }: { stage: Stage; children: ReactNode }) {
-  const inner = useRef<HTMLDivElement>(null);
-  const [h, setH] = useState<number | null>(null);
-  useLayoutEffect(() => {
-    const el = inner.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => setH(el.offsetHeight));
-    ro.observe(el);
-    setH(el.offsetHeight);
-    return () => ro.disconnect();
-  }, []);
-  return (
-    <div className="rf-card" style={{ height: h === null ? undefined : h + 2 } as CSSProperties}>
-      <span className="rf-corner tl" /><span className="rf-corner tr" /><span className="rf-corner bl" /><span className="rf-corner br" />
-      <div ref={inner} className="rf-card-inner">
-        <div key={stage} className="rf-step">{children}</div>
+      <div className="pointer-events-none absolute inset-0 grid place-items-center p-4">
+        <Card className={cn('pointer-events-auto max-h-full w-full max-w-md gap-5 overflow-y-auto shadow-2xl transition-all duration-500',
+          'animate-in fade-in zoom-in-95', exiting && 'scale-95 opacity-0')}>
+          <div key={stage} className="flex animate-in flex-col gap-5 fade-in slide-in-from-bottom-2 duration-300">
+            {stage === 'title' && <Title onBegin={() => setStage('hazard')} />}
+            {stage === 'hazard' && (
+              <HazardStep onHover={setHover} onBack={() => setStage('title')}
+                onPick={h => { setHazard(h); setHover(null); setStage('city'); }} />
+            )}
+            {stage === 'city' && <CityStep hazard={hazard} stats={stats} onBack={() => setStage('hazard')} onPick={pickTown} />}
+            {stage === 'loading' && <Loading stats={stats} onBack={() => setStage('city')} />}
+          </div>
+        </Card>
       </div>
     </div>
   );
@@ -128,62 +121,51 @@ function Card({ stage, children }: { stage: Stage; children: ReactNode }) {
 
 function Title({ onBegin }: { onBegin: () => void }) {
   return (
-    <div className="rf-title">
-      <div className="rf-kicker">Storm simulator for real towns</div>
-      <h1 className="rf-word" aria-label="Refuge">
-        {'Refuge'.split('').map((c, i) => <span key={i} style={{ '--i': i } as CSSProperties}>{c}</span>)}
-      </h1>
-      <div className="rf-rule"><span /></div>
-      <p className="rf-tag">Send a tornado or hurricane through a real town. See who is at risk and why, then plan the shelters that save lives.</p>
-      <button className="rf-begin" onClick={onBegin} autoFocus>
-        Begin simulation
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-      </button>
-      <div className="rf-hint">or press Enter</div>
-    </div>
+    <>
+      <CardHeader className="justify-items-center gap-3 text-center">
+        <Badge variant="outline">Storm simulator for real towns</Badge>
+        <CardTitle className="font-brand text-6xl font-bold tracking-tight">Refuge</CardTitle>
+        <CardDescription className="max-w-sm text-balance">
+          Send a tornado or hurricane through a real town. See who is at risk and why, then plan the shelters that save lives.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-3">
+        <Button size="lg" className="w-full" onClick={onBegin} autoFocus>Begin simulation<ArrowRight /></Button>
+        <p className="text-center text-xs text-muted-foreground">or press <Kbd>Enter</Kbd></p>
+      </CardContent>
+    </>
   );
 }
 
-function Steps({ at, onBack }: { at: 1 | 2 | 3; onBack?: () => void }) {
-  const names = ['Storm', 'Town', 'Simulate'];
+function StepHeader({ step, title, note, onBack }: { step: number; title: string; note?: string; onBack?: () => void }) {
   return (
-    <div className="rf-steps">
-      <ol>
-        {names.map((n, i) => (
-          <li key={n} data-state={i + 1 < at ? 'done' : i + 1 === at ? 'now' : 'next'}>
-            <span>{String(i + 1).padStart(2, '0')}</span>{n}
-          </li>
-        ))}
-      </ol>
-      {onBack && <button className="rf-back" onClick={onBack}>← Back</button>}
-    </div>
+    <CardHeader>
+      <CardDescription>Step {step} of 3</CardDescription>
+      <CardTitle className="text-xl">{title}{note && <span className="ml-2 text-sm font-normal text-muted-foreground">{note}</span>}</CardTitle>
+      {onBack && <CardAction><Button variant="ghost" size="sm" onClick={onBack}><ChevronLeft />Back</Button></CardAction>}
+    </CardHeader>
   );
 }
 
-function HazardStep({ onPick, onHover, onBack }: {
-  onPick: (h: Hazard) => void; onHover: (h: Hazard | null) => void; onBack: () => void;
-}) {
+function HazardStep({ onPick, onHover, onBack }: { onPick: (h: Hazard) => void; onHover: (h: Hazard | null) => void; onBack: () => void }) {
   const options: { id: Hazard; name: string; meta: string; text: string; icon: ReactNode }[] = [
-    { id: 'tornado', name: 'Tornado', meta: 'EF0–EF5 · minutes of warning', text: 'Who is most likely to die, and which shelters save the most lives.', icon: <TornadoIcon /> },
-    { id: 'hurricane', name: 'Hurricane', meta: 'Category 1–5 · days of warning', text: 'Which homes are lost, and where displaced people can shelter.', icon: <HurricaneIcon /> },
+    { id: 'tornado', name: 'Tornado', meta: 'EF0–EF5', text: 'Minutes of warning. Who is most likely to die, and which shelters save the most lives.', icon: <Tornado /> },
+    { id: 'hurricane', name: 'Hurricane', meta: 'Cat 1–5', text: 'Days of warning. Which homes are lost, and where displaced people can shelter.', icon: <CloudRainWind /> },
   ];
   return (
     <>
-      <Steps at={1} onBack={onBack} />
-      <h2 className="rf-h2">Choose a storm</h2>
-      <div className="rf-options">
-        {options.map((o, i) => (
-          <button key={o.id} className="rf-option" data-hazard={o.id}
-            style={{ '--i': i } as CSSProperties}
+      <StepHeader step={1} title="Choose a storm" onBack={onBack} />
+      <CardContent className="grid gap-3 sm:grid-cols-2">
+        {options.map(o => (
+          <Button key={o.id} variant="outline" className="h-auto flex-col items-start gap-2 p-4 text-left whitespace-normal"
             onClick={() => onPick(o.id)} onPointerEnter={() => onHover(o.id)} onPointerLeave={() => onHover(null)}
             onFocus={() => onHover(o.id)} onBlur={() => onHover(null)}>
-            <span className="rf-option-icon">{o.icon}</span>
-            <span className="rf-option-name">{o.name}</span>
-            <span className="rf-option-meta">{o.meta}</span>
-            <span className="rf-option-text">{o.text}</span>
-          </button>
+            <span className="flex size-9 items-center justify-center rounded-md bg-secondary [&_svg]:size-5">{o.icon}</span>
+            <span className="flex items-center gap-2 text-base font-semibold">{o.name}<Badge variant="secondary">{o.meta}</Badge></span>
+            <span className="text-xs leading-relaxed font-normal text-muted-foreground">{o.text}</span>
+          </Button>
         ))}
-      </div>
+      </CardContent>
     </>
   );
 }
@@ -199,49 +181,51 @@ function CityStep({ hazard, stats, onPick, onBack }: {
     .sort((a, b) => Number(b.place_id === 'lumberton') - Number(a.place_id === 'lumberton'));
   return (
     <>
-      <Steps at={2} onBack={onBack} />
-      <h2 className="rf-h2">Choose a town <span className="rf-h2-note">for the {hazard}</span></h2>
-      {g.cities.length === 0 && <div className="rf-muted">Loading towns…</div>}
-      <div className="rf-cities">
-        {towns.map((c, i) => {
-          const [name, st] = c.name.split(',').map(s => s.trim());
+      <StepHeader step={2} title="Choose a town" note={`for the ${hazard}`} onBack={onBack} />
+      <CardContent className="grid gap-2">
+        {g.cities.length === 0 && <div className="flex items-center gap-2 text-sm text-muted-foreground"><Spinner />Loading towns…</div>}
+        {towns.map(c => {
+          const [name] = c.name.split(',').map(s => s.trim());
           const s = stats[c.place_id];
           return (
-            <button key={c.place_id} className="rf-city" style={{ '--i': i } as CSSProperties} onClick={() => onPick(c.place_id)}>
-              <span className="rf-city-main">
-                <span className="rf-city-name">{name}</span>
-                <span className="rf-city-sub">
-                  {BLURB[c.place_id] ?? st}{c.place_id === 'lumberton' && hazard === 'tornado' ? ' · showcase tornado path' : ''}
+            <Button key={c.place_id} variant="outline" className="h-auto justify-between gap-4 p-4 text-left whitespace-normal" onClick={() => onPick(c.place_id)}>
+              <span className="grid gap-1">
+                <span className="text-base font-semibold">{name}</span>
+                <span className="text-xs font-normal text-muted-foreground">
+                  {BLURB[c.place_id] ?? c.name}{c.place_id === 'lumberton' && hazard === 'tornado' ? ' · showcase tornado path' : ''}
                 </span>
               </span>
-              {s && (
-                <span className="rf-city-stats">
-                  <span><b>{num(s.buildings)}</b> buildings</span>
-                  <span><b>{num(s.pop_night)}</b> residents</span>
-                </span>
-              )}
-              <svg className="rf-city-arrow" width="16" height="16" viewBox="0 0 24 24" aria-hidden><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </button>
+              <span className="flex items-center gap-3">
+                {s && (
+                  <span className="hidden text-right text-xs font-normal whitespace-nowrap text-muted-foreground tabular-nums sm:grid">
+                    <span><span className="text-foreground">{num(s.buildings)}</span> buildings</span>
+                    <span><span className="text-foreground">{num(s.pop_night)}</span> residents</span>
+                  </span>
+                )}
+                <ChevronRight className="text-muted-foreground" />
+              </span>
+            </Button>
           );
         })}
-      </div>
-      {g.canBuild && (
-        <div className="rf-build">
-          <div className="rf-muted">Or build any U.S. town (1–3 minutes)</div>
-          {g.build ? (
-            <div className="rf-build-progress">
-              <div className="rf-bar"><span style={{ width: `${Math.round(g.build.progress * 100)}%` }} /></div>
-              <div className="rf-muted">{g.build.message}</div>
-            </div>
-          ) : (
-            <form className="rf-build-row" onSubmit={e => { e.preventDefault(); if (city.trim() && state.length === 2) void g.buildCity(city.trim(), state); }}>
-              <input placeholder="City" value={city} onChange={e => setCity(e.target.value)} />
-              <input placeholder="ST" maxLength={2} value={state} onChange={e => setState(e.target.value.toUpperCase())} />
-              <button type="submit" disabled={!city.trim() || state.length !== 2}>Build</button>
-            </form>
-          )}
-        </div>
-      )}
+        {g.canBuild && (
+          <>
+            <Separator className="my-2" />
+            <Label>Or build any U.S. town (1–3 minutes)</Label>
+            {g.build ? (
+              <div className="grid gap-2">
+                <Progress value={Math.round(g.build.progress * 100)} />
+                <p className="text-xs text-muted-foreground">{g.build.message}</p>
+              </div>
+            ) : (
+              <form className="flex gap-2" onSubmit={e => { e.preventDefault(); if (city.trim() && state.length === 2) void g.buildCity(city.trim(), state); }}>
+                <Input placeholder="City" value={city} onChange={e => setCity(e.target.value)} />
+                <Input placeholder="ST" maxLength={2} className="w-16" value={state} onChange={e => setState(e.target.value.toUpperCase())} />
+                <Button type="submit" variant="secondary" disabled={!city.trim() || state.length !== 2}>Build</Button>
+              </form>
+            )}
+          </>
+        )}
+      </CardContent>
     </>
   );
 }
@@ -258,42 +242,23 @@ function Loading({ stats, onBack }: { stats: Record<string, TownStats>; onBack: 
   ];
   return (
     <>
-      <Steps at={3} onBack={g.error ? onBack : undefined} />
-      <h2 className="rf-h2">Loading {name}</h2>
-      {g.error ? <div className="rf-error">{g.error}</div> : (
-        <>
-          <div className="rf-bar rf-bar-live"><span style={{ width: ready ? '100%' : town ? '72%' : '34%' }} /></div>
-          <ul className="rf-checks">
-            {rows.map(([label, done]) => (
-              <li key={label} data-done={done || undefined}><span className="rf-check" />{label}</li>
-            ))}
-          </ul>
-        </>
-      )}
+      <StepHeader step={3} title={`Loading ${name}`} onBack={g.error ? onBack : undefined} />
+      <CardContent className="grid gap-4">
+        {g.error ? (
+          <Alert variant="destructive"><CircleAlert /><AlertTitle>This town couldn't load</AlertTitle><AlertDescription>{g.error}</AlertDescription></Alert>
+        ) : (
+          <>
+            <Progress value={ready ? 100 : town ? 70 : 30} />
+            <ul className="grid gap-2 text-sm">
+              {rows.map(([label, done]) => (
+                <li key={label} className={cn('flex items-center gap-2', done ? 'text-foreground' : 'text-muted-foreground')}>
+                  {done ? <CircleCheck className="size-4" /> : <Spinner />}{label}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </CardContent>
     </>
-  );
-}
-
-function TornadoIcon() {
-  return (
-    <svg className="rf-ico rf-ico-tornado" viewBox="0 0 48 48" aria-hidden>
-      {[[6, 42, 10], [10, 38, 16], [14, 34, 22], [17, 31, 28], [20, 28, 34], [22, 26, 40]].map(([x1, x2, y], i) => (
-        <line key={i} x1={x1} x2={x2} y1={y} y2={y} style={{ '--i': i } as CSSProperties} />
-      ))}
-    </svg>
-  );
-}
-
-function HurricaneIcon() {
-  return (
-    <svg className="rf-ico rf-ico-hurricane" viewBox="0 0 48 48" aria-hidden>
-      <g>
-        <path d="M24 24 m-4 0 a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0" />
-        <path d="M28 24c0-7 6-12 14-12" />
-        <path d="M20 24c0 7-6 12-14 12" />
-        <path d="M24 20c7 0 12-6 12-14" />
-        <path d="M24 28c-7 0-12 6-12 14" />
-      </g>
-    </svg>
   );
 }

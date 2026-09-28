@@ -3,15 +3,16 @@ import { useEffect, useMemo, useRef, type MutableRefObject } from 'react';
 import * as THREE from 'three';
 
 /**
- * Backdrop for the game intro: a field of hex blocks (a town seen from above) that a storm lights up
- * in the risk-map colors as it passes. Tornado = a tight funnel dragging a burn scar across the field;
- * hurricane = a spiral with an open eye. Purely decorative; no game data is read here.
+ * Backdrop for the game intro: a field of hex blocks (a town seen from above). A tornado and a small
+ * hurricane circle the middle of the screen (where the intro card sits) on opposite sides of one orbit,
+ * lighting blocks in the risk-map colors as they pass; the tornado leaves a scar along its path.
+ * Purely decorative; no game data is read here.
  */
 
 export type IntroHazard = 'tornado' | 'hurricane';
 export interface IntroSceneState {
-  /** 0 = tornado look, 1 = hurricane look (eased toward `hazard`). */
-  hazard: IntroHazard;
+  /** The storm to bring forward (the other dims); null shows both equally. */
+  focus: IntroHazard | null;
   /** Where the camera sits: a wide establishing shot, a lower one for choices, a dive on exit. */
   shot: 'wide' | 'choose' | 'dive';
 }
@@ -23,10 +24,10 @@ const HEADING = 0.5;                               // camera heading (radians); 
 const RIGHT = new THREE.Vector2(Math.cos(HEADING), -Math.sin(HEADING)), TOWARD = new THREE.Vector2(Math.sin(HEADING), Math.cos(HEADING));
 /** A point `x` to the right and `z` toward the camera, in world xz. */
 const view = (x: number, z: number) => RIGHT.clone().multiplyScalar(x).add(TOWARD.clone().multiplyScalar(z));
-// The tornado crosses the foreground below the card; the hurricane eye tracks just behind it.
-const TORNADO_A = view(-40, 21), TORNADO_B = view(36, 15);
-const EYE_A = view(-34, 10), EYE_B = view(34, 4);
-const TORNADO_S = 13, EYE_S = 38;                  // seconds per pass
+// Orbit around the card, in camera terms: centered a little behind the middle so the far side passes above
+// the card and the near side below it. The width follows the screen's aspect ratio (set each frame).
+const ORBIT_Z0 = -3, ORBIT_RZ = 17;
+const ORBIT_S = 20;                                // seconds per lap
 
 function rng(seed: number) {
   let s = seed >>> 0;
@@ -36,8 +37,9 @@ function rng(seed: number) {
 // ---------------------------------------------------------------- hex field
 
 const HEX_VERT = /* glsl */ `
-uniform float uTime, uReveal, uExit, uMode, uPassT, uPassE;
-uniform vec2 uStorm, uDir, uEye;
+uniform float uTime, uReveal, uExit, uWT, uWH, uPhi;
+uniform vec2 uStorm, uEye, uRight, uToward;
+uniform vec3 uOrbit;   // rx, rz, z0
 attribute vec2 aCenter;
 attribute float aBase, aDist, aSeed;
 varying vec3 vN;
@@ -46,23 +48,25 @@ varying float vHeat, vTop, vDepth, vRise, vDist;
 
 float tornadoHeat(vec2 c) {
   vec2 rel = c - uStorm;
-  float along = dot(rel, uDir);
-  float perp = abs(dot(rel, vec2(-uDir.y, uDir.x)));
   float core = exp(-dot(rel, rel) / 5.0);
-  float scar = exp(-perp * perp / 2.4) * step(along, 0.0) * exp(along / 16.0);
-  return clamp(max(core, scar * 0.8) * uPassT, 0.0, 1.0);
+  // Scar along the orbit behind the funnel: distance to the ellipse and how far back along it.
+  vec2 q = vec2(dot(c, uRight) / uOrbit.x, (dot(c, uToward) - uOrbit.z) / uOrbit.y);
+  float off = abs(length(q) - 1.0) * 0.5 * (uOrbit.x + uOrbit.y);
+  float behind = mod(uPhi - atan(q.y, q.x), 6.28318);
+  float scar = exp(-off * off / 2.4) * exp(-behind * 0.5 * (uOrbit.x + uOrbit.y) / 18.0);
+  return clamp(max(core, scar * 0.8), 0.0, 1.0);
 }
 float hurricaneHeat(vec2 c) {
   vec2 rel = c - uEye;
   float r = length(rel), th = atan(rel.y, rel.x);
-  float arms = 0.5 + 0.5 * sin(3.0 * (th + log(r + 1.0) * 1.9) - uTime * 0.7);
-  float wall = exp(-pow((r - 3.4) / 1.4, 2.0));
-  float bands = arms * smoothstep(22.0, 4.0, r) * 0.7;
-  return clamp((wall + bands) * smoothstep(1.3, 2.8, r) * uPassE, 0.0, 1.0);
+  float arms = 0.5 + 0.5 * sin(3.0 * (th + log(r + 1.0) * 2.4) - uTime * 0.9);
+  float wall = exp(-pow((r - 2.3) / 1.0, 2.0));
+  float bands = arms * smoothstep(9.0, 2.5, r) * 0.75;
+  return clamp((wall + bands) * smoothstep(0.9, 1.8, r), 0.0, 1.0);
 }
 
 void main() {
-  float heat = mix(tornadoHeat(aCenter), hurricaneHeat(aCenter), uMode);
+  float heat = max(tornadoHeat(aCenter) * uWT, hurricaneHeat(aCenter) * uWH);
   float rise = smoothstep(aDist * 0.7, aDist * 0.7 + 0.3, uReveal);
   float breathe = 0.04 * sin(uTime * 0.8 + aSeed * 6.283);
   float h = 0.06 + (aBase + breathe) * rise + heat * heat * 3.2 * rise + uExit * aBase * 2.0;
@@ -177,14 +181,14 @@ attribute float aAng, aH, aR, aSpd;
 varying float vA;
 varying float vWarm;
 void main() {
-  float r = 1.6 + aR * aR * 22.0;
-  float ang = aAng + uTime * 0.55 * 6.0 / (r + 4.0);
-  float arm = 0.5 + 0.5 * sin(3.0 * (ang + log(r + 1.0) * 1.9));
-  vec3 p = vec3(uEye.x + cos(ang) * r, 3.2 + aH * 1.4 + r * 0.04, uEye.y + sin(ang) * r);
+  float r = 1.1 + aR * aR * 8.5;
+  float ang = aAng + uTime * 0.9 * 4.0 / (r + 2.0);
+  float arm = 0.5 + 0.5 * sin(3.0 * (ang + log(r + 1.0) * 2.4));
+  vec3 p = vec3(uEye.x + cos(ang) * r, 2.6 + aH * 1.0 + r * 0.05, uEye.y + sin(ang) * r);
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   gl_Position = projectionMatrix * mv;
   gl_PointSize = uPx * (1.8 + aSpd * 2.6) * 40.0 / -mv.z;
-  vA = uAlpha * pow(arm, 1.8) * smoothstep(1.4, 3.2, r) * smoothstep(23.0, 12.0, r);
+  vA = uAlpha * pow(arm, 1.8) * smoothstep(1.0, 2.2, r) * smoothstep(9.6, 5.0, r);
   vWarm = 0.0;
 }`;
 const DOT_FRAG = /* glsl */ `
@@ -275,7 +279,6 @@ function windGeometry(count: number) {
 // ---------------------------------------------------------------- scene
 
 const ease = (x: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
-const pass = (t: number) => Math.min(1, t / 0.08, (1 - t) / 0.1);
 
 function Storm({ state, pointer }: { state: MutableRefObject<IntroSceneState>; pointer: MutableRefObject<[number, number]> }) {
   const { camera, gl } = useThree();
@@ -284,8 +287,9 @@ function Storm({ state, pointer }: { state: MutableRefObject<IntroSceneState>; p
   const hexMat = useMemo(() => new THREE.ShaderMaterial({
     vertexShader: HEX_VERT, fragmentShader: HEX_FRAG,
     uniforms: {
-      uTime: { value: 0 }, uReveal: { value: 0 }, uExit: { value: 0 }, uMode: { value: 0 }, uPassT: { value: 0 }, uPassE: { value: 0 },
-      uStorm: { value: new THREE.Vector2() }, uDir: { value: TORNADO_B.clone().sub(TORNADO_A).normalize() }, uEye: { value: new THREE.Vector2() },
+      uTime: { value: 0 }, uReveal: { value: 0 }, uExit: { value: 0 }, uWT: { value: 1 }, uWH: { value: 1 }, uPhi: { value: 0 },
+      uStorm: { value: new THREE.Vector2() }, uEye: { value: new THREE.Vector2() },
+      uRight: { value: RIGHT.clone() }, uToward: { value: TOWARD.clone() }, uOrbit: { value: new THREE.Vector3(18, ORBIT_RZ, ORBIT_Z0) },
       uBg: { value: new THREE.Color(BG) }, uFogNear: { value: 28 }, uFogFar: { value: 82 },
     },
   }), []);
@@ -295,7 +299,7 @@ function Storm({ state, pointer }: { state: MutableRefObject<IntroSceneState>; p
   });
   const funnel = useMemo(() => ({ geo: particles(4200, 1), mat: dots(FUNNEL_VERT, { uStorm: { value: new THREE.Vector2() } }) }), []);
   const debris = useMemo(() => ({ geo: particles(1100, 2), mat: dots(DEBRIS_VERT, { uStorm: { value: new THREE.Vector2() } }) }), []);
-  const spiral = useMemo(() => ({ geo: particles(9000, 3), mat: dots(SPIRAL_VERT, { uEye: { value: new THREE.Vector2() } }) }), []);
+  const spiral = useMemo(() => ({ geo: particles(6000, 3), mat: dots(SPIRAL_VERT, { uEye: { value: new THREE.Vector2() } }) }), []);
   const wind = useMemo(() => ({
     geo: windGeometry(260),
     mat: new THREE.ShaderMaterial({ vertexShader: WIND_VERT, fragmentShader: WIND_FRAG, transparent: true, depthWrite: false,
@@ -305,35 +309,44 @@ function Storm({ state, pointer }: { state: MutableRefObject<IntroSceneState>; p
     vertexShader: RING_VERT, fragmentShader: RING_FRAG, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     uniforms: { uTime: { value: 0 }, uAlpha: { value: 0 } },
   }), []);
-  const glow = useMemo(() => new THREE.ShaderMaterial({
+  const glowOf = (color: string) => new THREE.ShaderMaterial({
     vertexShader: RING_VERT, fragmentShader: GLOW_FRAG, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    uniforms: { uAlpha: { value: 0 }, uColor: { value: new THREE.Color('#ff4944') } },
-  }), []);
-  const glowMesh = useRef<THREE.Mesh>(null);
+    uniforms: { uAlpha: { value: 0 }, uColor: { value: new THREE.Color(color) } },
+  });
+  const glowT = useMemo(() => glowOf('#ff4944'), []);
+  const glowH = useMemo(() => glowOf('#84f9fe'), []);
+  const glowTMesh = useRef<THREE.Mesh>(null), glowHMesh = useRef<THREE.Mesh>(null);
+  const size = useThree(st => st.size);
   useEffect(() => () => {
-    hexGeo.dispose(); hexMat.dispose(); ring.dispose(); glow.dispose();
+    hexGeo.dispose(); hexMat.dispose(); ring.dispose(); glowT.dispose(); glowH.dispose();
     for (const p of [funnel, debris, spiral, wind]) { p.geo.dispose(); p.mat.dispose(); }
-  }, [hexGeo, hexMat, funnel, debris, spiral, wind, ring, glow]);
+  }, [hexGeo, hexMat, funnel, debris, spiral, wind, ring, glowT, glowH]);
 
-  const anim = useRef({ t: 0, reveal: 0, exit: 0, mode: 0, camDist: 46, camH: 30, look: new THREE.Vector3() });
+  const anim = useRef({ t: 0, reveal: 0, exit: 0, wT: 1, wH: 1, camDist: 46, camH: 30, look: new THREE.Vector3() });
   useFrame((_, dtRaw) => {
     const dt = Math.min(dtRaw, 0.05);
     const a = anim.current, s = state.current;
     a.t += dt;
     a.reveal = Math.min(1, a.reveal + dt / 2.4);
     a.exit = s.shot === 'dive' ? Math.min(1, a.exit + dt / 1.2) : Math.max(0, a.exit - dt);
-    a.mode += ((s.hazard === 'hurricane' ? 1 : 0) - a.mode) * Math.min(1, dt * 2.2);
+    const k2 = Math.min(1, dt * 2.5);
+    a.wT += ((s.focus === 'hurricane' ? 0.3 : 1) - a.wT) * k2;
+    a.wH += ((s.focus === 'tornado' ? 0.3 : 1) - a.wH) * k2;
 
-    const pt = (a.t % TORNADO_S) / TORNADO_S, pe = (a.t % EYE_S) / EYE_S;
-    const storm = TORNADO_A.clone().lerp(TORNADO_B, pt), eye = EYE_A.clone().lerp(EYE_B, pe);
+    // Both storms on one orbit, half a lap apart. Width fits the screen: wide on desktop, narrow on a phone.
+    const rx = THREE.MathUtils.clamp(12 * (size.width / Math.max(1, size.height)), 7, 19);
+    const phi = (a.t / ORBIT_S) * Math.PI * 2;
+    const storm = view(rx * Math.cos(phi), ORBIT_Z0 + ORBIT_RZ * Math.sin(phi));
+    const eye = view(rx * Math.cos(phi + Math.PI), ORBIT_Z0 + ORBIT_RZ * Math.sin(phi + Math.PI));
     const u = hexMat.uniforms;
-    u.uTime!.value = a.t; u.uReveal!.value = ease(a.reveal); u.uExit!.value = ease(a.exit); u.uMode!.value = a.mode;
-    u.uPassT!.value = pass(pt); u.uPassE!.value = pass(pe);
+    u.uTime!.value = a.t; u.uReveal!.value = ease(a.reveal); u.uExit!.value = ease(a.exit);
+    u.uWT!.value = a.wT; u.uWH!.value = a.wH; u.uPhi!.value = phi;
+    (u.uOrbit!.value as THREE.Vector3).set(rx, ORBIT_RZ, ORBIT_Z0);
     (u.uStorm!.value as THREE.Vector2).copy(storm); (u.uEye!.value as THREE.Vector2).copy(eye);
 
     const px = gl.getPixelRatio();
-    const tornadoA = (1 - a.mode) * ease(a.reveal) * pass(pt) * (1 - a.exit);
-    const hurricaneA = a.mode * ease(a.reveal) * pass(pe) * (1 - a.exit);
+    const tornadoA = a.wT * ease(a.reveal) * (1 - a.exit);
+    const hurricaneA = a.wH * ease(a.reveal) * (1 - a.exit);
     for (const [m, alpha] of [[funnel.mat, 0.8 * tornadoA], [debris.mat, 0.9 * tornadoA], [spiral.mat, 0.55 * hurricaneA]] as const) {
       m.uniforms.uTime!.value = a.t; m.uniforms.uAlpha!.value = alpha; m.uniforms.uPx!.value = px;
     }
@@ -343,15 +356,11 @@ function Storm({ state, pointer }: { state: MutableRefObject<IntroSceneState>; p
     wind.mat.uniforms.uTime!.value = a.t;
     wind.mat.uniforms.uAlpha!.value = 0.28 * ease(a.reveal) * (1 - a.exit);
     ring.uniforms.uTime!.value = a.t; ring.uniforms.uAlpha!.value = ease(a.reveal) * (1 - a.exit);
-    // Warm glow on the ground under the funnel, cool glow around the hurricane's eyewall.
-    const g = glowMesh.current;
-    if (g) {
-      const hur = a.mode > 0.5;
-      g.position.set(hur ? eye.x : storm.x, 0.08, hur ? eye.y : storm.y);
-      g.scale.setScalar(hur ? 9 : 5);
-      (glow.uniforms.uColor!.value as THREE.Color).set(hur ? '#84f9fe' : '#ff4944');
-      glow.uniforms.uAlpha!.value = (hur ? 0.16 * hurricaneA / Math.max(a.mode, 1e-3) : 0.42 * tornadoA / Math.max(1 - a.mode, 1e-3)) * Math.abs(a.mode - 0.5) * 2;
-    }
+    // Warm light on the ground under the funnel, cool light around the hurricane's eye.
+    glowTMesh.current?.position.set(storm.x, 0.08, storm.y);
+    glowHMesh.current?.position.set(eye.x, 0.08, eye.y);
+    glowT.uniforms.uAlpha!.value = 0.4 * tornadoA;
+    glowH.uniforms.uAlpha!.value = 0.2 * hurricaneA;
 
     // Camera: a slow orbit, lower for the choices, a dive into the town on exit, with a little mouse parallax.
     const goal = s.shot === 'wide' ? { d: 44, h: 27 } : s.shot === 'choose' ? { d: 39, h: 21 } : { d: 15, h: 6 };
@@ -371,7 +380,10 @@ function Storm({ state, pointer }: { state: MutableRefObject<IntroSceneState>; p
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]} material={ring} renderOrder={2}>
         <planeGeometry args={[80, 80]} />
       </mesh>
-      <mesh ref={glowMesh} rotation={[-Math.PI / 2, 0, 0]} material={glow} renderOrder={2}>
+      <mesh ref={glowTMesh} rotation={[-Math.PI / 2, 0, 0]} scale={5} material={glowT} renderOrder={2}>
+        <planeGeometry args={[2, 2]} />
+      </mesh>
+      <mesh ref={glowHMesh} rotation={[-Math.PI / 2, 0, 0]} scale={7} material={glowH} renderOrder={2}>
         <planeGeometry args={[2, 2]} />
       </mesh>
       <lineSegments geometry={wind.geo} material={wind.mat} frustumCulled={false} renderOrder={3} />
@@ -396,7 +408,7 @@ export function IntroScene({ state }: { state: MutableRefObject<IntroSceneState>
     return () => window.removeEventListener('pointermove', move);
   }, []);
   return (
-    <div ref={box} className="rf-canvas" aria-hidden>
+    <div ref={box} className="absolute inset-0" aria-hidden>
       <Canvas dpr={[1, 1.75]} gl={{ antialias: true, powerPreference: 'high-performance' }}
         camera={{ fov: 38, near: 0.5, far: 200, position: [20, 30, 40] }}>
         <color attach="background" args={[BG]} />
