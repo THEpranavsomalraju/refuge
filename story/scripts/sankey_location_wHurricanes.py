@@ -31,7 +31,7 @@ YEAR_START, YEAR_END = 1996, 2025
 CREAM, CORAL, NAVY, NAVY_LIGHT, CYAN = "#EEE4D7", "#FF4944", "#232E43", "#2E3A56", "#84F9FE"
 DISPLAY_FONT, BODY_FONT = "Chakra Petch", "IBM Plex Mono"
 
-# Matches the location grouping already agreed in ROLE_story_data.md
+# Same location grouping as the ML location model
 LOCATION_GROUPS = {
     "Mobile/Trailer Home": "Mobile home",
     "Permanent Home": "House",
