@@ -78,7 +78,7 @@ def find_hurdat_url() -> str:
     m = re.search(r'''href=['"]([^'"]*hurdat2-1851-\d{4}-\d+\.txt)['"]''', html)
     if not m:
         print("  couldn't find the link automatically, using last known file as fallback")
-        print("  (if this is stale, tell Claude — NOAA's page format changed)")
+        print("  (if this is stale, NOAA's page format probably changed)")
         return FALLBACK_URL
     url = m.group(1)
     if url.startswith("//"):
